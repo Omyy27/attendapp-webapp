@@ -9,6 +9,16 @@ import { AddGuestModal } from "@/components/add-guest-modal";
 import { EditGuestModal } from "@/components/edit-guest-modal";
 import { DeleteConfirm } from "@/components/delete-confirm";
 import { exportToCsv } from "@/lib/csv";
+import { useDriverTour } from "@/lib/use-driver-tour";
+
+const dashboardSteps = [
+  { element: "#tour-header", popover: { title: "Bienvenido a Attendapp", description: "Aquí ves el nombre de tu evento y notificaciones." } },
+  { element: "#tour-analytics", popover: { title: "Resumen del día", description: "Llegadas, pendientes y mesas activas en tiempo real." } },
+  { element: "#tour-actions", popover: { title: "Acciones rápidas", description: "Descarga tu lista de invitados como CSV o agrega nuevos invitados." } },
+  { element: "#tour-search", popover: { title: "Busca invitados", description: "Filtra por nombre, grupo familiar o estado de confirmación." } },
+  { element: "#tour-guest-list", popover: { title: "Tu padrón", description: "Lista completa con el estado de cada invitado. Toca un nombre para ver detalles." } },
+  { element: "#tour-nav", popover: { title: "Navegación", description: "Accede a Invitados, Escanear y Enviar pases desde aquí." } },
+];
 
 const filters = ["Todos", "Confirmados", "Por llegar", ];
 
@@ -35,6 +45,12 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState("");
 
   const supabase = createClient();
+  const { startTour } = useDriverTour("dashboard", dashboardSteps);
+
+  useEffect(() => {
+    const timer = setTimeout(() => startTour(), 800);
+    return () => clearTimeout(timer);
+  }, [startTour]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -215,7 +231,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-50 pb-28">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-md px-5 pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header id="tour-header" className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-md px-5 pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -230,18 +246,22 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <button className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 relative shadow-card">
+            <button
+              onClick={() => startTour(true)}
+              className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-card hover:bg-slate-50 transition-colors"
+              title="Mostrar tutorial"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-sky" />
             </button>
           </div>
         </header>
 
         {/* Analytics */}
-        <section className="px-5 pt-5 pb-1">
+        <section id="tour-analytics" className="px-5 pt-5 pb-1">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-serif text-lg text-ink">Resumen del dia</h2>
             <span className="text-xs text-slate-500 font-medium">
@@ -305,7 +325,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Quick Actions */}
-        <section className="px-5 pt-5 pb-1">
+        <section id="tour-actions" className="px-5 pt-5 pb-1">
           <div className="flex gap-3">
             <button
               onClick={handleExportCsv}
@@ -333,7 +353,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Search & Filters */}
-        <section className="px-5 pt-4 pb-2 space-y-3">
+        <section id="tour-search" className="px-5 pt-4 pb-2 space-y-3">
           <div className="relative">
             <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
@@ -365,7 +385,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Guest List */}
-        <section className="px-5 pt-3 space-y-3">
+        <section id="tour-guest-list" className="px-5 pt-3 space-y-3">
           <div className="flex items-center justify-between px-1">
             <h2 className="font-serif text-lg text-ink">Padron</h2>
             <span className="text-xs text-slate-500 font-medium">
@@ -404,7 +424,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <BottomNav />
+      <div id="tour-nav"><BottomNav /></div>
 
       {weddingId && (
         <AddGuestModal

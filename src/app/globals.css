@@ -52,3 +52,74 @@ body {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Driver.js popover theme */
+.attendapp-driver-popover {
+  --driver-popover-background: #0a2540;
+  --driver-popover-color: #ffffff;
+  --driver-popover-border-radius: 16px;
+  --driver-popover-padding: 20px;
+  --driver-popover-font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--driver-popover-font-family);
+  background: var(--driver-popover-background);
+  color: var(--driver-popover-color);
+  border-radius: var(--driver-popover-border-radius);
+  padding: var(--driver-popover-padding);
+  box-shadow: 0 20px 50px -12px rgba(10, 37, 64, 0.35);
+  border: 1px solid rgba(200, 160, 84, 0.2);
+}
+
+.driver-popover-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #c8a054;
+  margin-bottom: 8px;
+}
+
+.driver-popover-description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.driver-popover-footer {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.driver-btn {
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.driver-btn-secondary,
+.driver-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.driver-btn-primary,
+.driver-btn-primary:hover {
+  background: #c8a054;
+  color: #0a2540;
+  border: 1px solid #c8a054;
+}
+
+.driver-progress-bar {
+  background: #c8a054;
+  border-radius: 4px;
+  height: 4px;
+}
+
+.driver-stage-no-animation .driver-stage {
+  border-radius: 12px;
+}

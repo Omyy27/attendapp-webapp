@@ -4,11 +4,26 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { DispatchCard, type GuestGroup } from "@/components/dispatch-card";
+import { useDriverTour } from "@/lib/use-driver-tour";
+
+const pasesSteps = [
+  { element: "#tour-pases-status", popover: { title: "Estado de envíos", description: "Pases generados, enviados y por enviar en tiempo real." } },
+  { element: "#tour-pases-explainer", popover: { title: "¿Cómo funciona?", description: "Cada grupo familiar recibe un enlace único a su Pase VIP, sin archivos pesados." } },
+  { element: "#tour-pases-send-all", popover: { title: "Envío masivo", description: "Envía todos los pases pendientes de una sola vez." } },
+  { element: "#tour-pases-list", popover: { title: "Cola de despacho", description: "Envía por WhatsApp, correo o copia el link directamente." } },
+  { element: "#tour-pases-nav", popover: { title: "Navegación", description: "Cambia entre secciones desde la barra inferior." } },
+];
 
 export default function PassesPage() {
   const [groups, setGroups] = useState<GuestGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const { startTour } = useDriverTour("pases", pasesSteps);
+
+  useEffect(() => {
+    const timer = setTimeout(() => startTour(), 800);
+    return () => clearTimeout(timer);
+  }, [startTour]);
 
   const fetchGroups = useCallback(async () => {
     setLoading(true);
@@ -112,7 +127,7 @@ export default function PassesPage() {
         </header>
 
         {/* Status Strip */}
-        <section className="px-5 pt-5">
+        <section id="tour-pases-status" className="px-5 pt-5">
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-card text-center">
               <p className="text-xl font-bold text-ink leading-none">{emitted}</p>
@@ -130,7 +145,7 @@ export default function PassesPage() {
         </section>
 
         {/* Explainer */}
-        <section className="px-5 pt-5">
+        <section id="tour-pases-explainer" className="px-5 pt-5">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-card p-4 flex gap-3">
             <span className="w-10 h-10 rounded-xl bg-sky/10 text-sky flex items-center justify-center shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -146,7 +161,7 @@ export default function PassesPage() {
         </section>
 
         {/* Bulk Actions */}
-        <section className="px-5 pt-5">
+        <section id="tour-pases-send-all" className="px-5 pt-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-serif text-lg text-ink">Pendientes</h2>
             <span className="text-xs text-slate-500 font-medium">
@@ -168,7 +183,7 @@ export default function PassesPage() {
         </section>
 
         {/* Dispatch List */}
-        <section className="px-5 pt-4 space-y-3">
+        <section id="tour-pases-list" className="px-5 pt-4 space-y-3">
           {loading ? (
             <div className="text-center py-10 text-slate-400 text-sm">Cargando grupos...</div>
           ) : groups.length === 0 ? (
@@ -209,7 +224,7 @@ export default function PassesPage() {
         </section>
       </div>
 
-      <BottomNav />
+      <div id="tour-pases-nav"><BottomNav /></div>
     </div>
   );
 }

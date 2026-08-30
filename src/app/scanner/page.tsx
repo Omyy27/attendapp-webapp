@@ -4,6 +4,14 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { useDriverTour } from "@/lib/use-driver-tour";
+
+const scannerSteps = [
+  { element: "#tour-scanner-camera", popover: { title: "Escanea códigos QR", description: "Apunta al código QR del pase del invitado para registrar su llegada." } },
+  { element: "#tour-scanner-stats", popover: { title: "Estadísticas en tiempo real", description: "Llegadas, rechazados y pendientes del día." } },
+  { element: "#tour-scanner-search", popover: { title: "Buscador de respaldo", description: "Si el invitado no tiene código QR, búscalo por nombre." } },
+  { element: "#tour-scanner-nav", popover: { title: "Navegación", description: "Cambia entre secciones desde la barra inferior." } },
+];
 
 type ScanResult = {
   type: "valid" | "rejected" | null;
@@ -24,6 +32,12 @@ export default function ScannerPage() {
   const scannerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
+  const { startTour } = useDriverTour("scanner", scannerSteps);
+
+  useEffect(() => {
+    const timer = setTimeout(() => startTour(), 800);
+    return () => clearTimeout(timer);
+  }, [startTour]);
 
   const fetchStats = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -106,23 +120,6 @@ export default function ScannerPage() {
       }, 3000);
     } catch {
       setScanResult({ type: "rejected", message: "Error de conexión" });
-      setTimeout(() => {
-        setScanResult({ type: null });
-        setIsScanning(true);
-      }, 3000);
-    }
-  };
-
-  const simulateScan = (type: "valid" | "rejected") => {
-    if (type === "valid") {
-      handleScan("test-valid-uuid");
-    } else {
-      setIsScanning(false);
-      setScanResult({
-        type: "rejected",
-        message: "QR ya utilizado",
-        time: new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
-      });
       setTimeout(() => {
         setScanResult({ type: null });
         setIsScanning(true);
@@ -233,7 +230,7 @@ export default function ScannerPage() {
         </header>
 
         {/* Camera View */}
-        <section className="relative h-[440px] bg-slate-900">
+        <section id="tour-scanner-camera" className="relative h-[440px] bg-slate-900">
           {/* Real camera feed */}
           <div
             ref={containerRef}
@@ -271,29 +268,13 @@ export default function ScannerPage() {
                   <p className="text-slate-400 text-xs">{cameraError}</p>
                 </div>
               )}
-              <p className="text-slate-300 text-xs font-medium mb-4">Usa los botones de prueba</p>
+              <p className="text-slate-400 text-xs mt-2">Cámara no disponible en este dispositivo</p>
             </div>
           )}
 
-          <p className="absolute bottom-16 inset-x-0 text-center text-slate-300 text-xs font-medium tracking-wide z-10">
-            {showDemo ? "Modo prueba" : "Apunta al código QR"}
+          <p className="absolute bottom-6 inset-x-0 text-center text-slate-300 text-xs font-medium tracking-wide z-10">
+            Apunta al código QR
           </p>
-
-          {/* Demo buttons - always visible for testing */}
-          <div className="absolute bottom-6 inset-x-0 flex justify-center gap-3 z-10">
-            <button
-              onClick={() => simulateScan("valid")}
-              className="bg-emerald-500/80 text-white text-xs font-semibold px-4 py-2 rounded-full backdrop-blur-sm"
-            >
-              Simular válido
-            </button>
-            <button
-              onClick={() => simulateScan("rejected")}
-              className="bg-rose-500/80 text-white text-xs font-semibold px-4 py-2 rounded-full backdrop-blur-sm"
-            >
-              Simular rechazado
-            </button>
-          </div>
         </section>
 
         {/* Verdict Cards */}
@@ -338,7 +319,7 @@ export default function ScannerPage() {
         </section>
 
         {/* Stats Strip */}
-        <section className="px-5 pt-8">
+        <section id="tour-scanner-stats" className="px-5 pt-8">
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-emerald-600 leading-none">{stats.valid}</p>
@@ -356,7 +337,7 @@ export default function ScannerPage() {
         </section>
 
         {/* Backup Search */}
-        <section className="px-5 pt-5">
+        <section id="tour-scanner-search" className="px-5 pt-5">
           <Link
             href="/scanner/search"
             className="flex items-center justify-between bg-white border border-slate-100 rounded-2xl p-4 shadow-card hover:bg-slate-50 transition-colors"
@@ -380,7 +361,7 @@ export default function ScannerPage() {
         </section>
       </div>
 
-      <BottomNav />
+      <div id="tour-scanner-nav"><BottomNav /></div>
 
       <style jsx>{`
         @keyframes scan {
