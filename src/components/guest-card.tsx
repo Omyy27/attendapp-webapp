@@ -15,6 +15,7 @@ export interface Guest {
   group: {
     name: string;
     table_number: number;
+    pass_uuid?: string;
   };
 }
 

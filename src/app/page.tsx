@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
     const { data: groups } = await supabase
       .from("guest_groups")
-      .select("id, name, table_number")
+      .select("id, name, table_number, pass_uuid")
       .eq("wedding_id", organizer.wedding_id);
 
     const groupMap = new Map();
@@ -168,6 +168,12 @@ export default function DashboardPage() {
   function handleDeleteClick(guest: Guest) {
     setDeletingGuest(guest);
     setShowDeleteConfirm(true);
+  }
+
+  function handleQRClick(guest: Guest) {
+    if (guest.group?.pass_uuid) {
+      window.open(`/pase/${guest.group.pass_uuid}`, "_blank");
+    }
   }
 
   async function handleDeleteConfirm() {
@@ -389,6 +395,7 @@ export default function DashboardPage() {
               <GuestCard
                 key={guest.id}
                 guest={guest}
+                onQRClick={() => handleQRClick(guest)}
                 onEditClick={() => handleEditClick(guest)}
                 onDeleteClick={() => handleDeleteClick(guest)}
               />
