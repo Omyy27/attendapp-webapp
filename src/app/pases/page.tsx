@@ -98,9 +98,9 @@ export default function PassesPage() {
             </span>
             <div>
               <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
-                Modulo backend
+                Envío de invitaciones
               </p>
-              <h1 className="font-serif text-xl leading-none text-ink">El Despachador</h1>
+              <h1 className="font-serif text-xl leading-none text-ink">Enviar pases</h1>
             </div>
           </div>
           <button className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-card">
@@ -116,15 +116,15 @@ export default function PassesPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-card text-center">
               <p className="text-xl font-bold text-ink leading-none">{emitted}</p>
-              <p className="text-[11px] text-slate-500 font-medium mt-1">Pases emitidos</p>
+              <p className="text-[11px] text-slate-500 font-medium mt-1">Generados</p>
             </div>
             <div className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-card text-center">
               <p className="text-xl font-bold text-emerald-600 leading-none">{delivered}</p>
-              <p className="text-[11px] text-slate-500 font-medium mt-1">Entregados</p>
+              <p className="text-[11px] text-slate-500 font-medium mt-1">Enviados</p>
             </div>
             <div className="bg-ink rounded-2xl p-3.5 shadow-lift text-center">
               <p className="text-xl font-bold text-gold leading-none">{inQueue}</p>
-              <p className="text-[11px] text-slate-400 font-medium mt-1">En cola</p>
+              <p className="text-[11px] text-slate-400 font-medium mt-1">Por enviar</p>
             </div>
           </div>
         </section>
@@ -138,7 +138,7 @@ export default function PassesPage() {
               </svg>
             </span>
             <p className="text-xs text-slate-500 leading-relaxed">
-              <span className="font-semibold text-ink">Cero PDFs.</span> Cada grupo familiar
+              <span className="font-semibold text-ink">Sin archivos pesados.</span> Cada grupo familiar
               recibe un UUID unico encriptado y un link magico a su Pase VIP — enviado directo
               por WhatsApp o correo, sin adjuntos que pesen.
             </p>
@@ -148,7 +148,7 @@ export default function PassesPage() {
         {/* Bulk Actions */}
         <section className="px-5 pt-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-serif text-lg text-ink">Cola de despacho</h2>
+            <h2 className="font-serif text-lg text-ink">Pendientes</h2>
             <span className="text-xs text-slate-500 font-medium">
               {inQueue} grupos pendientes
             </span>
@@ -162,7 +162,7 @@ export default function PassesPage() {
               <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M7 2v11h3v9l7-12h-4l4-8z" />
               </svg>
-              Despachar todos
+              Enviar todos
             </button>
           </div>
         </section>

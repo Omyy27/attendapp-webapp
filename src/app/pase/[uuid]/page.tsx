@@ -128,13 +128,13 @@ export default function GuestPassPage({
                 )}
               </div>
               <p className="text-[11px] text-slate-400 font-mono mt-3 tracking-wider">
-                UUID · {uuid.toUpperCase().slice(0, 4)}-{uuid.toUpperCase().slice(4, 8)}-{uuid.toUpperCase().slice(8, 12)}-{uuid.toUpperCase().slice(12, 16)}
+                Código · {uuid.toUpperCase().slice(0, 4)}-{uuid.toUpperCase().slice(4, 8)}-{uuid.toUpperCase().slice(8, 12)}-{uuid.toUpperCase().slice(12, 16)}
               </p>
               <div className="flex items-center gap-2 mt-4 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3.5 py-1.5 rounded-full">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                 </svg>
-                Pase válido · {passData.guest_count} personas
+                Válido para {passData.guest_count} personas
               </div>
             </div>
 
@@ -254,7 +254,7 @@ export default function GuestPassPage({
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Guardar pase
+              Guardar en fotos
             </button>
             <button className="flex-1 bg-white border border-slate-200 text-slate-700 rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-card hover:bg-slate-50 transition-colors">
               <svg className="w-4 h-4 text-sky" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -72,7 +72,7 @@ export function DispatchCard({
             {group.guest_count} invitados · Mesa {group.table_number}
           </p>
           <p className="text-[11px] text-slate-400 font-mono mt-1 truncate">
-            UUID {group.pass_uuid.slice(0, 4)}-{group.pass_uuid.slice(4, 8)}-…-{group.pass_uuid.slice(-4)}
+            Código {group.pass_uuid.slice(0, 4)}-{group.pass_uuid.slice(4, 8)}-…-{group.pass_uuid.slice(-4)}
           </p>
         </div>
         {getStatusBadge(group)}

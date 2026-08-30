@@ -139,9 +139,9 @@ export default function ScannerPage() {
             </span>
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
-                Portero
+                Validación
               </p>
-              <h1 className="font-serif text-base leading-none text-ink">Ojo de Halcon</h1>
+              <h1 className="font-serif text-base leading-none text-ink">Escanear entrada</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -243,7 +243,7 @@ export default function ScannerPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-emerald-600 leading-none">{stats.valid}</p>
-              <p className="text-[10px] text-slate-500 font-medium mt-1">Validos</p>
+              <p className="text-[10px] text-slate-500 font-medium mt-1">Entradas</p>
             </div>
             <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-rose-600 leading-none">{stats.rejected}</p>
@@ -251,7 +251,7 @@ export default function ScannerPage() {
             </div>
             <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-ink leading-none">{stats.remaining}</p>
-              <p className="text-[10px] text-slate-500 font-medium mt-1">Restantes</p>
+              <p className="text-[10px] text-slate-500 font-medium mt-1">Por llegar</p>
             </div>
           </div>
         </section>
@@ -271,7 +271,7 @@ export default function ScannerPage() {
               </span>
               <div>
                 <p className="text-sm font-semibold text-ink">Buscador de respaldo</p>
-                <p className="text-[11px] text-slate-500">Plan B: busca por nombre y apellido</p>
+                <p className="text-[11px] text-slate-500">Si no tiene código QR</p>
               </div>
             </div>
             <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

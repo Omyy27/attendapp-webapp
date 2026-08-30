@@ -191,7 +191,7 @@ export function AddGuestModal({
 
           <div>
             <label className="text-xs font-semibold text-slate-600 mb-1 block">
-              Correo electrónico
+              Correo
             </label>
             <input
               type="email"

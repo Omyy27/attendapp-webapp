@@ -146,9 +146,9 @@ export default function BackupSearchPage() {
             </Link>
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
-                Plan B
+                Alternativa
               </p>
-              <h1 className="font-serif text-lg leading-none text-ink">Buscador de respaldo</h1>
+              <h1 className="font-serif text-lg leading-none text-ink">Buscar por nombre</h1>
             </div>
           </div>
 
@@ -224,14 +224,14 @@ export default function BackupSearchPage() {
                     onClick={() => handleCheckin(result.id, `${result.first_name} ${result.last_name}`)}
                     className="bg-ink text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg whitespace-nowrap hover:bg-ink-light transition-colors shrink-0"
                   >
-                    Marcar entrada
+                    Registrar llegada
                   </button>
                 ) : (
                   <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1.5 rounded-full whitespace-nowrap flex items-center gap-1 shrink-0">
                     <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                     </svg>
-                    Ya ingreso
+                    Ya llegó
                   </span>
                 )}
               </article>

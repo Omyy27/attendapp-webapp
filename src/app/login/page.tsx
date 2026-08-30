@@ -43,7 +43,7 @@ export default function LoginPage() {
             </svg>
           </span>
           <h1 className="font-serif text-2xl text-ink">Attendapp</h1>
-          <p className="text-sm text-slate-500 mt-1">Gestiona tu evento</p>
+          <p className="text-sm text-slate-500 mt-1">Administra tu evento</p>
         </div>
 
         {/* Form */}
@@ -55,7 +55,7 @@ export default function LoginPage() {
           )}
           <div>
             <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
-              Correo electrónico
+              Correo
             </label>
             <input
               type="email"
