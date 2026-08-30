@@ -26,7 +26,7 @@ export function useDriverTour(pageKey: string, steps: DriveStep[]) {
 
       const driverObj = driver({
         showProgress: true,
-        progressText: "{current} de {total}",
+        progressText: "{{current}} de {{total}}",
         showButtons: ["next", "previous", "close"],
         nextBtnText: "Siguiente",
         prevBtnText: "Anterior",
