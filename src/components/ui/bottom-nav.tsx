@@ -56,10 +56,10 @@ export function BottomNav() {
           if (item.isCenter) {
             return (
               <Link key={i} href={item.href} className="flex flex-col items-center gap-1 -mt-7">
-                <span className="w-14 h-14 rounded-full bg-sky text-white shadow-lift flex items-center justify-center">
+                <span className="w-14 h-14 rounded-full bg-ink text-white shadow-lift flex items-center justify-center">
                   {item.icon}
                 </span>
-                <span className={cn("text-[10px] font-semibold", isActive ? "text-sky" : "text-sky/80")}>
+                <span className={cn("text-[10px] font-semibold", isActive ? "text-ink" : "text-ink/80")}>
                   {item.label}
                 </span>
               </Link>
