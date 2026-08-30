@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { BottomNav } from "@/components/ui/bottom-nav";
@@ -19,6 +19,10 @@ export default function ScannerPage() {
   const [scanResult, setScanResult] = useState<ScanResult>({ type: null });
   const [isScanning, setIsScanning] = useState(true);
   const [stats, setStats] = useState({ valid: 0, rejected: 0, remaining: 0 });
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [showDemo, setShowDemo] = useState(false);
+  const scannerRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
   const fetchStats = useCallback(async () => {
@@ -126,6 +130,82 @@ export default function ScannerPage() {
     }
   };
 
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  useEffect(() => {
+    let mounted = true;
+    let scanner: any = null;
+
+    async function startScanner() {
+      try {
+        const { Html5Qrcode } = await import("html5-qrcode");
+
+        if (!mounted || !containerRef.current) return;
+
+        scanner = new Html5Qrcode("scanner-reader");
+        scannerRef.current = scanner;
+
+        const cameras = await Html5Qrcode.getCameras();
+        if (cameras && cameras.length === 0) {
+          if (mounted) {
+            setCameraError("No se encontraron cámaras");
+            setShowDemo(true);
+          }
+          return;
+        }
+
+        await scanner.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 220, height: 220 },
+            aspectRatio: 1,
+          },
+          (decodedText: string) => {
+            if (!mounted) return;
+
+            let uuid = decodedText.trim();
+
+            if (uuid.toUpperCase().startsWith("ATTENDAPP-")) {
+              uuid = uuid.substring(10);
+            }
+
+            handleScan(uuid);
+          },
+          () => {}
+        );
+      } catch (err: any) {
+        if (!mounted) return;
+
+        const msg = err?.message || String(err);
+
+        if (msg.includes("Permission") || msg.includes("NotAllowedError") || msg.includes("PermissionDeniedError")) {
+          setCameraError("Permiso de cámara denegado. Actícalo en la configuración de tu navegador.");
+        } else if (msg.includes("NotFoundError") || msg.includes("DevicesNotFoundError")) {
+          setCameraError("No se encontró cámara en este dispositivo.");
+        } else {
+          setCameraError("No se pudo acceder a la cámara.");
+        }
+        setShowDemo(true);
+      }
+    }
+
+    startScanner();
+
+    return () => {
+      mounted = false;
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.stop().catch(() => {});
+          scannerRef.current.clear().catch(() => {});
+        } catch {}
+        scannerRef.current = null;
+      }
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 pb-28">
       <div className="max-w-md mx-auto min-h-screen">
@@ -154,39 +234,58 @@ export default function ScannerPage() {
 
         {/* Camera View */}
         <section className="relative h-[440px] bg-slate-900 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black" />
+          {/* Real camera feed */}
           <div
-            className="absolute inset-0 opacity-30"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 30% 20%, rgba(56,189,248,.25), transparent 45%), radial-gradient(circle at 70% 80%, rgba(200,160,84,.15), transparent 40%)",
-            }}
+            ref={containerRef}
+            id="scanner-reader"
+            className="absolute inset-0 [&>div]:w-full [&>div]:h-full [&_video]:!object-cover"
           />
 
-          {/* Scan frame */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-64 h-64">
-              <span className="absolute top-0 left-0 w-10 h-10 border-t-[3px] border-l-[3px] border-sky rounded-tl-2xl" />
-              <span className="absolute top-0 right-0 w-10 h-10 border-t-[3px] border-r-[3px] border-sky rounded-tr-2xl" />
-              <span className="absolute bottom-0 left-0 w-10 h-10 border-b-[3px] border-l-[3px] border-sky rounded-bl-2xl" />
-              <span className="absolute bottom-0 right-0 w-10 h-10 border-b-[3px] border-r-[3px] border-sky rounded-br-2xl" />
-              {isScanning && (
-                <div className="absolute left-2 right-2 h-0.5 bg-sky/80 shadow-[0_0_12px_2px_rgba(56,189,248,.8)] animate-scan" />
-              )}
+          {/* Scan frame overlay */}
+          {!showDemo && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+              <div className="relative w-64 h-64">
+                <span className="absolute top-0 left-0 w-10 h-10 border-t-[3px] border-l-[3px] border-sky rounded-tl-2xl" />
+                <span className="absolute top-0 right-0 w-10 h-10 border-t-[3px] border-r-[3px] border-sky rounded-tr-2xl" />
+                <span className="absolute bottom-0 left-0 w-10 h-10 border-b-[3px] border-l-[3px] border-sky rounded-bl-2xl" />
+                <span className="absolute bottom-0 right-0 w-10 h-10 border-b-[3px] border-r-[3px] border-sky rounded-br-2xl" />
+                {isScanning && (
+                  <div className="absolute left-2 right-2 h-0.5 bg-sky/80 shadow-[0_0_12px_2px_rgba(56,189,248,.8)] animate-scan" />
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          <p className="absolute bottom-16 inset-x-0 text-center text-slate-300 text-xs font-medium tracking-wide">
-            Apunta la camara al codigo QR del pase
+          {/* Camera error / demo fallback */}
+          {showDemo && (
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-900 to-black flex flex-col items-center justify-center">
+              {cameraError && (
+                <div className="text-center px-8 mb-6">
+                  <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                      <path d="M3 3l18 18" />
+                    </svg>
+                  </div>
+                  <p className="text-white text-sm font-medium mb-2">Cámara no disponible</p>
+                  <p className="text-slate-400 text-xs">{cameraError}</p>
+                </div>
+              )}
+              <p className="text-slate-300 text-xs font-medium mb-4">Usa los botones de prueba</p>
+            </div>
+          )}
+
+          <p className="absolute bottom-16 inset-x-0 text-center text-slate-300 text-xs font-medium tracking-wide z-10">
+            {showDemo ? "Modo prueba" : "Apunta al código QR"}
           </p>
 
-          {/* Demo buttons */}
-          <div className="absolute bottom-6 inset-x-0 flex justify-center gap-3">
+          {/* Demo buttons - always visible for testing */}
+          <div className="absolute bottom-6 inset-x-0 flex justify-center gap-3 z-10">
             <button
               onClick={() => simulateScan("valid")}
               className="bg-emerald-500/80 text-white text-xs font-semibold px-4 py-2 rounded-full backdrop-blur-sm"
             >
-              Simular valido
+              Simular válido
             </button>
             <button
               onClick={() => simulateScan("rejected")}
@@ -207,13 +306,13 @@ export default function ScannerPage() {
                 </svg>
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-bold text-base leading-tight">A celebrar!</p>
+                <p className="text-white font-bold text-base leading-tight">¡Pase válido!</p>
                 <p className="text-white/85 text-xs font-medium truncate">
                   {scanResult.groupName} · Mesa {scanResult.tableNumber} · {scanResult.guestCount} personas
                 </p>
               </div>
               <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-1 rounded-full whitespace-nowrap">
-                VALIDO
+                VÁLIDO
               </span>
             </div>
           )}
@@ -226,7 +325,7 @@ export default function ScannerPage() {
                 </svg>
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-bold text-base leading-tight">Intruso detectado</p>
+                <p className="text-white font-bold text-base leading-tight">No se pudo validar</p>
                 <p className="text-white/85 text-xs font-medium truncate">
                   {scanResult.message} {scanResult.time && `\u00b7 ${scanResult.time}`}
                 </p>
