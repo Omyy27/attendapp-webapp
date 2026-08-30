@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [pendingCount, setPendingCount] = useState(0);
   const [activeTables, setActiveTables] = useState(0);
   const [coupleName, setCoupleName] = useState("Mi evento");
+  const [currentTime, setCurrentTime] = useState("");
 
   const supabase = createClient();
 
@@ -133,6 +134,14 @@ export default function DashboardPage() {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    setCurrentTime(new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }));
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }));
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   const percentage = totalGuests > 0 ? Math.round((arrived / totalGuests) * 100) : 0;
 
   const filteredGuests = guests.filter((guest) => {
@@ -230,7 +239,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-serif text-lg text-ink">Resumen del dia</h2>
             <span className="text-xs text-slate-500 font-medium">
-              {new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+              {currentTime}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3">
