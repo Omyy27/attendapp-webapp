@@ -233,7 +233,7 @@ export default function ScannerPage() {
         </header>
 
         {/* Camera View */}
-        <section className="relative h-[440px] bg-slate-900 overflow-hidden">
+        <section className="relative h-[440px] bg-slate-900">
           {/* Real camera feed */}
           <div
             ref={containerRef}
@@ -297,7 +297,7 @@ export default function ScannerPage() {
         </section>
 
         {/* Verdict Cards */}
-        <section className="px-5 -mt-10 relative z-20 space-y-3">
+        <section className="px-5 -mt-8 relative z-20 space-y-3">
           {scanResult.type === "valid" && (
             <div className="bg-emerald-500 rounded-2xl shadow-lift p-4 flex items-center gap-3.5 border border-emerald-400/40 animate-fade-in">
               <span className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
@@ -338,7 +338,7 @@ export default function ScannerPage() {
         </section>
 
         {/* Stats Strip */}
-        <section className="px-5 pt-5">
+        <section className="px-5 pt-8">
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-emerald-600 leading-none">{stats.valid}</p>
