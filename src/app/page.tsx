@@ -10,9 +10,11 @@ import { EditGuestModal } from "@/components/edit-guest-modal";
 import { DeleteConfirm } from "@/components/delete-confirm";
 import { exportToCsv } from "@/lib/csv";
 import { useDriverTour } from "@/lib/use-driver-tour";
+import { UserAvatar } from "@/components/user-avatar";
 
 const dashboardSteps = [
   { element: "#tour-header", popover: { title: "Bienvenido a Attendapp", description: "Aquí ves el nombre de tu evento y notificaciones." } },
+  { element: "#tour-user-avatar", popover: { title: "Tu perfil", description: "Toca tu avatar para ver tu perfil y cerrar sesión." } },
   { element: "#tour-analytics", popover: { title: "Resumen del día", description: "Llegadas, pendientes y mesas activas en tiempo real." } },
   { element: "#tour-actions", popover: { title: "Acciones rápidas", description: "Descarga tu lista de invitados como CSV o agrega nuevos invitados." } },
   { element: "#tour-search", popover: { title: "Busca invitados", description: "Filtra por nombre, grupo familiar o estado de confirmación." } },
@@ -257,6 +259,7 @@ export default function DashboardPage() {
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </button>
+            <span id="tour-user-avatar"><UserAvatar name={coupleName} /></span>
           </div>
         </header>
 

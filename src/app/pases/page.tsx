@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { DispatchCard, type GuestGroup } from "@/components/dispatch-card";
 import { useDriverTour } from "@/lib/use-driver-tour";
+import { UserAvatar } from "@/components/user-avatar";
 
 const pasesSteps = [
   { element: "#tour-pases-status", popover: { title: "Estado de envíos", description: "Pases generados, enviados y por enviar en tiempo real." } },
@@ -17,6 +18,7 @@ const pasesSteps = [
 export default function PassesPage() {
   const [groups, setGroups] = useState<GuestGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [organizerName, setOrganizerName] = useState("");
   const supabase = createClient();
   const { startTour } = useDriverTour("pases", pasesSteps);
 
@@ -33,9 +35,11 @@ export default function PassesPage() {
 
     const { data: organizer } = await supabase
       .from("organizers")
-      .select("wedding_id")
+      .select("wedding_id, name")
       .eq("user_id", user.id)
       .single();
+
+    if (organizer?.name) setOrganizerName(organizer.name);
 
     if (!organizer?.wedding_id) { setLoading(false); return; }
 
@@ -118,12 +122,7 @@ export default function PassesPage() {
               <h1 className="font-serif text-xl leading-none text-ink">Enviar pases</h1>
             </div>
           </div>
-          <button className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-card">
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-            </svg>
-          </button>
+          <UserAvatar name={organizerName} />
         </header>
 
         {/* Status Strip */}

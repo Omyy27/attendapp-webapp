@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { useDriverTour } from "@/lib/use-driver-tour";
+import { UserAvatar } from "@/components/user-avatar";
 
 const scannerSteps = [
   { element: "#tour-scanner-camera", popover: { title: "Escanea códigos QR", description: "Apunta al código QR del pase del invitado para registrar su llegada." } },
@@ -29,6 +30,7 @@ export default function ScannerPage() {
   const [stats, setStats] = useState({ valid: 0, rejected: 0, remaining: 0 });
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showDemo, setShowDemo] = useState(false);
+  const [organizerName, setOrganizerName] = useState("");
   const scannerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
@@ -45,9 +47,11 @@ export default function ScannerPage() {
 
     const { data: organizer } = await supabase
       .from("organizers")
-      .select("wedding_id")
+      .select("wedding_id, name")
       .eq("user_id", user.id)
       .single();
+
+    if (organizer?.name) setOrganizerName(organizer.name);
 
     if (!organizer?.wedding_id) return;
 
@@ -226,6 +230,7 @@ export default function ScannerPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {stats.valid}/{stats.valid + stats.remaining}
             </span>
+            <UserAvatar name={organizerName} />
           </div>
         </header>
 
