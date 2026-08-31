@@ -91,11 +91,8 @@ export function GuestCard({
           className="w-11 h-11 rounded-lg text-slate-400 hover:text-ink hover:bg-slate-50 flex items-center justify-center transition-colors"
           title="Ver QR"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
+          <svg className="w-5 h-5" viewBox="0 -0.09 122.88 122.88" fill="currentColor">
+            <path fillRule="evenodd" clipRule="evenodd" d="M0.18,0h44.63v44.45H0.18V0z M111.5,111.5h11.38v11.2H111.5V111.5z M89.63,111.48h11.38v10.67H89.63h-0.01H78.25v-21.82h11.02V89.27h11.21V67.22h11.38v10.84h10.84v11.2h-10.84v11.2h-11.21h-0.17H89.63V111.48z M55.84,89.09h11.02v-11.2H56.2v-11.2h10.66v-11.2H56.02v11.2H44.63v-11.2h11.2V22.23h11.38v33.25h11.02v11.2h10.84v-11.2h11.38v11.2H89.63v11.2H78.25v22.05H67.22v22.23H55.84V89.09z M111.31,55.48h11.38v11.2h-11.38V55.48z M22.41,55.48h11.38v11.2H22.41V55.48z M0.18,55.48h11.38v11.2H0.18V55.48z M55.84,0h11.38v11.2H55.84V0z M0,78.06h44.63v44.45H0V78.06z M10.84,88.86h22.95v22.86H10.84V88.86z M78.06,0h44.63v44.45H78.06V0z M88.91,10.8h22.95v22.86H88.91V10.8z M11.02,10.8h22.95v22.86H11.02V10.8z" />
           </svg>
         </button>
         <button
