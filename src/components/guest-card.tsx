@@ -88,7 +88,7 @@ export function GuestCard({
       <div className="flex items-center gap-1">
         <button
           onClick={onQRClick}
-          className="w-8 h-8 rounded-lg text-slate-400 hover:text-ink hover:bg-slate-50 flex items-center justify-center transition-colors"
+          className="w-11 h-11 rounded-lg text-slate-400 hover:text-ink hover:bg-slate-50 flex items-center justify-center transition-colors"
           title="Ver QR"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -100,7 +100,7 @@ export function GuestCard({
         </button>
         <button
           onClick={onEditClick}
-          className="w-8 h-8 rounded-lg text-slate-400 hover:text-sky hover:bg-sky/10 flex items-center justify-center transition-colors"
+          className="w-11 h-11 rounded-lg text-slate-400 hover:text-sky hover:bg-sky/10 flex items-center justify-center transition-colors"
           title="Editar"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -109,7 +109,7 @@ export function GuestCard({
         </button>
         <button
           onClick={onDeleteClick}
-          className="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition-colors"
+          className="w-11 h-11 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition-colors"
           title="Eliminar"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

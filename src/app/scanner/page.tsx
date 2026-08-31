@@ -211,7 +211,7 @@ export default function ScannerPage() {
     <div className="min-h-screen bg-slate-50 pb-28">
       <div className="max-w-md mx-auto min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-5 pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-5 pt-[env(safe-area-inset-top)] pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
           <div className="flex items-center gap-3">
             <span className="w-9 h-9 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -235,7 +235,7 @@ export default function ScannerPage() {
         </header>
 
         {/* Camera View */}
-        <section id="tour-scanner-camera" className="relative h-[440px] bg-slate-900">
+        <section id="tour-scanner-camera" className="relative h-[min(440px,50vh)] bg-slate-900">
           {/* Real camera feed */}
           <div
             ref={containerRef}
@@ -328,15 +328,15 @@ export default function ScannerPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-emerald-600 leading-none">{stats.valid}</p>
-              <p className="text-[10px] text-slate-500 font-medium mt-1">Entradas</p>
+              <p className="text-xs text-slate-500 font-medium mt-1">Entradas</p>
             </div>
             <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-rose-600 leading-none">{stats.rejected}</p>
-              <p className="text-[10px] text-slate-500 font-medium mt-1">Rechazados</p>
+              <p className="text-xs text-slate-500 font-medium mt-1">Rechazados</p>
             </div>
             <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-ink leading-none">{stats.remaining}</p>
-              <p className="text-[10px] text-slate-500 font-medium mt-1">Por llegar</p>
+              <p className="text-xs text-slate-500 font-medium mt-1">Por llegar</p>
             </div>
           </div>
         </section>

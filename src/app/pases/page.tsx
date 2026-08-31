@@ -108,7 +108,7 @@ export default function PassesPage() {
     <div className="min-h-screen bg-slate-50 pb-28">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-md px-5 pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-md px-5 pt-[env(safe-area-inset-top)] pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

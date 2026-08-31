@@ -233,7 +233,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-50 pb-28">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <header id="tour-header" className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-md px-5 pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header id="tour-header" className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-md px-5 pt-[env(safe-area-inset-top)] pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -367,7 +367,7 @@ export default function DashboardPage() {
               placeholder="Buscar por nombre o grupo familiar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">

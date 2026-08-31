@@ -163,7 +163,7 @@ export default function BackupSearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Nombre y apellido..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-10 py-3.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky/40 focus:border-sky/40"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-10 py-3.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky/40 focus:border-sky/40"
             />
             {query && (
               <button
