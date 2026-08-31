@@ -211,7 +211,7 @@ export default function ScannerPage() {
     <div className="min-h-screen bg-slate-50 pb-28">
       <div className="max-w-md mx-auto min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-5 pt-[env(safe-area-inset-top)] pt-5 pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200/70">
           <div className="flex items-center gap-3">
             <span className="w-9 h-9 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
