@@ -49,13 +49,13 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 safe-bottom">
-      <div className="max-w-md mx-auto flex items-center justify-around h-16 relative">
+      <div className="max-w-md mx-auto flex items-center justify-between h-16 relative px-8">
         {navItems.map((item, i) => {
           const isActive = pathname === item.href;
 
           if (item.isCenter) {
             return (
-              <Link key={i} href={item.href} className="flex flex-col items-center gap-1 -mt-7">
+              <Link key={i} href={item.href} className="absolute left-1/2 -translate-x-1/2 -mt-7 flex flex-col items-center gap-1">
                 <span className="w-14 h-14 rounded-full bg-ink text-white shadow-lift flex items-center justify-center">
                   {item.icon}
                 </span>
