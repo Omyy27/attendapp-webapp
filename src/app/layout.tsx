@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
+import { ScriptsLoader } from "@/components/scripts-loader";
 import "./globals.css";
 
 const jakartaSans = Plus_Jakarta_Sans({
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   title: "Attendapp",
   description: "Gestiona las invitaciones de tu evento con códigos QR",
   applicationName: "Attendapp",
-  manifest: "/manifest.webmanifest",
+  manifest: "/manifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -53,32 +54,7 @@ export default function RootLayout({
       className={`${jakartaSans.variable} ${playfairDisplay.variable} h-full`}
       suppressHydrationWarning
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var t = localStorage.getItem('attendapp_theme') || 'system';
-                  var d = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                  if (d) document.documentElement.classList.add('dark');
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function() {});
-                });
-              }
-            `,
-          }}
-        />
-      </head>
+      <ScriptsLoader />
       <body className="min-h-full bg-surface text-content font-sans antialiased transition-colors duration-200">
         {children}
       </body>
