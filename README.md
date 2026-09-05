@@ -35,7 +35,7 @@ src/
 │   ├── scanner/              # Escáner QR
 │   │   └── search/           # Búsqueda de respaldo
 │   ├── pases/                # Despacho de invitaciones
-│   ├── pase/[uuid]/          # Pase VIP del invitado
+│   ├── pase/[uuid]/          # Invitación del invitado
 │   ├── perfil/               # Perfil y logout
 │   └── login/                # Autenticación
 ├── components/

@@ -9,7 +9,7 @@ import { UserAvatar } from "@/components/user-avatar";
 
 const pasesSteps = [
   { element: "#tour-pases-status", popover: { title: "Estado de envíos", description: "Pases generados, enviados y por enviar en tiempo real." } },
-  { element: "#tour-pases-explainer", popover: { title: "¿Cómo funciona?", description: "Cada grupo familiar recibe un enlace único a su Pase VIP, sin archivos pesados." } },
+  { element: "#tour-pases-explainer", popover: { title: "¿Cómo funciona?", description: "Cada grupo familiar recibe un enlace único a su Invitación, sin archivos pesados." } },
   { element: "#tour-pases-send-all", popover: { title: "Envío masivo", description: "Envía todos los pases pendientes de una sola vez." } },
   { element: "#tour-pases-list", popover: { title: "Cola de despacho", description: "Envía por WhatsApp, correo o copia el link directamente." } },
   { element: "#tour-pases-nav", popover: { title: "Navegación", description: "Cambia entre secciones desde la barra inferior." } },
@@ -153,7 +153,7 @@ export default function PassesPage() {
             </span>
             <p className="text-xs text-muted leading-relaxed">
               <span className="font-semibold text-content">Sin archivos pesados.</span> Cada grupo familiar
-              recibe un UUID unico encriptado y un link magico a su Pase VIP — enviado directo
+              recibe un UUID unico encriptado y un link magico a su Invitación — enviado directo
               por WhatsApp o correo, sin adjuntos que pesen.
             </p>
           </div>

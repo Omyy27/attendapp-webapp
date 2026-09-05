@@ -43,7 +43,7 @@ export default function GuestPassPage({
       try {
         // Fetch pass data from API
         const res = await fetch(`/api/pass/${uuid}`);
-        if (!res.ok) throw new Error("Pase no encontrado");
+        if (!res.ok) throw new Error("Invitación no encontrada");
         const data: PassData = await res.json();
         setPassData(data);
 
@@ -52,7 +52,7 @@ export default function GuestPassPage({
           setRsvpState("confirmed");
         }
       } catch {
-        setError("Pase no encontrado o expirado");
+        setError("Invitación no encontrada o expirada");
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,7 @@ export default function GuestPassPage({
               <path d="m9 9 6 6" />
             </svg>
           </div>
-          <h1 className="font-serif text-xl text-ink mb-2">Pase no válido</h1>
+          <h1 className="font-serif text-xl text-ink mb-2">Invitación no válida</h1>
           <p className="text-sm text-slate-500">{error}</p>
         </div>
       </div>
@@ -149,7 +149,7 @@ export default function GuestPassPage({
             <div className="bg-ink px-6 py-4 flex items-center justify-between">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.2em] text-gold font-semibold">
-                  Pase VIP
+                  Invitación
                 </p>
                 <p className="text-white text-sm font-semibold mt-0.5">
                   {passData.group_name}
@@ -268,6 +268,38 @@ export default function GuestPassPage({
           </div>
         </section>
 
+        {/* RSVP */}
+        <section className="px-6 pt-5">
+          {rsvpState === "confirmed" ? (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+              <span className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                </svg>
+              </span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-emerald-700">¡Asistencia confirmada!</p>
+                <p className="text-xs text-emerald-600 mt-0.5">
+                  Presenta tu código QR en la entrada — ¡nos vemos pronto!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleRsvp}
+              disabled={rsvpState === "loading"}
+              className="w-full bg-ink text-white rounded-xl py-3.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light transition-colors disabled:opacity-50"
+            >
+              <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+              {rsvpState === "loading"
+                ? "Confirmando..."
+                : "Confirmar asistencia"}
+            </button>
+          )}
+        </section>
+
         {/* Location Card */}
         {passData.venue_name && (
           <section className="px-6 pt-5">
@@ -327,38 +359,6 @@ export default function GuestPassPage({
             </div>
           </section>
         )}
-
-        {/* RSVP */}
-        <section className="px-6 pt-5">
-          {rsvpState === "confirmed" ? (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
-              <span className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                </svg>
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-emerald-700">¡Asistencia confirmada!</p>
-                <p className="text-xs text-emerald-600 mt-0.5">
-                  Presenta tu código QR en la entrada — ¡nos vemos pronto!
-                </p>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={handleRsvp}
-              disabled={rsvpState === "loading"}
-              className="w-full bg-ink text-white rounded-xl py-3.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light transition-colors disabled:opacity-50"
-            >
-              <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-              </svg>
-              {rsvpState === "loading"
-                ? "Confirmando..."
-                : "Confirmar asistencia"}
-            </button>
-          )}
-        </section>
 
         {/* Actions */}
         <section className="px-6 pt-5">

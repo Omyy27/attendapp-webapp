@@ -305,7 +305,7 @@ export default function ScannerPage() {
                 </svg>
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-bold text-base leading-tight">¡Pase válido!</p>
+                <p className="text-white font-bold text-base leading-tight">¡Invitación válida!</p>
                 <p className="text-white/85 text-xs font-medium truncate">
                   {scanResult.groupName} · Mesa {scanResult.tableNumber} · {scanResult.guestCount} personas
                 </p>
