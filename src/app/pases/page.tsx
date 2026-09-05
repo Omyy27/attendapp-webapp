@@ -21,6 +21,7 @@ export default function PassesPage() {
   const [groups, setGroups] = useState<GuestGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [organizerName, setOrganizerName] = useState("");
+  const [coupleName, setCoupleName] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
@@ -66,6 +67,14 @@ export default function PassesPage() {
     }
 
     if (!organizer?.wedding_id) { setLoading(false); return; }
+
+    const { data: wedding } = await supabase
+      .from("weddings")
+      .select("couple_name")
+      .eq("id", organizer.wedding_id)
+      .single();
+
+    if (wedding?.couple_name) setCoupleName(wedding.couple_name);
 
     const { data: groupsData } = await supabase
       .from("guest_groups")
@@ -129,6 +138,59 @@ export default function PassesPage() {
   async function handleResend(group: GuestGroup) {
     const ok = await handleMarkSent(group.id, group.pass_sent_via || "link");
     if (ok) showToast("Invitación reenviada");
+  }
+
+  async function handleWhatsApp(group: GuestGroup) {
+    const url = `${window.location.origin}/pase/${group.pass_uuid}`;
+    const message = `¡Hola! ${coupleName || "Te invitamos a nuestra boda"} 💍\nConfirma tu asistencia y ve tu invitación aquí:\n${url}`;
+
+    // Intentar abrir el chat directo con el primer teléfono del grupo
+    let phone: string | null = null;
+    try {
+      const { data } = await supabase
+        .from("guests")
+        .select("phone")
+        .eq("group_id", group.id)
+        .not("phone", "is", null)
+        .limit(5);
+      const digits = (data || [])
+        .map((g) => (g.phone || "").replace(/\D/g, ""))
+        .find((d) => d.length >= 10);
+      if (digits) phone = digits;
+    } catch {
+      // Sin teléfono: se abre el selector de contactos
+    }
+
+    window.open(
+      `https://wa.me/${phone ?? ""}?text=${encodeURIComponent(message)}`,
+      "_blank"
+    );
+    await handleMarkSent(group.id, "whatsapp");
+  }
+
+  async function handleEmail(group: GuestGroup) {
+    try {
+      const res = await fetch("/api/dispatch/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ groupId: group.id }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.error || "No se pudo enviar el correo");
+        return;
+      }
+
+      showToast(
+        data.total > 1
+          ? `Invitación enviada a ${data.sent} correos`
+          : "Invitación enviada por correo"
+      );
+      await handleMarkSent(group.id, "email");
+    } catch {
+      showToast("No se pudo enviar el correo");
+    }
   }
 
   async function handleCopyLink(group: GuestGroup) {
@@ -265,8 +327,8 @@ export default function PassesPage() {
               <DispatchCard
                 key={group.id}
                 group={group}
-                onWhatsApp={() => handleMarkSent(group.id, "whatsapp")}
-                onEmail={() => handleMarkSent(group.id, "email")}
+                onWhatsApp={() => handleWhatsApp(group)}
+                onEmail={() => handleEmail(group)}
                 onCopyLink={() => handleCopyLink(group)}
                 onResend={() => handleResend(group)}
               />
