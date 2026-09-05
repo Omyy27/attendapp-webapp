@@ -18,10 +18,19 @@ const playfairDisplay = Playfair_Display({
 export const metadata: Metadata = {
   title: "Attendapp",
   description: "Gestiona las invitaciones de tu evento con códigos QR",
+  applicationName: "Attendapp",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Attendapp",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -55,6 +64,17 @@ export default function RootLayout({
                   if (d) document.documentElement.classList.add('dark');
                 } catch(e) {}
               })();
+            `,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                });
+              }
             `,
           }}
         />

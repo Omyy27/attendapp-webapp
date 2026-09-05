@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     // 1. Buscar el grupo por pass_uuid
     const { data: group, error: groupError } = await supabaseAdmin
       .from("guest_groups")
-      .select("id, name")
+      .select("id, name, wedding_id")
       .eq("pass_uuid", uuid)
       .single();
 
@@ -48,6 +48,17 @@ export async function POST(request: NextRequest) {
       .from("guests")
       .select("*", { count: "exact", head: true })
       .eq("group_id", group.id);
+
+    // Notificar push al organizador (no bloquea la respuesta)
+    if (group.wedding_id) {
+      const { sendPushToWeddingOrganizers } = await import("@/lib/push");
+      sendPushToWeddingOrganizers(group.wedding_id, {
+        title: "Confirmación de asistencia",
+        body: `${group.name} confirmó asistencia (${pendingCount} persona${pendingCount === 1 ? "" : "s"})`,
+        url: "/",
+        tag: "rsvp",
+      });
+    }
 
     return NextResponse.json({
       result: "confirmed",

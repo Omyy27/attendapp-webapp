@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { UserAvatar } from "@/components/user-avatar";
 import { DarkToggle } from "@/components/dark-toggle";
+import { InstallPrompt } from "@/components/install-prompt";
+import { PushPrompt } from "@/components/push-prompt";
 import type { Organizer, Wedding } from "@/lib/types";
 
 export default function ProfilePage() {
@@ -163,6 +165,10 @@ export default function ProfilePage() {
             <p className="text-[11px] uppercase tracking-[0.15em] text-muted font-semibold mb-3">Apariencia</p>
             <DarkToggle />
           </div>
+
+          {/* Install + Push */}
+          <InstallPrompt />
+          <PushPrompt />
 
           {/* Sign Out */}
           <button
