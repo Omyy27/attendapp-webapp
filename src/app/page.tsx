@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { AnalyticsRing } from "@/components/analytics-ring";
@@ -45,6 +46,9 @@ export default function DashboardPage() {
   const [activeTables, setActiveTables] = useState(0);
   const [coupleName, setCoupleName] = useState("Mi evento");
   const [currentTime, setCurrentTime] = useState("");
+  const [page, setPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 20;
 
   const supabase = createClient();
   const { startTour } = useDriverTour("dashboard", dashboardSteps);
@@ -162,6 +166,8 @@ export default function DashboardPage() {
 
   const percentage = totalGuests > 0 ? Math.round((arrived / totalGuests) * 100) : 0;
 
+  useEffect(() => { setPage(1); }, [searchQuery, activeFilter]);
+
   const filteredGuests = guests.filter((guest) => {
     const matchesSearch =
       searchQuery === "" ||
@@ -177,6 +183,9 @@ export default function DashboardPage() {
 
     return matchesSearch && matchesFilter;
   });
+
+  const totalPages = Math.ceil(filteredGuests.length / ITEMS_PER_PAGE);
+  const paginatedGuests = filteredGuests.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   function handleEditClick(guest: Guest) {
     setEditingGuest(guest);
@@ -230,10 +239,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <header id="tour-header" className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header id="tour-header" className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200/70">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -250,7 +259,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => startTour(true)}
-              className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-card hover:bg-slate-50 transition-colors"
+              className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-card hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               title="Mostrar tutorial"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -259,6 +268,16 @@ export default function DashboardPage() {
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </button>
+            <Link
+              href="/ajustes"
+              className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-card hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              title="Ajustes del evento"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </Link>
             <span id="tour-user-avatar"><UserAvatar name={coupleName} /></span>
           </div>
         </header>
@@ -272,7 +291,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-card flex items-center gap-3">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-card flex items-center gap-3">
               <AnalyticsRing percentage={percentage} />
               <div>
                 <p className="text-2xl font-bold text-ink leading-none">
@@ -283,7 +302,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-card flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-card flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <span className="w-9 h-9 rounded-full bg-gold-faint text-gold-deep flex items-center justify-center">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -297,7 +316,7 @@ export default function DashboardPage() {
               <p className="text-xs text-slate-500 font-medium">Activas</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-card flex items-center gap-3">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-card flex items-center gap-3">
               <span className="w-11 h-11 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
@@ -310,7 +329,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-ink rounded-2xl p-4 shadow-lift flex items-center gap-3">
+            <div className="bg-ink dark:bg-gold dark:text-ink rounded-2xl p-4 shadow-lift flex items-center gap-3">
               <span className="w-11 h-11 rounded-full bg-white/10 text-gold flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="7" height="7" />
@@ -414,7 +433,7 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : (
-            filteredGuests.map((guest) => (
+            paginatedGuests.map((guest) => (
               <GuestCard
                 key={guest.id}
                 guest={guest}
@@ -423,6 +442,35 @@ export default function DashboardPage() {
                 onDeleteClick={() => handleDeleteClick(guest)}
               />
             ))
+          )}
+
+          {/* Pagination */}
+          {!loading && filteredGuests.length > ITEMS_PER_PAGE && (
+            <div className="flex items-center justify-between pt-2 pb-4">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-card disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                Anterior
+              </button>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                {((page - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(page * ITEMS_PER_PAGE, filteredGuests.length)} de {filteredGuests.length}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-card disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Siguiente
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
           )}
         </section>
       </div>

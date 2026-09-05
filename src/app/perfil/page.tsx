@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { UserAvatar } from "@/components/user-avatar";
+import { DarkToggle } from "@/components/dark-toggle";
 import type { Organizer, Wedding } from "@/lib/types";
 
 export default function ProfilePage() {
@@ -64,10 +65,10 @@ export default function ProfilePage() {
     : "Por definir";
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200/70">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-ink font-medium text-sm"
@@ -155,6 +156,12 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Theme Toggle */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-card p-4">
+            <p className="text-[11px] uppercase tracking-[0.15em] text-slate-500 font-semibold mb-3">Apariencia</p>
+            <DarkToggle />
           </div>
 
           {/* Sign Out */}

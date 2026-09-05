@@ -123,7 +123,7 @@ export function AddGuestModal({
         className="absolute inset-0"
         onClick={onClose}
       />
-      <div className="relative max-w-md w-full mx-auto bg-white rounded-t-3xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-h-[85vh] overflow-y-auto">
+      <div className="relative max-w-md w-full mx-auto bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-h-[85vh] overflow-y-auto">
         <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
         <button
           onClick={onClose}
@@ -157,7 +157,7 @@ export function AddGuestModal({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Sofia"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
                 required
               />
             </div>
@@ -170,7 +170,7 @@ export function AddGuestModal({
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Alatorre"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
                 required
               />
             </div>
@@ -185,7 +185,7 @@ export function AddGuestModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+52 55 1234 5678"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+              className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
             />
           </div>
 
@@ -198,7 +198,7 @@ export function AddGuestModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="correo@ejemplo.com"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+              className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
             />
           </div>
 
@@ -239,7 +239,7 @@ export function AddGuestModal({
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="Familia Alatorre"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                  className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
                 />
                 <input
                   type="number"
@@ -247,14 +247,14 @@ export function AddGuestModal({
                   onChange={(e) => setNewGroupTable(e.target.value)}
                   placeholder="Número de mesa (opcional)"
                   min="1"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                  className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
                 />
               </div>
             ) : (
               <select
                 value={selectedGroupId}
                 onChange={(e) => setSelectedGroupId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-base text-ink focus:outline-none focus:ring-2 focus:ring-ink/10"
+                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink focus:outline-none focus:ring-2 focus:ring-ink/10"
               >
                 <option value="">Seleccionar grupo...</option>
                 {groups.map((g) => (

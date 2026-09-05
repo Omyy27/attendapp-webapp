@@ -20,7 +20,7 @@ export function DeleteConfirm({
   return (
     <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-center justify-center p-5">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-w-sm w-full">
+      <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-w-sm w-full">
         <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-4">
           <svg className="w-6 h-6 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 6h18" />
