@@ -48,14 +48,14 @@ export function BottomNav({ role = "organizer" }: { role?: string }) {
     },
   ];
 
-  const navItems = role === "scanner"
+  const visibleNavItems = role === "scanner"
     ? allNavItems.filter((i) => !i.hideForScanner)
     : allNavItems;
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 bg-card border-t border-line safe-bottom">
       <div className="max-w-md mx-auto flex items-center justify-around h-16 relative px-8">
-        {navItems.map((item, i) => {
+        {visibleNavItems.map((item, i) => {
           const isActive = pathname === item.href;
 
           if (item.isCenter) {

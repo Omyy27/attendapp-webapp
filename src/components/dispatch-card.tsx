@@ -110,17 +110,29 @@ export function DispatchCard({
           </button>
         </div>
       ) : (
-        <div className="flex items-center justify-between mt-3 pl-14">
+        <div className="mt-3 pl-14 space-y-2.5">
           <p className="text-[11px] text-muted-soft">
             {group.pass_sent_via === "whatsapp" ? "Enviado por WhatsApp" : group.pass_sent_via === "email" ? "Enviado por correo" : "Link copiado"}
             {group.pass_sent_at && ` · ${new Date(group.pass_sent_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}`}
           </p>
-          <button
-            onClick={onResend}
-            className="text-xs font-semibold text-sky hover:text-content transition-colors"
-          >
-            Reenviar
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onResend}
+              className="flex-1 bg-ink dark:bg-gold dark:text-ink text-white rounded-lg py-2 px-2 text-xs font-semibold hover:bg-ink-light dark:hover:bg-gold-deep transition-colors"
+            >
+              Reenviar invitación
+            </button>
+            <button
+              onClick={onCopyLink}
+              className="flex-1 bg-field text-content-soft rounded-lg py-2 px-2 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-line-strong/60 transition-colors"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+              Copiar enlace
+            </button>
+          </div>
         </div>
       )}
     </article>
