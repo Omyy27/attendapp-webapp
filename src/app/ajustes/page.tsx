@@ -75,8 +75,13 @@ export default function AjustesPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   async function handleGeocode() {
-    const query = [venueAddress, venueCity, venueCountry].filter(Boolean).join(", ");
-    if (!query) {
+    // Normalizar: quitar # y limpiar formato colombiano/latinoamericano
+    const normalizedStreet = venueAddress
+      .replace(/#/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!normalizedStreet && !venueCity && !venueCountry) {
       setGeocodeError("Escribe la dirección, ciudad y país para buscar en el mapa");
       return;
     }
@@ -84,10 +89,21 @@ export default function AjustesPage() {
     setGeocodeError("");
 
     try {
+      // Query estructurado de Nominatim - mucho más preciso que query libre
+      const params = new URLSearchParams({
+        format: "json",
+        limit: "1",
+        addressdetails: "1",
+      });
+
+      if (normalizedStreet) params.set("street", normalizedStreet);
+      if (venueCity) params.set("city", venueCity);
+      if (venueCountry) params.set("country", venueCountry);
+
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`
       );
-      const data = (await res.json()) as { lat: string; lon: string }[];
+      const data = (await res.json()) as { lat: string; lon: string; display_name: string }[];
 
       if (!data || data.length === 0) {
         setGeocodeError("No se encontró la dirección. Intenta con más detalle.");
