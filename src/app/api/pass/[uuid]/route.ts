@@ -20,6 +20,7 @@ export async function GET(
     const { data: group, error: groupError } = await supabaseAdmin
       .from("guest_groups")
       .select(`
+        id,
         name,
         table_number,
         weddings (
@@ -42,7 +43,13 @@ export async function GET(
     const { count } = await supabaseAdmin
       .from("guests")
       .select("*", { count: "exact", head: true })
-      .eq("group_id", group.name);
+      .eq("group_id", group.id);
+
+    const { count: confirmedCount } = await supabaseAdmin
+      .from("guests")
+      .select("*", { count: "exact", head: true })
+      .eq("group_id", group.id)
+      .neq("status", "pending");
 
     const wedding = group.weddings as unknown as {
       couple_name: string;
@@ -60,6 +67,7 @@ export async function GET(
       group_name: group.name,
       table_number: group.table_number,
       guest_count: count || 0,
+      confirmed_count: confirmedCount || 0,
       event_time: "17:00 hrs",
       dress_code: wedding.dress_code || "Formal / Gala",
       venue_name: wedding.venue_name,

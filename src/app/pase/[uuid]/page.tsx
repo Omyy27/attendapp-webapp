@@ -1,12 +1,21 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import QRCode from "qrcode";
+
+const VenueMap = dynamic(() => import("@/components/venue-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-48 bg-slate-100 animate-pulse" />
+  ),
+});
 
 interface PassData {
   group_name: string;
   table_number: number;
   guest_count: number;
+  confirmed_count: number;
   event_time: string;
   dress_code: string;
   venue_name: string;
@@ -27,6 +36,7 @@ export default function GuestPassPage({
   const [passData, setPassData] = useState<PassData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  const [rsvpState, setRsvpState] = useState<"idle" | "loading" | "confirmed">("idle");
 
   useEffect(() => {
     async function loadPass() {
@@ -34,8 +44,13 @@ export default function GuestPassPage({
         // Fetch pass data from API
         const res = await fetch(`/api/pass/${uuid}`);
         if (!res.ok) throw new Error("Pase no encontrado");
-        const data = await res.json();
+        const data: PassData = await res.json();
         setPassData(data);
+
+        // Si todos los invitados del grupo ya confirmaron, mostrar como confirmado
+        if (data.confirmed_count >= data.guest_count && data.guest_count > 0) {
+          setRsvpState("confirmed");
+        }
 
         // Generate QR code
         const qrUrl = await QRCode.toDataURL(`ATTENDAPP-${uuid.toUpperCase()}`, {
@@ -52,6 +67,28 @@ export default function GuestPassPage({
     }
     loadPass();
   }, [uuid]);
+
+  async function handleRsvp() {
+    setRsvpState("loading");
+    try {
+      const res = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uuid }),
+      });
+      const data = await res.json();
+      if (data.result === "confirmed" || data.result === "already_confirmed") {
+        setRsvpState("confirmed");
+        if (passData) {
+          setPassData({ ...passData, confirmed_count: passData.guest_count });
+        }
+      } else {
+        setRsvpState("idle");
+      }
+    } catch {
+      setRsvpState("idle");
+    }
+  }
 
   if (loading) {
     return (
@@ -204,17 +241,26 @@ export default function GuestPassPage({
         {passData.venue_name && (
           <section className="px-6 pt-5">
             <div className="bg-white rounded-3xl shadow-card border border-slate-100 overflow-hidden">
-              {/* Map placeholder */}
-              <div className="w-full h-48 bg-slate-100 flex items-center justify-center relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-200" />
-                <div className="relative z-10 text-center">
-                  <div className="w-10 h-10 rounded-full bg-ink border-3 border-gold flex items-center justify-center mx-auto shadow-lg">
-                    <svg className="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                    </svg>
+              {/* Map */}
+              {passData.venue_lat && passData.venue_lng ? (
+                <VenueMap
+                  lat={passData.venue_lat}
+                  lng={passData.venue_lng}
+                  name={passData.venue_name}
+                  height={192}
+                />
+              ) : (
+                <div className="w-full h-48 bg-slate-100 flex items-center justify-center relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-200" />
+                  <div className="relative z-10 text-center">
+                    <div className="w-10 h-10 rounded-full bg-ink border-3 border-gold flex items-center justify-center mx-auto shadow-lg">
+                      <svg className="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
               <div className="p-5">
                 <div className="flex items-start gap-3">
                   <span className="w-10 h-10 rounded-xl bg-gold-faint text-gold-deep flex items-center justify-center shrink-0 mt-0.5">
@@ -230,7 +276,13 @@ export default function GuestPassPage({
                   </div>
                 </div>
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${passData.venue_lat},${passData.venue_lng}`}
+                  href={
+                    passData.venue_lat && passData.venue_lng
+                      ? `https://www.google.com/maps/search/?api=1&query=${passData.venue_lat},${passData.venue_lng}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          `${passData.venue_name || ""} ${passData.venue_address || ""}`
+                        )}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 w-full bg-ink text-white rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-2 shadow-lift hover:bg-ink-light transition-colors"
@@ -244,6 +296,38 @@ export default function GuestPassPage({
             </div>
           </section>
         )}
+
+        {/* RSVP */}
+        <section className="px-6 pt-5">
+          {rsvpState === "confirmed" ? (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+              <span className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                </svg>
+              </span>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-emerald-700">¡Asistencia confirmada!</p>
+                <p className="text-xs text-emerald-600 mt-0.5">
+                  Presenta tu código QR en la entrada — ¡nos vemos pronto!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleRsvp}
+              disabled={rsvpState === "loading"}
+              className="w-full bg-ink text-white rounded-xl py-3.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light transition-colors disabled:opacity-50"
+            >
+              <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+              {rsvpState === "loading"
+                ? "Confirmando..."
+                : "Confirmar asistencia"}
+            </button>
+          )}
+        </section>
 
         {/* Actions */}
         <section className="px-6 pt-5">

@@ -2,8 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import type { Wedding } from "@/lib/types";
+
+const VenueMap = dynamic(() => import("@/components/venue-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[220px] rounded-2xl bg-field animate-pulse" />
+  ),
+});
 
 export default function AjustesPage() {
   const router = useRouter();
@@ -16,6 +24,14 @@ export default function AjustesPage() {
   const [venueName, setVenueName] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
   const [dressCode, setDressCode] = useState("");
+
+  // Coordenadas: mapLat/mapLng = posición del mapa; pinLat/pinLng = posición actual del pin
+  const [mapLat, setMapLat] = useState<number | null>(null);
+  const [mapLng, setMapLng] = useState<number | null>(null);
+  const [pinLat, setPinLat] = useState<number | null>(null);
+  const [pinLng, setPinLng] = useState<number | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState("");
   const supabase = createClient();
 
   const fetchData = useCallback(async () => {
@@ -43,11 +59,50 @@ export default function AjustesPage() {
       setVenueName(w.venue_name || "");
       setVenueAddress(w.venue_address || "");
       setDressCode(w.dress_code || "");
+      if (w.venue_lat && w.venue_lng) {
+        setMapLat(w.venue_lat);
+        setMapLng(w.venue_lng);
+        setPinLat(w.venue_lat);
+        setPinLng(w.venue_lng);
+      }
     }
     setLoading(false);
   }, [supabase, router]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  async function handleGeocode() {
+    const query = [venueName, venueAddress].filter(Boolean).join(", ");
+    if (!query) {
+      setGeocodeError("Escribe el nombre del lugar y la dirección primero");
+      return;
+    }
+    setGeocoding(true);
+    setGeocodeError("");
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`
+      );
+      const data = (await res.json()) as { lat: string; lon: string }[];
+
+      if (!data || data.length === 0) {
+        setGeocodeError("No se encontró la dirección. Intenta agregar la ciudad.");
+        return;
+      }
+
+      const lat = parseFloat(data[0].lat);
+      const lng = parseFloat(data[0].lon);
+      setMapLat(lat);
+      setMapLng(lng);
+      setPinLat(lat);
+      setPinLng(lng);
+    } catch {
+      setGeocodeError("Error al buscar. Verifica tu conexión.");
+    } finally {
+      setGeocoding(false);
+    }
+  }
 
   async function handleSave() {
     if (!wedding) return;
@@ -62,6 +117,8 @@ export default function AjustesPage() {
         venue_name: venueName,
         venue_address: venueAddress,
         dress_code: dressCode || null,
+        venue_lat: pinLat,
+        venue_lng: pinLng,
       })
       .eq("id", wedding.id);
 
@@ -164,6 +221,51 @@ export default function AjustesPage() {
               placeholder="Formal / Cóctel / Casual"
               className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
             />
+          </div>
+
+          {/* Venue Map */}
+          <div className="bg-card rounded-2xl border border-line shadow-card p-4 space-y-3">
+            <div>
+              <p className="text-xs font-semibold text-content-soft">Ubicación en el mapa</p>
+              <p className="text-[11px] text-muted-soft mt-0.5">
+                Busca la ubicación y ajusta el pin arrastrándolo o tocando el mapa
+              </p>
+            </div>
+
+            <button
+              onClick={handleGeocode}
+              disabled={geocoding}
+              className="w-full bg-ink dark:bg-gold dark:text-ink text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-card hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              {geocoding ? "Buscando..." : "Buscar en mapa"}
+            </button>
+
+            {geocodeError && (
+              <p className="text-xs text-rose-600 dark:text-rose-400">{geocodeError}</p>
+            )}
+
+            {mapLat !== null && mapLng !== null && (
+              <div className="space-y-2">
+                <VenueMap
+                  lat={mapLat}
+                  lng={mapLng}
+                  name={venueName || "Lugar del evento"}
+                  height={220}
+                  draggable
+                  onPositionChange={(lat, lng) => {
+                    setPinLat(lat);
+                    setPinLng(lng);
+                  }}
+                />
+                <p className="text-[11px] text-muted-soft text-center font-mono">
+                  {pinLat?.toFixed(5)}, {pinLng?.toFixed(5)}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Save Button */}
