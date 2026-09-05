@@ -40,12 +40,9 @@ export default function DashboardPage() {
   const [deletingGuest, setDeletingGuest] = useState<Guest | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const [totalGuests, setTotalGuests] = useState(0);
-  const [arrived, setArrived] = useState(0);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [activeTables, setActiveTables] = useState(0);
   const [coupleName, setCoupleName] = useState("Mi evento");
   const [currentTime, setCurrentTime] = useState("");
+  const [activeTables, setActiveTables] = useState(0);
   const [page, setPage] = useState(1);
 
   const ITEMS_PER_PAGE = 20;
@@ -140,9 +137,6 @@ export default function DashboardPage() {
     }
 
     setGuests(allGuests);
-    setTotalGuests(allGuests.length);
-    setArrived(allGuests.filter((g) => g.status === "checked_in").length);
-    setPendingCount(allGuests.filter((g) => g.status === "pending").length);
 
     const tableSet = new Set(
       (groups || []).filter((g) => g.table_number).map((g) => g.table_number)
@@ -156,6 +150,11 @@ export default function DashboardPage() {
     fetchData();
   }, [fetchData]);
 
+  // Contadores derivados de la lista (se actualizan con realtime)
+  const totalGuests = guests.length;
+  const arrived = guests.filter((g) => g.status === "checked_in").length;
+  const pendingCount = guests.filter((g) => g.status === "pending").length;
+
   useEffect(() => {
     setCurrentTime(new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }));
     const timer = setInterval(() => {
@@ -165,6 +164,34 @@ export default function DashboardPage() {
   }, []);
 
   const percentage = totalGuests > 0 ? Math.round((arrived / totalGuests) * 100) : 0;
+
+  // Realtime: check-ins en vivo desde cualquier dispositivo
+  useEffect(() => {
+    const channel = supabase
+      .channel("guests-rt")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "guests" },
+        (payload: { new: Partial<Guest> & { id: string } }) => {
+          const next = payload.new;
+          setGuests((prev) =>
+            prev.some((g) => g.id === next.id)
+              ? prev.map((g) => (g.id === next.id ? { ...g, ...next, group: g.group } : g))
+              : prev
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "guests" },
+        () => { fetchData(); }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, fetchData]);
 
   useEffect(() => { setPage(1); }, [searchQuery, activeFilter]);
 

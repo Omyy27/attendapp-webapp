@@ -135,6 +135,19 @@ export default function ScannerPage() {
     fetchStats();
   }, [fetchStats]);
 
+  // Realtime: stats en vivo desde cualquier dispositivo
+  useEffect(() => {
+    const channel = supabase
+      .channel("scanner-rt")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "scan_logs" }, () => fetchStats())
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "guests" }, () => fetchStats())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, fetchStats]);
+
   useEffect(() => {
     let mounted = true;
     let scanner: any = null;
@@ -357,6 +370,30 @@ export default function ScannerPage() {
               <div>
                 <p className="text-sm font-semibold text-content">Buscador de respaldo</p>
                 <p className="text-[11px] text-muted">Si no tiene código QR</p>
+              </div>
+            </div>
+            <svg className="w-4 h-4 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </Link>
+        </section>
+
+        {/* Scan History */}
+        <section className="px-5 pt-3 pb-2">
+          <Link
+            href="/historial"
+            className="flex items-center justify-between bg-card border border-line rounded-2xl p-4 shadow-card hover:bg-field transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-sky/10 text-sky flex items-center justify-center">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-content">Historial de escaneos</p>
+                <p className="text-[11px] text-muted">Últimos registros de validación</p>
               </div>
             </div>
             <svg className="w-4 h-4 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
