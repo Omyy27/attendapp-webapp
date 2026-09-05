@@ -171,7 +171,7 @@ export default function PassesPage() {
             <button
               onClick={handleDispatchAll}
               disabled={inQueue === 0}
-              className="flex-1 bg-ink dark:bg-gold dark:text-ink rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
+              className="flex-1 bg-ink dark:bg-gold dark:text-ink text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
             >
               <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M7 2v11h3v9l7-12h-4l4-8z" />
