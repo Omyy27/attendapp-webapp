@@ -126,7 +126,10 @@ export default function BackupSearchPage() {
       time: new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
     });
 
-    searchGuests(query);
+    // Optimista: marcar en la lista sin re-buscar
+    setResults((prev) =>
+      prev.map((r) => (r.id === guestId ? { ...r, status: "checked_in" } : r))
+    );
   }
 
   return (

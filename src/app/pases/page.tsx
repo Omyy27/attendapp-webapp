@@ -29,8 +29,9 @@ export default function PassesPage() {
     return () => clearTimeout(timer);
   }, [startTour]);
 
-  const fetchGroups = useCallback(async () => {
-    setLoading(true);
+  const fetchGroups = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
+    if (!silent) setLoading(true);
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
@@ -86,16 +87,27 @@ export default function PassesPage() {
   const inQueue = groups.filter((g) => !g.pass_sent).length;
 
   async function handleMarkSent(groupId: string, via: "whatsapp" | "email" | "link") {
-    await supabase
+    const sentAt = new Date().toISOString();
+    const { error } = await supabase
       .from("guest_groups")
       .update({
         pass_sent: true,
         pass_sent_via: via,
-        pass_sent_at: new Date().toISOString(),
+        pass_sent_at: sentAt,
       })
       .eq("id", groupId);
 
-    fetchGroups();
+    if (error) {
+      // Respaldo: recarga silenciosa si el update falló
+      fetchGroups({ silent: true });
+    } else {
+      // Optimista: parchear en memoria sin recargar la lista
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === groupId ? { ...g, pass_sent: true, pass_sent_via: via, pass_sent_at: sentAt } : g
+        )
+      );
+    }
   }
 
   async function handleCopyLink(group: GuestGroup) {
@@ -105,10 +117,26 @@ export default function PassesPage() {
   }
 
   async function handleDispatchAll() {
-    for (const group of groups) {
-      if (!group.pass_sent) {
-        await handleMarkSent(group.id, "link");
-      }
+    const pendingIds = groups.filter((g) => !g.pass_sent).map((g) => g.id);
+    if (pendingIds.length === 0) return;
+
+    const sentAt = new Date().toISOString();
+    const { error } = await supabase
+      .from("guest_groups")
+      .update({ pass_sent: true, pass_sent_via: "link", pass_sent_at: sentAt })
+      .in("id", pendingIds);
+
+    if (error) {
+      fetchGroups({ silent: true });
+    } else {
+      // Optimista: marcar todos en memoria sin recargar la lista
+      setGroups((prev) =>
+        prev.map((g) =>
+          pendingIds.includes(g.id)
+            ? { ...g, pass_sent: true, pass_sent_via: "link" as const, pass_sent_at: sentAt }
+            : g
+        )
+      );
     }
   }
 

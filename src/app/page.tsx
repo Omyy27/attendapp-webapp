@@ -56,8 +56,9 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, [startTour]);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
+    if (!silent) setLoading(true);
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -187,14 +188,19 @@ export default function DashboardPage() {
       .on(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "guests" },
-        () => { fetchData(); }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload: any) => {
+          // Eliminar en memoria, sin recargar la lista
+          const id = payload?.old?.id as string | undefined;
+          if (id) setGuests((prev) => prev.filter((g) => g.id !== id));
+        }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, fetchData]);
+  }, [supabase]);
 
   useEffect(() => { setPage(1); }, [searchQuery, activeFilter]);
 
@@ -236,22 +242,57 @@ export default function DashboardPage() {
   async function handleDeleteConfirm() {
     if (!deletingGuest) return;
 
+    const deletedId = deletingGuest.id;
     setDeleteLoading(true);
 
     try {
-      await supabase
+      const { error } = await supabase
         .from("guests")
         .delete()
-        .eq("id", deletingGuest.id);
+        .eq("id", deletedId);
 
       setShowDeleteConfirm(false);
       setDeletingGuest(null);
-      fetchData();
+
+      if (error) {
+        // Respaldo: recarga silenciosa si el borrado falló
+        fetchData({ silent: true });
+      } else {
+        // Optimista: quitar de la lista sin recargar
+        setGuests((prev) => prev.filter((g) => g.id !== deletedId));
+      }
     } catch {
-      setDeleteLoading(false);
+      fetchData({ silent: true });
     } finally {
       setDeleteLoading(false);
     }
+  }
+
+  // Optimista: parchear el invitado editado sin recargar la lista
+  function handleGuestUpdated(updated: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone?: string | null;
+    email?: string | null;
+    group_id: string;
+  }) {
+    setShowEditModal(false);
+    setEditingGuest(null);
+    setGuests((prev) =>
+      prev.map((g) =>
+        g.id === updated.id
+          ? {
+              ...g,
+              first_name: updated.first_name,
+              last_name: updated.last_name,
+              phone: updated.phone ?? undefined,
+              email: updated.email ?? undefined,
+              group_id: updated.group_id,
+            }
+          : g
+      )
+    );
   }
 
   function handleExportCsv() {
@@ -514,7 +555,7 @@ export default function DashboardPage() {
         <AddGuestModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
-          onGuestAdded={fetchData}
+          onGuestAdded={() => fetchData({ silent: true })}
           weddingId={weddingId}
         />
       )}
@@ -522,7 +563,7 @@ export default function DashboardPage() {
       <EditGuestModal
         isOpen={showEditModal}
         onClose={() => { setShowEditModal(false); setEditingGuest(null); }}
-        onGuestUpdated={fetchData}
+        onGuestUpdated={handleGuestUpdated}
         guest={editingGuest}
       />
 

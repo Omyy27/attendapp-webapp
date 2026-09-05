@@ -6,7 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 interface EditGuestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onGuestUpdated: () => void;
+  onGuestUpdated: (updated: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone?: string | null;
+    email?: string | null;
+    group_id: string;
+  }) => void;
   guest: {
     id: string;
     first_name: string;
@@ -81,7 +88,14 @@ export function EditGuestModal({
 
       if (updateError) throw updateError;
 
-      onGuestUpdated();
+      onGuestUpdated({
+        id: guest.id,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone: phone.trim() || null,
+        email: email.trim() || null,
+        group_id: selectedGroupId,
+      });
       onClose();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al guardar";
