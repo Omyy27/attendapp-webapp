@@ -75,9 +75,9 @@ export default function AjustesPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   async function handleGeocode() {
-    const query = [venueName, venueAddress, venueCity, venueCountry].filter(Boolean).join(", ");
+    const query = [venueAddress, venueCity, venueCountry].filter(Boolean).join(", ");
     if (!query) {
-      setGeocodeError("Escribe al menos el nombre del lugar o la dirección");
+      setGeocodeError("Escribe la dirección, ciudad y país para buscar en el mapa");
       return;
     }
     setGeocoding(true);
