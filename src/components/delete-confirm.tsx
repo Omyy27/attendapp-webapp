@@ -20,7 +20,7 @@ export function DeleteConfirm({
   return (
     <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-center justify-center p-5">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-w-sm w-full">
+      <div className="relative bg-card rounded-2xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-w-sm w-full">
         <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-4">
           <svg className="w-6 h-6 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 6h18" />
@@ -31,9 +31,9 @@ export function DeleteConfirm({
           </svg>
         </div>
 
-        <h3 className="font-serif text-lg text-ink text-center mb-2">Eliminar invitado</h3>
-        <p className="text-sm text-slate-500 text-center mb-6">
-          Se eliminara a <span className="font-semibold text-ink">{guestName}</span> del padron.
+        <h3 className="font-serif text-lg text-content text-center mb-2">Eliminar invitado</h3>
+        <p className="text-sm text-muted text-center mb-6">
+          Se eliminara a <span className="font-semibold text-content">{guestName}</span> del padron.
           Esta accion no se puede deshacer.
         </p>
 
@@ -41,7 +41,7 @@ export function DeleteConfirm({
           <button
             onClick={onClose}
             disabled={loading}
-            className="flex-1 bg-slate-100 text-slate-700 rounded-xl py-3 text-sm font-semibold hover:bg-slate-200 transition-colors disabled:opacity-50"
+            className="flex-1 bg-field text-content-soft rounded-xl py-3 text-sm font-semibold hover:bg-line-strong/60 transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>

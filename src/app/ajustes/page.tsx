@@ -72,34 +72,34 @@ export default function AjustesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-        <p className="text-slate-400 text-sm">Cargando ajustes...</p>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <p className="text-muted-soft text-sm">Cargando ajustes...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
+    <div className="min-h-screen bg-surface pb-28">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-ink dark:text-slate-100 font-medium text-sm"
+            className="flex items-center gap-2 text-content font-medium text-sm"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Atrás
           </button>
-          <h1 className="font-serif text-lg text-ink dark:text-slate-100">Ajustes</h1>
+          <h1 className="font-serif text-lg text-content">Ajustes</h1>
           <span className="w-16" />
         </header>
 
         <div className="px-5 pt-6 space-y-5">
           {/* Couple Name */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+            <label className="text-xs font-semibold text-muted mb-1.5 block">
               Nombre de la pareja
             </label>
             <input
@@ -107,26 +107,26 @@ export default function AjustesPage() {
               value={coupleName}
               onChange={(e) => setCoupleName(e.target.value)}
               placeholder="Ana & Carlos"
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base text-ink dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
             />
           </div>
 
           {/* Event Date */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+            <label className="text-xs font-semibold text-muted mb-1.5 block">
               Fecha del evento
             </label>
             <input
               type="date"
               value={eventDate}
               onChange={(e) => setEventDate(e.target.value)}
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base text-ink dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
             />
           </div>
 
           {/* Venue Name */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+            <label className="text-xs font-semibold text-muted mb-1.5 block">
               Lugar del evento
             </label>
             <input
@@ -134,13 +134,13 @@ export default function AjustesPage() {
               value={venueName}
               onChange={(e) => setVenueName(e.target.value)}
               placeholder="Salón de eventos"
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base text-ink dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
             />
           </div>
 
           {/* Venue Address */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+            <label className="text-xs font-semibold text-muted mb-1.5 block">
               Dirección
             </label>
             <input
@@ -148,13 +148,13 @@ export default function AjustesPage() {
               value={venueAddress}
               onChange={(e) => setVenueAddress(e.target.value)}
               placeholder="Calle ejemplo 123, Ciudad"
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base text-ink dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
             />
           </div>
 
           {/* Dress Code */}
           <div>
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">
+            <label className="text-xs font-semibold text-muted mb-1.5 block">
               Código de vestimenta
             </label>
             <input
@@ -162,7 +162,7 @@ export default function AjustesPage() {
               value={dressCode}
               onChange={(e) => setDressCode(e.target.value)}
               placeholder="Formal / Cóctel / Casual"
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base text-ink dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
             />
           </div>
 
@@ -170,7 +170,7 @@ export default function AjustesPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-ink dark:bg-gold dark:text-ink text-white rounded-xl py-3.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light transition-colors disabled:opacity-50"
+            className="w-full bg-ink dark:bg-gold dark:text-ink rounded-xl py-3.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
           >
             {saving ? (
               "Guardando..."

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Dark mode por clase .dark en <html> (Tailwind v4 requiere declarar la variante) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-ink: #0a2540;
   --color-ink-light: #0d2d4d;
@@ -7,6 +10,17 @@
   --color-gold-deep: #a8843a;
   --color-gold-faint: #fbf6ec;
   --color-sky: #38bdf8;
+
+  /* Semánticos (cambian con .dark) */
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-content: var(--content);
+  --color-content-soft: var(--content-soft);
+  --color-muted: var(--muted);
+  --color-muted-soft: var(--muted-soft);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-field: var(--field);
 
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", Georgia, serif;
@@ -17,32 +31,32 @@
 }
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0a2540;
+  --surface: #f8fafc;
   --card: #ffffff;
-  --card-foreground: #0a2540;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --border: #e2e8f0;
-  --input: #f1f5f9;
-  --ring: #c8a054;
+  --content: #0a2540;
+  --content-soft: #475569;
+  --muted: #64748b;
+  --muted-soft: #94a3b8;
+  --line: #f1f5f9;
+  --line-strong: #e2e8f0;
+  --field: #f8fafc;
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
+  --surface: #0f172a;
   --card: #1e293b;
-  --card-foreground: #f1f5f9;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --border: #334155;
-  --input: #1e293b;
-  --ring: #c8a054;
+  --content: #f1f5f9;
+  --content-soft: #cbd5e1;
+  --muted: #94a3b8;
+  --muted-soft: #64748b;
+  --line: #1e293b;
+  --line-strong: #334155;
+  --field: #0f172a;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--surface);
+  color: var(--content);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

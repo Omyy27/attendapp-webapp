@@ -96,11 +96,11 @@ export function EditGuestModal({
   return (
     <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end justify-center">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative max-w-md w-full mx-auto bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-h-[85vh] overflow-y-auto">
-        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
+      <div className="relative max-w-md w-full mx-auto bg-card rounded-t-3xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-h-[85vh] overflow-y-auto">
+        <div className="w-10 h-1 bg-line-strong rounded-full mx-auto mb-4" />
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center text-slate-500"
+          className="absolute top-4 right-4 w-11 h-11 rounded-full bg-field flex items-center justify-center text-muted"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6 6 18" />
@@ -108,8 +108,8 @@ export function EditGuestModal({
           </svg>
         </button>
 
-        <h3 className="font-serif text-lg text-ink mb-1">Editar Invitado</h3>
-        <p className="text-xs text-slate-500 mb-4">
+        <h3 className="font-serif text-lg text-content mb-1">Editar Invitado</h3>
+        <p className="text-xs text-muted mb-4">
           Modifica los datos del invitado
         </p>
 
@@ -122,7 +122,7 @@ export function EditGuestModal({
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">
+              <label className="text-xs font-semibold text-content-soft mb-1 block">
                 Nombre *
               </label>
               <input
@@ -130,12 +130,12 @@ export function EditGuestModal({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Sofia"
-                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
                 required
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">
+              <label className="text-xs font-semibold text-content-soft mb-1 block">
                 Apellido *
               </label>
               <input
@@ -143,14 +143,14 @@ export function EditGuestModal({
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Alatorre"
-                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-600 mb-1 block">
+            <label className="text-xs font-semibold text-content-soft mb-1 block">
               Telefono
             </label>
             <input
@@ -158,12 +158,12 @@ export function EditGuestModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+52 55 1234 5678"
-              className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+              className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-600 mb-1 block">
+            <label className="text-xs font-semibold text-content-soft mb-1 block">
               Correo electronico
             </label>
             <input
@@ -171,18 +171,18 @@ export function EditGuestModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="correo@ejemplo.com"
-              className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+              className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-600 mb-1 block">
+            <label className="text-xs font-semibold text-content-soft mb-1 block">
               Grupo familiar
             </label>
             <select
               value={selectedGroupId}
               onChange={(e) => setSelectedGroupId(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink focus:outline-none focus:ring-2 focus:ring-ink/10"
+              className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-base text-content focus:outline-none focus:ring-2 focus:ring-ink/10"
             >
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>

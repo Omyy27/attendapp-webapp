@@ -14,7 +14,7 @@ export function Card({ children, variant = "default", className }: CardProps) {
       className={cn(
         "rounded-2xl border shadow-card",
         variant === "default"
-          ? "bg-white border-slate-100"
+          ? "bg-card border-line"
           : "bg-ink border-ink shadow-lift",
         className
       )}

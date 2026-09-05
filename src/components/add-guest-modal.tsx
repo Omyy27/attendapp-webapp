@@ -123,11 +123,11 @@ export function AddGuestModal({
         className="absolute inset-0"
         onClick={onClose}
       />
-      <div className="relative max-w-md w-full mx-auto bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-h-[85vh] overflow-y-auto">
-        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
+      <div className="relative max-w-md w-full mx-auto bg-card rounded-t-3xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-h-[85vh] overflow-y-auto">
+        <div className="w-10 h-1 bg-line-strong rounded-full mx-auto mb-4" />
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-11 h-11 rounded-full bg-slate-50 flex items-center justify-center text-slate-500"
+          className="absolute top-4 right-4 w-11 h-11 rounded-full bg-field flex items-center justify-center text-muted"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6 6 18" />
@@ -135,8 +135,8 @@ export function AddGuestModal({
           </svg>
         </button>
 
-        <h3 className="font-serif text-lg text-ink mb-1">Agregar Invitado</h3>
-        <p className="text-xs text-slate-500 mb-4">
+        <h3 className="font-serif text-lg text-content mb-1">Agregar Invitado</h3>
+        <p className="text-xs text-muted mb-4">
           Completa los datos del invitado
         </p>
 
@@ -149,7 +149,7 @@ export function AddGuestModal({
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">
+              <label className="text-xs font-semibold text-content-soft mb-1 block">
                 Nombre *
               </label>
               <input
@@ -157,12 +157,12 @@ export function AddGuestModal({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Sofia"
-                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
                 required
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">
+              <label className="text-xs font-semibold text-content-soft mb-1 block">
                 Apellido *
               </label>
               <input
@@ -170,14 +170,14 @@ export function AddGuestModal({
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Alatorre"
-                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-600 mb-1 block">
+            <label className="text-xs font-semibold text-content-soft mb-1 block">
               Teléfono
             </label>
             <input
@@ -185,12 +185,12 @@ export function AddGuestModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+52 55 1234 5678"
-              className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+              className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-600 mb-1 block">
+            <label className="text-xs font-semibold text-content-soft mb-1 block">
               Correo
             </label>
             <input
@@ -198,13 +198,13 @@ export function AddGuestModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="correo@ejemplo.com"
-              className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+              className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
             />
           </div>
 
           {/* Group selection */}
-          <div className="border-t border-slate-100 pt-3 mt-3">
-            <p className="text-xs font-semibold text-slate-600 mb-2">
+          <div className="border-t border-line pt-3 mt-3">
+            <p className="text-xs font-semibold text-content-soft mb-2">
               Grupo familiar
             </p>
             <div className="flex gap-2 mb-3">
@@ -214,7 +214,7 @@ export function AddGuestModal({
                 className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${
                   isNewGroup
                     ? "bg-ink text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : "bg-field text-content-soft hover:bg-line-strong/60"
                 }`}
               >
                 Nuevo grupo
@@ -225,7 +225,7 @@ export function AddGuestModal({
                 className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${
                   !isNewGroup
                     ? "bg-ink text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : "bg-field text-content-soft hover:bg-line-strong/60"
                 }`}
               >
                 Grupo existente
@@ -239,7 +239,7 @@ export function AddGuestModal({
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="Familia Alatorre"
-                  className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                  className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
                 />
                 <input
                   type="number"
@@ -247,14 +247,14 @@ export function AddGuestModal({
                   onChange={(e) => setNewGroupTable(e.target.value)}
                   placeholder="Número de mesa (opcional)"
                   min="1"
-                  className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10"
+                  className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
                 />
               </div>
             ) : (
               <select
                 value={selectedGroupId}
                 onChange={(e) => setSelectedGroupId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2.5 text-base text-ink focus:outline-none focus:ring-2 focus:ring-ink/10"
+                className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-base text-content focus:outline-none focus:ring-2 focus:ring-ink/10"
               >
                 <option value="">Seleccionar grupo...</option>
                 {groups.map((g) => (

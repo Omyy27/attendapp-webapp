@@ -105,10 +105,10 @@ export default function PassesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
+    <div className="min-h-screen bg-surface pb-28">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -116,10 +116,10 @@ export default function PassesPage() {
               </svg>
             </span>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted font-semibold">
                 Envío de invitaciones
               </p>
-              <h1 className="font-serif text-xl leading-none text-ink">Enviar pases</h1>
+              <h1 className="font-serif text-xl leading-none text-content">Enviar pases</h1>
             </div>
           </div>
           <UserAvatar name={organizerName} />
@@ -128,15 +128,15 @@ export default function PassesPage() {
         {/* Status Strip */}
         <section id="tour-pases-status" className="px-5 pt-5">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-card text-center">
-              <p className="text-xl font-bold text-ink leading-none">{emitted}</p>
-              <p className="text-[11px] text-slate-500 font-medium mt-1">Generados</p>
+            <div className="bg-card rounded-2xl p-3.5 border border-line shadow-card text-center">
+              <p className="text-xl font-bold text-content leading-none">{emitted}</p>
+              <p className="text-[11px] text-muted font-medium mt-1">Generados</p>
             </div>
-            <div className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-card text-center">
+            <div className="bg-card rounded-2xl p-3.5 border border-line shadow-card text-center">
               <p className="text-xl font-bold text-emerald-600 leading-none">{delivered}</p>
-              <p className="text-[11px] text-slate-500 font-medium mt-1">Enviados</p>
+              <p className="text-[11px] text-muted font-medium mt-1">Enviados</p>
             </div>
-            <div className="bg-ink rounded-2xl p-3.5 shadow-lift text-center">
+            <div className="bg-ink rounded-2xl p-3.5 shadow-lift text-center dark:ring-1 dark:ring-gold/30">
               <p className="text-xl font-bold text-gold leading-none">{inQueue}</p>
               <p className="text-[11px] text-slate-400 font-medium mt-1">Por enviar</p>
             </div>
@@ -145,14 +145,14 @@ export default function PassesPage() {
 
         {/* Explainer */}
         <section id="tour-pases-explainer" className="px-5 pt-5">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-card p-4 flex gap-3">
+          <div className="bg-card rounded-2xl border border-line shadow-card p-4 flex gap-3">
             <span className="w-10 h-10 rounded-xl bg-sky/10 text-sky flex items-center justify-center shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
               </svg>
             </span>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              <span className="font-semibold text-ink">Sin archivos pesados.</span> Cada grupo familiar
+            <p className="text-xs text-muted leading-relaxed">
+              <span className="font-semibold text-content">Sin archivos pesados.</span> Cada grupo familiar
               recibe un UUID unico encriptado y un link magico a su Pase VIP — enviado directo
               por WhatsApp o correo, sin adjuntos que pesen.
             </p>
@@ -162,8 +162,8 @@ export default function PassesPage() {
         {/* Bulk Actions */}
         <section id="tour-pases-send-all" className="px-5 pt-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-serif text-lg text-ink">Pendientes</h2>
-            <span className="text-xs text-slate-500 font-medium">
+            <h2 className="font-serif text-lg text-content">Pendientes</h2>
+            <span className="text-xs text-muted font-medium">
               {inQueue} grupos pendientes
             </span>
           </div>
@@ -171,7 +171,7 @@ export default function PassesPage() {
             <button
               onClick={handleDispatchAll}
               disabled={inQueue === 0}
-              className="flex-1 bg-ink text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light transition-colors disabled:opacity-50"
+              className="flex-1 bg-ink dark:bg-gold dark:text-ink rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
             >
               <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M7 2v11h3v9l7-12h-4l4-8z" />
@@ -184,16 +184,16 @@ export default function PassesPage() {
         {/* Dispatch List */}
         <section id="tour-pases-list" className="px-5 pt-4 space-y-3">
           {loading ? (
-            <div className="text-center py-10 text-slate-400 text-sm">Cargando grupos...</div>
+            <div className="text-center py-10 text-muted-soft text-sm">Cargando grupos...</div>
           ) : groups.length === 0 ? (
             <div className="text-center py-10">
-              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="w-16 h-16 rounded-full bg-field flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M2 9a3 3 0 0 1 0 6v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a3 3 0 0 1 0-6V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-slate-600">No hay grupos</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-sm font-medium text-content-soft">No hay grupos</p>
+              <p className="text-xs text-muted-soft mt-1">
                 Crea grupos de invitados en el padron primero
               </p>
             </div>
@@ -213,7 +213,7 @@ export default function PassesPage() {
 
         {/* Security Note */}
         <section className="px-5 pt-2">
-          <div className="flex items-center gap-2.5 text-slate-400 text-[11px] justify-center py-4">
+          <div className="flex items-center gap-2.5 text-muted-soft text-[11px] justify-center py-4">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />

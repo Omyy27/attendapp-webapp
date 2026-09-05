@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-6">
+    <div className="min-h-screen bg-surface flex items-center justify-center px-6">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -42,19 +42,19 @@ export default function LoginPage() {
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
           </span>
-          <h1 className="font-serif text-2xl text-ink">Attendapp</h1>
-          <p className="text-sm text-slate-500 mt-1">Administra tu evento</p>
+          <h1 className="font-serif text-2xl text-content">Attendapp</h1>
+          <p className="text-sm text-muted mt-1">Administra tu evento</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-rose-50 text-rose-600 text-xs font-medium px-4 py-3 rounded-xl">
+            <div className="bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-medium px-4 py-3 rounded-xl">
               {error}
             </div>
           )}
           <div>
-            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            <label className="text-xs font-semibold text-content-soft mb-1.5 block">
               Correo
             </label>
             <input
@@ -62,12 +62,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="organizador@correo.com"
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
               required
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">
+            <label className="text-xs font-semibold text-content-soft mb-1.5 block">
               Contraseña
             </label>
             <input
@@ -75,14 +75,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
               required
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-ink text-white rounded-xl py-3 text-sm font-semibold shadow-lift hover:bg-ink-light transition-colors disabled:opacity-50"
+            className="w-full bg-ink dark:bg-gold dark:text-ink rounded-xl py-3 text-sm font-semibold shadow-lift hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
           >
             {loading ? "Entrando..." : "Ingresar"}
           </button>

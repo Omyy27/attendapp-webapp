@@ -12,8 +12,8 @@ export function AnalyticsRing({
   percentage,
   size = 56,
   strokeWidth = 4,
-  color = "#38bdf8",
-  bgColor = "#e2e8f0",
+  color,
+  bgColor,
 }: AnalyticsRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -27,7 +27,7 @@ export function AnalyticsRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={bgColor}
+          stroke={bgColor ?? "var(--line-strong)"}
           strokeWidth={strokeWidth}
         />
         <circle
@@ -35,7 +35,7 @@ export function AnalyticsRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={color}
+          stroke={color ?? "#38bdf8"}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -46,7 +46,7 @@ export function AnalyticsRing({
           }}
         />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center font-bold text-ink text-[13px]">
+      <span className="absolute inset-0 flex items-center justify-center font-bold text-content text-[13px]">
         {percentage}%
       </span>
     </div>

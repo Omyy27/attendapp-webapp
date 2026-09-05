@@ -23,7 +23,7 @@ export function UserAvatar({ name = "", size = "sm" }: UserAvatarProps) {
   return (
     <Link
       href="/perfil"
-      className={`${sizeClasses} rounded-full bg-ink text-gold flex items-center justify-center font-bold shadow-card hover:opacity-90 transition-opacity shrink-0`}
+      className={`${sizeClasses} rounded-full bg-ink dark:bg-gold dark:text-ink text-gold flex items-center justify-center font-bold shadow-card hover:opacity-90 transition-opacity shrink-0`}
     >
       {initials}
     </Link>

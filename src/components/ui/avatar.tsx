@@ -10,9 +10,9 @@ interface AvatarProps {
 }
 
 const variants = {
-  gold: "bg-gold-faint text-gold-deep",
-  slate: "bg-slate-100 text-slate-600",
-  emerald: "bg-emerald-50 text-emerald-600",
+  gold: "bg-gold-faint text-gold-deep dark:bg-gold/15 dark:text-gold",
+  slate: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
+  emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400",
 };
 
 const sizes = {

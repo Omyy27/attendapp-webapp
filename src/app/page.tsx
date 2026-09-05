@@ -239,10 +239,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
+    <div className="min-h-screen bg-surface pb-28">
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <header id="tour-header" className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header id="tour-header" className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -250,16 +250,16 @@ export default function DashboardPage() {
               </svg>
             </span>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted font-semibold">
                 {coupleName}
               </p>
-              <h1 className="font-serif text-xl leading-none text-ink">Attendapp</h1>
+              <h1 className="font-serif text-xl leading-none text-content">Attendapp</h1>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => startTour(true)}
-              className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-card hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="w-10 h-10 rounded-full bg-card border border-line-strong flex items-center justify-center text-muted shadow-card hover:bg-field transition-colors"
               title="Mostrar tutorial"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -270,7 +270,7 @@ export default function DashboardPage() {
             </button>
             <Link
               href="/ajustes"
-              className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-card hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="w-10 h-10 rounded-full bg-card border border-line-strong flex items-center justify-center text-muted shadow-card hover:bg-field transition-colors"
               title="Ajustes del evento"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -285,24 +285,24 @@ export default function DashboardPage() {
         {/* Analytics */}
         <section id="tour-analytics" className="px-5 pt-5 pb-1">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-serif text-lg text-ink">Resumen del dia</h2>
-            <span className="text-xs text-slate-500 font-medium">
+            <h2 className="font-serif text-lg text-content">Resumen del dia</h2>
+            <span className="text-xs text-muted font-medium">
               {currentTime}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-card flex items-center gap-3">
+            <div className="bg-card rounded-2xl p-4 border border-line shadow-card flex items-center gap-3">
               <AnalyticsRing percentage={percentage} />
               <div>
-                <p className="text-2xl font-bold text-ink leading-none">
+                <p className="text-2xl font-bold text-content leading-none">
                   {arrived}
-                  <span className="text-base text-slate-400 font-medium">/{totalGuests}</span>
+                  <span className="text-base text-muted-soft font-medium">/{totalGuests}</span>
                 </p>
-                <p className="text-xs text-slate-500 mt-1 font-medium">Llegaron</p>
+                <p className="text-xs text-muted mt-1 font-medium">Llegaron</p>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-card flex flex-col justify-between">
+            <div className="bg-card rounded-2xl p-4 border border-line shadow-card flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <span className="w-9 h-9 rounded-full bg-gold-faint text-gold-deep flex items-center justify-center">
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -312,11 +312,11 @@ export default function DashboardPage() {
                   </svg>
                 </span>
               </div>
-              <p className="text-2xl font-bold text-ink leading-none mt-2">{activeTables} Mesas</p>
-              <p className="text-xs text-slate-500 font-medium">Activas</p>
+              <p className="text-2xl font-bold text-content leading-none mt-2">{activeTables} Mesas</p>
+              <p className="text-xs text-muted font-medium">Activas</p>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-card flex items-center gap-3">
+            <div className="bg-card rounded-2xl p-4 border border-line shadow-card flex items-center gap-3">
               <span className="w-11 h-11 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
@@ -324,12 +324,12 @@ export default function DashboardPage() {
                 </svg>
               </span>
               <div>
-                <p className="text-2xl font-bold text-ink leading-none">{pendingCount}</p>
-                <p className="text-xs text-slate-500 font-medium">Pendientes</p>
+                <p className="text-2xl font-bold text-content leading-none">{pendingCount}</p>
+                <p className="text-xs text-muted font-medium">Pendientes</p>
               </div>
             </div>
 
-            <div className="bg-ink dark:bg-gold dark:text-ink rounded-2xl p-4 shadow-lift flex items-center gap-3">
+            <div className="bg-ink rounded-2xl p-4 shadow-lift dark:ring-1 dark:ring-gold/30 flex items-center gap-3">
               <span className="w-11 h-11 rounded-full bg-white/10 text-gold flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="7" height="7" />
@@ -340,7 +340,7 @@ export default function DashboardPage() {
               </span>
               <div>
                 <p className="text-2xl font-bold text-white leading-none">{activeTables}</p>
-                <p className="text-xs text-slate-400 font-medium">Mesas activas</p>
+                <p className="text-xs text-muted-soft font-medium">Mesas activas</p>
               </div>
             </div>
           </div>
@@ -352,7 +352,7 @@ export default function DashboardPage() {
             <button
               onClick={handleExportCsv}
               disabled={guests.length === 0}
-              className="flex-1 bg-ink text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light transition-colors disabled:opacity-50"
+              className="flex-1 bg-ink dark:bg-gold dark:text-ink rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
             >
               <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -363,7 +363,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-white border border-slate-200 text-slate-700 rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-card hover:bg-slate-50 transition-colors"
+              className="bg-card border border-line-strong text-content-soft rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-card hover:bg-field transition-colors"
             >
               <svg className="w-4 h-4 text-sky" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -377,7 +377,7 @@ export default function DashboardPage() {
         {/* Search & Filters */}
         <section id="tour-search" className="px-5 pt-4 pb-2 space-y-3">
           <div className="relative">
-            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.3-4.3" />
             </svg>
@@ -386,7 +386,7 @@ export default function DashboardPage() {
               placeholder="Buscar por nombre o grupo familiar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-base text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
+              className="w-full bg-card border border-line-strong rounded-xl pl-11 pr-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -396,8 +396,8 @@ export default function DashboardPage() {
                 onClick={() => setActiveFilter(filter)}
                 className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
                   activeFilter === filter
-                    ? "bg-ink text-white"
-                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                    ? "bg-ink text-white dark:bg-gold dark:text-ink"
+                    : "bg-card border border-line-strong text-content-soft hover:bg-field"
                 }`}
               >
                 {filter}
@@ -409,26 +409,26 @@ export default function DashboardPage() {
         {/* Guest List */}
         <section id="tour-guest-list" className="px-5 pt-3 space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h2 className="font-serif text-lg text-ink">Padron</h2>
-            <span className="text-xs text-slate-500 font-medium">
+            <h2 className="font-serif text-lg text-content">Padron</h2>
+            <span className="text-xs text-muted font-medium">
               {totalGuests} invitados
             </span>
           </div>
 
           {loading ? (
-            <div className="text-center py-10 text-slate-400 text-sm">Cargando invitados...</div>
+            <div className="text-center py-10 text-muted-soft text-sm">Cargando invitados...</div>
           ) : filteredGuests.length === 0 ? (
             <div className="text-center py-10">
-              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="w-16 h-16 rounded-full bg-field flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <line x1="19" y1="8" x2="19" y2="14" />
                   <line x1="22" y1="11" x2="16" y2="11" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-slate-600">No hay invitados</p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-sm font-medium text-content-soft">No hay invitados</p>
+              <p className="text-xs text-muted-soft mt-1">
                 Agrega tu primer invitado para empezar
               </p>
             </div>
@@ -450,20 +450,20 @@ export default function DashboardPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-card disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-content-soft bg-card border border-line-strong rounded-lg shadow-card disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
                 Anterior
               </button>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <span className="text-xs text-muted dark:text-muted-soft font-medium">
                 {((page - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(page * ITEMS_PER_PAGE, filteredGuests.length)} de {filteredGuests.length}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-card disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 px-3 py-2 text-xs font-semibold text-content-soft bg-card border border-line-strong rounded-lg shadow-card disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Siguiente
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -63,22 +63,22 @@ export function GuestCard({
   const initials = `${guest.first_name.charAt(0)}${guest.last_name.charAt(0)}`;
 
   return (
-    <article className="bg-white rounded-xl border border-slate-100 shadow-card p-4 flex items-center gap-3 hover:shadow-lift transition-shadow">
+    <article className="bg-card rounded-xl border border-line shadow-card p-4 flex items-center gap-3 hover:shadow-lift transition-shadow">
       <Avatar
         initials={initials}
         variant={guest.status === "checked_in" ? "gold" : "slate"}
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-ink truncate">
+          <h3 className="text-sm font-semibold text-content truncate">
             {guest.first_name} {guest.last_name}
           </h3>
-          <span className="text-[11px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full truncate">
+          <span className="text-[11px] text-muted-soft font-medium bg-field px-2 py-0.5 rounded-full truncate">
             {guest.group.name}
           </span>
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+          <span className="text-xs text-muted font-medium flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full border border-gold" />
             Mesa {guest.group.table_number}
           </span>
@@ -88,7 +88,7 @@ export function GuestCard({
       <div className="flex items-center gap-1">
         <button
           onClick={onQRClick}
-          className="w-11 h-11 rounded-lg text-slate-400 hover:text-ink hover:bg-slate-50 flex items-center justify-center transition-colors"
+          className="w-11 h-11 rounded-lg text-muted-soft hover:text-content hover:bg-field flex items-center justify-center transition-colors"
           title="Ver QR"
         >
           <svg className="w-5 h-5" viewBox="0 -0.09 122.88 122.88" fill="currentColor">
@@ -97,7 +97,7 @@ export function GuestCard({
         </button>
         <button
           onClick={onEditClick}
-          className="w-11 h-11 rounded-lg text-slate-400 hover:text-sky hover:bg-sky/10 flex items-center justify-center transition-colors"
+          className="w-11 h-11 rounded-lg text-muted-soft hover:text-sky hover:bg-sky/10 flex items-center justify-center transition-colors"
           title="Editar"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -106,7 +106,7 @@ export function GuestCard({
         </button>
         <button
           onClick={onDeleteClick}
-          className="w-11 h-11 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 flex items-center justify-center transition-colors"
+          className="w-11 h-11 rounded-lg text-muted-soft hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors"
           title="Eliminar"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

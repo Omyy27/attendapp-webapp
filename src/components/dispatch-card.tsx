@@ -63,15 +63,15 @@ export function DispatchCard({
     .toUpperCase();
 
   return (
-    <article className="bg-white rounded-xl border border-slate-100 shadow-card p-4">
+    <article className="bg-card rounded-xl border border-line shadow-card p-4">
       <div className="flex items-center gap-3">
         <Avatar initials={initials} />
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-ink truncate">{group.name}</h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h3 className="text-sm font-semibold text-content truncate">{group.name}</h3>
+          <p className="text-xs text-muted mt-0.5">
             {group.guest_count} invitados · Mesa {group.table_number}
           </p>
-          <p className="text-[11px] text-slate-400 font-mono mt-1 truncate">
+          <p className="text-[11px] text-muted-soft font-mono mt-1 truncate">
             Código {group.pass_uuid.slice(0, 4)}-{group.pass_uuid.slice(4, 8)}-…-{group.pass_uuid.slice(-4)}
           </p>
         </div>
@@ -91,7 +91,7 @@ export function DispatchCard({
           </button>
           <button
             onClick={onEmail}
-            className="flex-1 bg-slate-50 text-slate-600 rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-slate-100 transition-colors"
+            className="flex-1 bg-field text-content-soft rounded-lg py-2 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-line-strong/60 transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect width="20" height="16" x="2" y="4" rx="2" />
@@ -101,7 +101,7 @@ export function DispatchCard({
           </button>
           <button
             onClick={onCopyLink}
-            className="w-9 bg-slate-50 text-slate-500 rounded-lg flex items-center justify-center hover:bg-slate-100 transition-colors"
+            className="w-11 bg-field text-muted rounded-lg flex items-center justify-center hover:bg-line-strong/60 transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -111,13 +111,13 @@ export function DispatchCard({
         </div>
       ) : (
         <div className="flex items-center justify-between mt-3 pl-14">
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-muted-soft">
             {group.pass_sent_via === "whatsapp" ? "Enviado por WhatsApp" : group.pass_sent_via === "email" ? "Enviado por correo" : "Link copiado"}
             {group.pass_sent_at && ` · ${new Date(group.pass_sent_at).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}`}
           </p>
           <button
             onClick={onResend}
-            className="text-xs font-semibold text-sky hover:text-ink transition-colors"
+            className="text-xs font-semibold text-sky hover:text-content transition-colors"
           >
             Reenviar
           </button>

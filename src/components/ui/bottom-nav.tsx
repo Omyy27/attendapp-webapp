@@ -48,7 +48,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-700 safe-bottom">
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-card border-t border-line safe-bottom">
       <div className="max-w-md mx-auto flex items-center justify-between h-16 relative px-8">
         {navItems.map((item, i) => {
           const isActive = pathname === item.href;
@@ -56,10 +56,10 @@ export function BottomNav() {
           if (item.isCenter) {
             return (
               <Link key={i} href={item.href} className="absolute left-1/2 -translate-x-1/2 -mt-7 flex flex-col items-center gap-1">
-                <span className="w-14 h-14 rounded-full bg-ink text-white shadow-lift flex items-center justify-center">
+                <span className="w-14 h-14 rounded-full bg-ink dark:bg-gold dark:text-ink text-white shadow-lift flex items-center justify-center">
                   {item.icon}
                 </span>
-                <span className={cn("text-[10px] font-semibold", isActive ? "text-ink" : "text-ink/80")}>
+                <span className={cn("text-[10px] font-semibold", isActive ? "text-content" : "text-content/80")}>
                   {item.label}
                 </span>
               </Link>
@@ -73,8 +73,8 @@ export function BottomNav() {
               className={cn(
                 "flex flex-col items-center gap-1 py-2 transition-colors",
                 isActive
-                  ? "text-ink"
-                  : "text-slate-400 hover:text-ink"
+                  ? "text-content"
+                  : "text-muted-soft hover:text-content"
               )}
             >
               {item.icon}

@@ -208,10 +208,10 @@ export default function ScannerPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-28">
+    <div className="min-h-screen bg-surface pb-28">
       <div className="max-w-md mx-auto min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-slate-200/70">
+        <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <div className="flex items-center gap-3">
             <span className="w-9 h-9 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -219,10 +219,10 @@ export default function ScannerPage() {
               </svg>
             </span>
             <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-semibold">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted font-semibold">
                 Validación
               </p>
-              <h1 className="font-serif text-base leading-none text-ink">Escanear entrada</h1>
+              <h1 className="font-serif text-base leading-none text-content">Escanear entrada</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -326,17 +326,17 @@ export default function ScannerPage() {
         {/* Stats Strip */}
         <section id="tour-scanner-stats" className="px-5 pt-8">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
+            <div className="bg-card border border-line rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-emerald-600 leading-none">{stats.valid}</p>
-              <p className="text-xs text-slate-500 font-medium mt-1">Entradas</p>
+              <p className="text-xs text-muted font-medium mt-1">Entradas</p>
             </div>
-            <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
+            <div className="bg-card border border-line rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-rose-600 leading-none">{stats.rejected}</p>
-              <p className="text-xs text-slate-500 font-medium mt-1">Rechazados</p>
+              <p className="text-xs text-muted font-medium mt-1">Rechazados</p>
             </div>
-            <div className="bg-white border border-slate-100 rounded-2xl p-3 text-center shadow-card">
-              <p className="text-lg font-bold text-ink leading-none">{stats.remaining}</p>
-              <p className="text-xs text-slate-500 font-medium mt-1">Por llegar</p>
+            <div className="bg-card border border-line rounded-2xl p-3 text-center shadow-card">
+              <p className="text-lg font-bold text-content leading-none">{stats.remaining}</p>
+              <p className="text-xs text-muted font-medium mt-1">Por llegar</p>
             </div>
           </div>
         </section>
@@ -345,7 +345,7 @@ export default function ScannerPage() {
         <section id="tour-scanner-search" className="px-5 pt-5">
           <Link
             href="/scanner/search"
-            className="flex items-center justify-between bg-white border border-slate-100 rounded-2xl p-4 shadow-card hover:bg-slate-50 transition-colors"
+            className="flex items-center justify-between bg-card border border-line rounded-2xl p-4 shadow-card hover:bg-field transition-colors"
           >
             <div className="flex items-center gap-3">
               <span className="w-10 h-10 rounded-xl bg-gold-faint text-gold-deep flex items-center justify-center">
@@ -355,11 +355,11 @@ export default function ScannerPage() {
                 </svg>
               </span>
               <div>
-                <p className="text-sm font-semibold text-ink">Buscador de respaldo</p>
-                <p className="text-[11px] text-slate-500">Si no tiene código QR</p>
+                <p className="text-sm font-semibold text-content">Buscador de respaldo</p>
+                <p className="text-[11px] text-muted">Si no tiene código QR</p>
               </div>
             </div>
-            <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="w-4 h-4 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="m9 18 6-6-6-6" />
             </svg>
           </Link>
