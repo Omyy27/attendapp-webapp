@@ -28,6 +28,8 @@ export async function GET(
           event_date,
           venue_name,
           venue_address,
+          venue_city,
+          venue_country,
           venue_lat,
           venue_lng,
           dress_code
@@ -55,13 +57,18 @@ export async function GET(
       couple_name: string;
       event_date: string;
       venue_name: string;
-      venue_address: string;
+      venue_address: string | null;
+      venue_city: string | null;
+      venue_country: string | null;
       venue_lat: number;
       venue_lng: number;
       dress_code: string;
     };
 
     const eventDate = new Date(wedding.event_date);
+    const fullAddress = [wedding.venue_address, wedding.venue_city, wedding.venue_country]
+      .filter(Boolean)
+      .join(", ");
 
     return NextResponse.json({
       group_name: group.name,
@@ -71,7 +78,7 @@ export async function GET(
       event_time: "17:00 hrs",
       dress_code: wedding.dress_code || "Formal / Gala",
       venue_name: wedding.venue_name,
-      venue_address: wedding.venue_address,
+      venue_address: fullAddress || wedding.venue_address || "",
       venue_lat: wedding.venue_lat,
       venue_lng: wedding.venue_lng,
       couple_name: wedding.couple_name,
@@ -79,7 +86,7 @@ export async function GET(
         day: "numeric",
         month: "long",
         year: "numeric",
-      }) + (wedding.venue_address ? ` \u00b7 ${wedding.venue_address.split(",").pop()?.trim() || ""}` : ""),
+      }) + (fullAddress ? ` \u00b7 ${fullAddress}` : ""),
     });
   } catch (error) {
     console.error("Pass fetch error:", error);

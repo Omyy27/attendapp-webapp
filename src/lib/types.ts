@@ -7,6 +7,8 @@ export interface Wedding {
   event_date: string;
   venue_name: string | null;
   venue_address: string | null;
+  venue_city: string | null;
+  venue_country: string | null;
   venue_lat: number | null;
   venue_lng: number | null;
   dress_code: string | null;

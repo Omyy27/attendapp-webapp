@@ -21,11 +21,12 @@ export default function AjustesPage() {
   const [saved, setSaved] = useState(false);
   const [coupleName, setCoupleName] = useState("");
   const [eventDate, setEventDate] = useState("");
-  const [venueName, setVenueName] = useState("");
-  const [venueAddress, setVenueAddress] = useState("");
   const [dressCode, setDressCode] = useState("");
+  const [venueName, setVenueName] = useState("");
+  const [venueCountry, setVenueCountry] = useState("");
+  const [venueCity, setVenueCity] = useState("");
+  const [venueAddress, setVenueAddress] = useState("");
 
-  // Coordenadas: mapLat/mapLng = posición del mapa; pinLat/pinLng = posición actual del pin
   const [mapLat, setMapLat] = useState<number | null>(null);
   const [mapLng, setMapLng] = useState<number | null>(null);
   const [pinLat, setPinLat] = useState<number | null>(null);
@@ -56,9 +57,11 @@ export default function AjustesPage() {
       setWedding(w);
       setCoupleName(w.couple_name || "");
       setEventDate(w.event_date ? w.event_date.split("T")[0] : "");
-      setVenueName(w.venue_name || "");
-      setVenueAddress(w.venue_address || "");
       setDressCode(w.dress_code || "");
+      setVenueName(w.venue_name || "");
+      setVenueCountry((w as any).venue_country || "");
+      setVenueCity((w as any).venue_city || "");
+      setVenueAddress(w.venue_address || "");
       if (w.venue_lat && w.venue_lng) {
         setMapLat(w.venue_lat);
         setMapLng(w.venue_lng);
@@ -72,9 +75,9 @@ export default function AjustesPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   async function handleGeocode() {
-    const query = [venueName, venueAddress].filter(Boolean).join(", ");
+    const query = [venueName, venueAddress, venueCity, venueCountry].filter(Boolean).join(", ");
     if (!query) {
-      setGeocodeError("Escribe el nombre del lugar y la dirección primero");
+      setGeocodeError("Escribe al menos el nombre del lugar o la dirección");
       return;
     }
     setGeocoding(true);
@@ -87,7 +90,7 @@ export default function AjustesPage() {
       const data = (await res.json()) as { lat: string; lon: string }[];
 
       if (!data || data.length === 0) {
-        setGeocodeError("No se encontró la dirección. Intenta agregar la ciudad.");
+        setGeocodeError("No se encontró la dirección. Intenta con más detalle.");
         return;
       }
 
@@ -114,9 +117,11 @@ export default function AjustesPage() {
       .update({
         couple_name: coupleName,
         event_date: eventDate ? new Date(eventDate).toISOString() : wedding.event_date,
-        venue_name: venueName,
-        venue_address: venueAddress,
         dress_code: dressCode || null,
+        venue_name: venueName,
+        venue_country: venueCountry || null,
+        venue_city: venueCity || null,
+        venue_address: venueAddress || null,
         venue_lat: pinLat,
         venue_lng: pinLng,
       })
@@ -138,7 +143,6 @@ export default function AjustesPage() {
   return (
     <div className="min-h-screen bg-surface pb-28">
       <div className="max-w-md mx-auto">
-        {/* Header */}
         <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <button
             onClick={() => router.back()}
@@ -181,6 +185,20 @@ export default function AjustesPage() {
             />
           </div>
 
+          {/* Dress Code */}
+          <div>
+            <label className="text-xs font-semibold text-muted mb-1.5 block">
+              Código de vestimenta
+            </label>
+            <input
+              type="text"
+              value={dressCode}
+              onChange={(e) => setDressCode(e.target.value)}
+              placeholder="Formal / Cóctel / Casual"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+            />
+          </div>
+
           {/* Venue Name */}
           <div>
             <label className="text-xs font-semibold text-muted mb-1.5 block">
@@ -195,30 +213,44 @@ export default function AjustesPage() {
             />
           </div>
 
-          {/* Venue Address */}
+          {/* Country */}
           <div>
             <label className="text-xs font-semibold text-muted mb-1.5 block">
-              Dirección
+              País
+            </label>
+            <input
+              type="text"
+              value={venueCountry}
+              onChange={(e) => setVenueCountry(e.target.value)}
+              placeholder="México"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+            />
+          </div>
+
+          {/* City */}
+          <div>
+            <label className="text-xs font-semibold text-muted mb-1.5 block">
+              Ciudad
+            </label>
+            <input
+              type="text"
+              value={venueCity}
+              onChange={(e) => setVenueCity(e.target.value)}
+              placeholder="Ciudad de México"
+              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+            />
+          </div>
+
+          {/* Street Address */}
+          <div>
+            <label className="text-xs font-semibold text-muted mb-1.5 block">
+              Dirección (calle y número)
             </label>
             <input
               type="text"
               value={venueAddress}
               onChange={(e) => setVenueAddress(e.target.value)}
-              placeholder="Calle ejemplo 123, Ciudad"
-              className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
-            />
-          </div>
-
-          {/* Dress Code */}
-          <div>
-            <label className="text-xs font-semibold text-muted mb-1.5 block">
-              Código de vestimenta
-            </label>
-            <input
-              type="text"
-              value={dressCode}
-              onChange={(e) => setDressCode(e.target.value)}
-              placeholder="Formal / Cóctel / Casual"
+              placeholder="Av. Insurgentes 123"
               className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
             />
           </div>
