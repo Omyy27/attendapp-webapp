@@ -23,7 +23,7 @@ const dashboardSteps = [
   { element: "#tour-nav", popover: { title: "Navegación", description: "Accede a Invitados, Escanear y Enviar pases desde aquí." } },
 ];
 
-const filters = ["Todos", "Confirmados", "Por llegar", ];
+const filters = ["Todos", "Confirmados", "Sin confirmar"];
 
 export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState("Todos");
@@ -154,6 +154,7 @@ export default function DashboardPage() {
   const totalGuests = guests.length;
   const arrived = guests.filter((g) => g.status === "checked_in").length;
   const pendingCount = guests.filter((g) => g.status === "pending").length;
+  const confirmedCount = guests.filter((g) => g.status === "confirmed").length;
 
   useEffect(() => {
     setCurrentTime(new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }));
@@ -206,7 +207,7 @@ export default function DashboardPage() {
     const matchesFilter =
       activeFilter === "Todos" ||
       (activeFilter === "Confirmados" && guest.status === "confirmed") ||
-      (activeFilter === "Pendientes" && guest.status === "pending");
+      (activeFilter === "Sin confirmar" && guest.status === "pending");
 
     return matchesSearch && matchesFilter;
   });
@@ -329,22 +330,22 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-card rounded-2xl p-4 border border-line shadow-card flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="w-9 h-9 rounded-full bg-gold-faint text-gold-deep flex items-center justify-center">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 7v2c0 1.1.9 2 2 2h4" />
-                    <path d="M21 7v2c0 1.1-.9 2-2 2h-4" />
-                    <rect x="5" y="7" width="14" height="10" rx="2" />
-                  </svg>
-                </span>
+            <div className="bg-card rounded-2xl p-4 border border-line shadow-card flex items-center gap-3">
+              <span className="w-11 h-11 rounded-full bg-gold-faint text-gold-deep dark:bg-gold/15 dark:text-gold flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <polyline points="16 11 18 13 22 9" />
+                </svg>
+              </span>
+              <div>
+                <p className="text-2xl font-bold text-content leading-none">{confirmedCount}</p>
+                <p className="text-xs text-muted font-medium">Confirmados</p>
               </div>
-              <p className="text-2xl font-bold text-content leading-none mt-2">{activeTables} Mesas</p>
-              <p className="text-xs text-muted font-medium">Activas</p>
             </div>
 
             <div className="bg-card rounded-2xl p-4 border border-line shadow-card flex items-center gap-3">
-              <span className="w-11 h-11 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+              <span className="w-11 h-11 rounded-full bg-amber-50 text-amber-500 dark:bg-amber-500/15 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
@@ -352,7 +353,7 @@ export default function DashboardPage() {
               </span>
               <div>
                 <p className="text-2xl font-bold text-content leading-none">{pendingCount}</p>
-                <p className="text-xs text-muted font-medium">Pendientes</p>
+                <p className="text-xs text-muted font-medium">Sin confirmar</p>
               </div>
             </div>
 

@@ -51,14 +51,6 @@ export default function GuestPassPage({
         if (data.confirmed_count >= data.guest_count && data.guest_count > 0) {
           setRsvpState("confirmed");
         }
-
-        // Generate QR code
-        const qrUrl = await QRCode.toDataURL(`ATTENDAPP-${uuid.toUpperCase()}`, {
-          width: 400,
-          margin: 0,
-          color: { dark: "#0a2540", light: "#ffffff" },
-        });
-        setQrDataUrl(qrUrl);
       } catch {
         setError("Pase no encontrado o expirado");
       } finally {
@@ -67,6 +59,24 @@ export default function GuestPassPage({
     }
     loadPass();
   }, [uuid]);
+
+  // El QR se genera solo cuando la asistencia está confirmada
+  useEffect(() => {
+    if (rsvpState !== "confirmed") return;
+    let cancelled = false;
+
+    async function generateQr() {
+      const qrUrl = await QRCode.toDataURL(`ATTENDAPP-${uuid.toUpperCase()}`, {
+        width: 400,
+        margin: 0,
+        color: { dark: "#0a2540", light: "#ffffff" },
+      });
+      if (!cancelled) setQrDataUrl(qrUrl);
+    }
+
+    generateQr();
+    return () => { cancelled = true; };
+  }, [rsvpState, uuid]);
 
   async function handleRsvp() {
     setRsvpState("loading");
@@ -154,25 +164,46 @@ export default function GuestPassPage({
 
             {/* QR Zone */}
             <div className="px-6 pt-7 pb-6 flex flex-col items-center">
-              <div className="bg-white p-4 rounded-2xl border-2 border-ink">
-                {qrDataUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={qrDataUrl}
-                    alt="Código de acceso"
-                    className="w-52 h-52 object-contain"
-                  />
-                )}
-              </div>
-              <p className="text-[11px] text-slate-400 font-mono mt-3 tracking-wider">
-                Código · {uuid.toUpperCase().slice(0, 4)}-{uuid.toUpperCase().slice(4, 8)}-{uuid.toUpperCase().slice(8, 12)}-{uuid.toUpperCase().slice(12, 16)}
-              </p>
-              <div className="flex items-center gap-2 mt-4 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3.5 py-1.5 rounded-full">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                </svg>
-                Válido para {passData.guest_count} personas
-              </div>
+              {rsvpState === "confirmed" ? (
+                <>
+                  <div className="bg-white p-4 rounded-2xl border-2 border-ink">
+                    {qrDataUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={qrDataUrl}
+                        alt="Código de acceso"
+                        className="w-52 h-52 object-contain"
+                      />
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-mono mt-3 tracking-wider">
+                    Código · {uuid.toUpperCase().slice(0, 4)}-{uuid.toUpperCase().slice(4, 8)}-{uuid.toUpperCase().slice(8, 12)}-{uuid.toUpperCase().slice(12, 16)}
+                  </p>
+                  <div className="flex items-center gap-2 mt-4 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3.5 py-1.5 rounded-full">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                    Válido para {passData.guest_count} personas
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-52 h-52 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center gap-3 px-6">
+                    <span className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                    </span>
+                    <p className="text-xs text-slate-500 text-center leading-relaxed">
+                      Confirma tu asistencia para desbloquear tu código QR de entrada
+                    </p>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-3 tracking-wide">
+                    Tu código se generará al confirmar
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Perforation */}

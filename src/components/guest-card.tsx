@@ -38,16 +38,16 @@ function getStatusBadge(status: Guest["status"]) {
       );
     case "confirmed":
       return (
-        <Badge variant="warning">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-          Pendiente
+        <Badge variant="info">
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+          Confirmado
         </Badge>
       );
     default:
       return (
-        <Badge>
+        <Badge variant="default">
           <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-          Ausente
+          Sin confirmar
         </Badge>
       );
   }
