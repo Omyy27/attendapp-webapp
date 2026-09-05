@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { Toast } from "@/components/ui/toast";
 import { DispatchCard, type GuestGroup } from "@/components/dispatch-card";
 import { useDriverTour } from "@/lib/use-driver-tour";
 import { UserAvatar } from "@/components/user-avatar";
@@ -20,9 +21,23 @@ export default function PassesPage() {
   const [groups, setGroups] = useState<GuestGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [organizerName, setOrganizerName] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
   const supabase = createClient();
   const { startTour } = useDriverTour("pases", pasesSteps);
+
+  const showToast = useCallback((message: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(message);
+    toastTimer.current = setTimeout(() => setToast(null), 2500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => startTour(), 800);
@@ -86,7 +101,7 @@ export default function PassesPage() {
   const delivered = groups.filter((g) => g.pass_sent).length;
   const inQueue = groups.filter((g) => !g.pass_sent).length;
 
-  async function handleMarkSent(groupId: string, via: "whatsapp" | "email" | "link") {
+  async function handleMarkSent(groupId: string, via: "whatsapp" | "email" | "link"): Promise<boolean> {
     const sentAt = new Date().toISOString();
     const { error } = await supabase
       .from("guest_groups")
@@ -100,19 +115,31 @@ export default function PassesPage() {
     if (error) {
       // Respaldo: recarga silenciosa si el update falló
       fetchGroups({ silent: true });
-    } else {
-      // Optimista: parchear en memoria sin recargar la lista
-      setGroups((prev) =>
-        prev.map((g) =>
-          g.id === groupId ? { ...g, pass_sent: true, pass_sent_via: via, pass_sent_at: sentAt } : g
-        )
-      );
+      return false;
     }
+    // Optimista: parchear en memoria sin recargar la lista
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId ? { ...g, pass_sent: true, pass_sent_via: via, pass_sent_at: sentAt } : g
+      )
+    );
+    return true;
+  }
+
+  async function handleResend(group: GuestGroup) {
+    const ok = await handleMarkSent(group.id, group.pass_sent_via || "link");
+    if (ok) showToast("Invitación reenviada");
   }
 
   async function handleCopyLink(group: GuestGroup) {
     const url = `${window.location.origin}/pase/${group.pass_uuid}`;
-    await navigator.clipboard.writeText(url);
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("Enlace de invitación copiado");
+    } catch {
+      showToast("No se pudo copiar el enlace");
+      return;
+    }
     await handleMarkSent(group.id, "link");
   }
 
@@ -241,7 +268,7 @@ export default function PassesPage() {
                 onWhatsApp={() => handleMarkSent(group.id, "whatsapp")}
                 onEmail={() => handleMarkSent(group.id, "email")}
                 onCopyLink={() => handleCopyLink(group)}
-                onResend={() => handleMarkSent(group.id, group.pass_sent_via as "whatsapp" | "email" | "link" || "link")}
+                onResend={() => handleResend(group)}
               />
             ))
           )}
@@ -260,6 +287,8 @@ export default function PassesPage() {
       </div>
 
       <div id="tour-pases-nav"><BottomNav /></div>
+
+      <Toast message={toast} />
     </div>
   );
 }
