@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: "Attendapp",
   description: "Gestiona las invitaciones de tu evento con códigos QR",
   applicationName: "Attendapp",
-  manifest: "/manifest",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
