@@ -96,7 +96,9 @@ export default function AjustesPage() {
         addressdetails: "1",
       });
 
-      if (normalizedStreet) params.set("street", normalizedStreet);
+      if (venueName || normalizedStreet) {
+        params.set("street", [venueName, normalizedStreet].filter(Boolean).join(" "));
+      }
       if (venueCity) params.set("city", venueCity);
       if (venueCountry) params.set("country", venueCountry);
 
