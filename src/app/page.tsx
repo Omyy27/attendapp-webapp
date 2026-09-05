@@ -44,6 +44,7 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState("");
   const [activeTables, setActiveTables] = useState(0);
   const [page, setPage] = useState(1);
+  const [role, setRole] = useState("organizer");
 
   const ITEMS_PER_PAGE = 20;
 
@@ -103,6 +104,7 @@ export default function DashboardPage() {
 
     if (!organizer.wedding_id) { setLoading(false); return; }
     setWeddingId(organizer.wedding_id);
+    setRole(organizer.role || "organizer");
 
     const { data: wedding } = await supabase
       .from("weddings")
@@ -375,6 +377,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Quick Actions */}
+        {role === "organizer" && (
         <section id="tour-actions" className="px-5 pt-5 pb-1">
           <div className="flex gap-3">
             <button
@@ -401,6 +404,7 @@ export default function DashboardPage() {
             </button>
           </div>
         </section>
+        )}
 
         {/* Search & Filters */}
         <section id="tour-search" className="px-5 pt-4 pb-2 space-y-3">
@@ -465,6 +469,7 @@ export default function DashboardPage() {
               <GuestCard
                 key={guest.id}
                 guest={guest}
+                showActions={role === "organizer"}
                 onQRClick={() => handleQRClick(guest)}
                 onEditClick={() => handleEditClick(guest)}
                 onDeleteClick={() => handleDeleteClick(guest)}
@@ -503,7 +508,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div id="tour-nav"><BottomNav /></div>
+      <div id="tour-nav"><BottomNav role={role} /></div>
 
       {weddingId && (
         <AddGuestModal

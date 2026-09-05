@@ -120,7 +120,9 @@ export default function ProfilePage() {
                 </span>
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.15em] text-muted font-semibold">Rol</p>
-                  <p className="text-content font-semibold text-sm capitalize">{organizer?.role || "Organizador"}</p>
+                  <p className="text-content font-semibold text-sm">
+                    {organizer?.role === "scanner" ? "Portero" : "Organizador"}
+                  </p>
                 </div>
               </div>
             </div>

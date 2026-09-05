@@ -33,6 +33,14 @@ export default function AjustesPage() {
   const [pinLng, setPinLng] = useState<number | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState("");
+  const [role, setRole] = useState("organizer");
+  const [team, setTeam] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [showAddStaff, setShowAddStaff] = useState(false);
+  const [staffName, setStaffName] = useState("");
+  const [staffEmail, setStaffEmail] = useState("");
+  const [staffPassword, setStaffPassword] = useState("");
+  const [staffError, setStaffError] = useState("");
+  const [staffLoading, setStaffLoading] = useState(false);
   const supabase = createClient();
 
   const fetchData = useCallback(async () => {
@@ -41,11 +49,19 @@ export default function AjustesPage() {
 
     const { data: organizer } = await supabase
       .from("organizers")
-      .select("wedding_id")
+      .select("wedding_id, role")
       .eq("user_id", user.id)
       .single();
 
     if (!organizer?.wedding_id) { setLoading(false); return; }
+
+    // Los porteros no acceden a ajustes
+    if (organizer.role === "scanner") {
+      router.replace("/");
+      return;
+    }
+
+    setRole(organizer.role || "organizer");
 
     const { data: w } = await supabase
       .from("weddings")
@@ -148,6 +164,57 @@ export default function AjustesPage() {
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  }
+
+  // --- Equipo ---
+  const fetchTeam = useCallback(async () => {
+    const res = await fetch("/api/team");
+    if (res.ok) {
+      const data = await res.json();
+      setTeam(data.staff || []);
+    }
+  }, []);
+
+  useEffect(() => { if (role === "organizer") fetchTeam(); }, [role, fetchTeam]);
+
+  async function handleAddStaff() {
+    if (!staffEmail || !staffPassword) {
+      setStaffError("Email y contraseña son requeridos");
+      return;
+    }
+    if (staffPassword.length < 6) {
+      setStaffError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+    setStaffLoading(true);
+    setStaffError("");
+    try {
+      const res = await fetch("/api/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: staffName, email: staffEmail, password: staffPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setStaffError(data.error); return; }
+      setStaffName("");
+      setStaffEmail("");
+      setStaffPassword("");
+      setShowAddStaff(false);
+      fetchTeam();
+    } catch {
+      setStaffError("Error de conexión");
+    } finally {
+      setStaffLoading(false);
+    }
+  }
+
+  async function handleRemoveStaff(id: string) {
+    await fetch("/api/team", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    fetchTeam();
   }
 
   if (loading) {
@@ -317,6 +384,94 @@ export default function AjustesPage() {
               </div>
             )}
           </div>
+
+          {/* Equipo de puerta */}
+          {role === "organizer" && (
+          <div className="bg-card rounded-2xl border border-line shadow-card p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-content-soft">Equipo de puerta</p>
+                <p className="text-[11px] text-muted-soft mt-0.5">
+                  Porteros que pueden escanear invitados
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddStaff(!showAddStaff)}
+                className="w-8 h-8 rounded-full bg-field flex items-center justify-center text-muted hover:bg-line-strong/60 transition-colors"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Staff list */}
+            {team.length > 0 && (
+              <div className="space-y-2">
+                {team.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between p-2.5 bg-field rounded-xl">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-content truncate">{s.name || s.email}</p>
+                      <p className="text-[11px] text-muted truncate">{s.email}</p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveStaff(s.id)}
+                      className="w-8 h-8 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center shrink-0 transition-colors"
+                      title="Eliminar"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add staff form */}
+            {showAddStaff && (
+              <div className="space-y-2.5 pt-2 border-t border-line">
+                <input
+                  type="text"
+                  value={staffName}
+                  onChange={(e) => setStaffName(e.target.value)}
+                  placeholder="Nombre (opcional)"
+                  className="w-full bg-field border border-line-strong rounded-xl px-4 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
+                />
+                <input
+                  type="email"
+                  value={staffEmail}
+                  onChange={(e) => setStaffEmail(e.target.value)}
+                  placeholder="Email"
+                  className="w-full bg-field border border-line-strong rounded-xl px-4 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
+                />
+                <input
+                  type="password"
+                  value={staffPassword}
+                  onChange={(e) => setStaffPassword(e.target.value)}
+                  placeholder="Contraseña (mín. 6 caracteres)"
+                  className="w-full bg-field border border-line-strong rounded-xl px-4 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
+                />
+                {staffError && (
+                  <p className="text-xs text-rose-600 dark:text-rose-400">{staffError}</p>
+                )}
+                <button
+                  onClick={handleAddStaff}
+                  disabled={staffLoading}
+                  className="w-full bg-ink dark:bg-gold dark:text-ink text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
+                >
+                  {staffLoading ? "Creando..." : "Agregar al equipo"}
+                </button>
+              </div>
+            )}
+
+            {team.length === 0 && !showAddStaff && (
+              <p className="text-[11px] text-muted-soft">No hay porteros aún</p>
+            )}
+          </div>
+          )}
 
           {/* Save Button */}
           <button

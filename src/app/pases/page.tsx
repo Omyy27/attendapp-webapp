@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { DispatchCard, type GuestGroup } from "@/components/dispatch-card";
@@ -19,6 +20,7 @@ export default function PassesPage() {
   const [groups, setGroups] = useState<GuestGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [organizerName, setOrganizerName] = useState("");
+  const router = useRouter();
   const supabase = createClient();
   const { startTour } = useDriverTour("pases", pasesSteps);
 
@@ -35,11 +37,17 @@ export default function PassesPage() {
 
     const { data: organizer } = await supabase
       .from("organizers")
-      .select("wedding_id, name")
+      .select("wedding_id, name, role")
       .eq("user_id", user.id)
       .single();
 
     if (organizer?.name) setOrganizerName(organizer.name);
+
+    // Los porteros no acceden a pases
+    if (organizer?.role === "scanner") {
+      router.replace("/");
+      return;
+    }
 
     if (!organizer?.wedding_id) { setLoading(false); return; }
 

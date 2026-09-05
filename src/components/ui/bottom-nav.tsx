@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+const allNavItems = [
   {
     href: "/",
     label: "Invitados",
@@ -33,6 +33,7 @@ const navItems = [
   {
     href: "/pases",
     label: "Enviar",
+    hideForScanner: true,
     icon: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 9a3 3 0 0 1 0 6v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a3 3 0 0 1 0-6V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
@@ -44,8 +45,9 @@ const navItems = [
   },
 ];
 
-export function BottomNav() {
+export function BottomNav({ role = "organizer" }: { role?: string }) {
   const pathname = usePathname();
+  const navItems = role === "scanner" ? allNavItems.filter((i) => !i.hideForScanner) : allNavItems;
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 bg-card border-t border-line safe-bottom">

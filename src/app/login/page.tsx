@@ -28,7 +28,23 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/");
+    // Verificar rol del usuario para redirigir
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: organizer } = await supabase
+        .from("organizers")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+
+      if (organizer?.role === "scanner") {
+        router.push("/scanner");
+      } else {
+        router.push("/");
+      }
+    } else {
+      router.push("/");
+    }
     router.refresh();
   };
 
