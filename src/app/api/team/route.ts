@@ -23,13 +23,21 @@ async function getSessionUser() {
 }
 
 async function getActor(userId: string) {
-  const { data: organizer } = await supabaseAdmin
+  // Tolerante a filas duplicadas (StrictMode en dev puede crear 2):
+  // usa la más antigua en vez de fallar como .single()
+  const { data: rows } = await supabaseAdmin
     .from("organizers")
     .select("id, wedding_id, role")
     .eq("user_id", userId)
-    .single();
+    .order("created_at", { ascending: true })
+    .limit(1);
 
+  const organizer = rows?.[0] || null;
   return organizer as { id: string; wedding_id: string; role: string } | null;
+}
+
+function hasServiceKey(): boolean {
+  return !!process.env.SUPABASE_SERVICE_ROLE_KEY;
 }
 
 // GET: listar equipo del evento
@@ -39,8 +47,17 @@ export async function GET(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const actor = await getActor(user.id);
-    if (!actor || !canManageEvent(actor.role)) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    if (!actor) {
+      return NextResponse.json(
+        { error: 'No tienes un organizador asignado a este evento' },
+        { status: 403 }
+      );
+    }
+    if (!canManageEvent(actor.role)) {
+      return NextResponse.json(
+        { error: `Tu rol actual (${actor.role || 'sin rol'}) no tiene permiso` },
+        { status: 403 }
+      );
     }
 
     const { data: staff } = await supabaseAdmin
@@ -63,8 +80,24 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const actor = await getActor(user.id);
-    if (!actor || !canManageEvent(actor.role)) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    if (!actor) {
+      return NextResponse.json(
+        { error: 'No tienes un organizador asignado a este evento' },
+        { status: 403 }
+      );
+    }
+    if (!canManageEvent(actor.role)) {
+      return NextResponse.json(
+        { error: `Tu rol actual (${actor.role || "sin rol"}) no tiene permiso` },
+        { status: 403 }
+      );
+    }
+
+    if (!hasServiceKey()) {
+      return NextResponse.json(
+        { error: "Falta configurar SUPABASE_SERVICE_ROLE_KEY en el servidor" },
+        { status: 503 }
+      );
     }
 
     const { name, email, password, role } = await request.json();
@@ -143,8 +176,17 @@ export async function DELETE(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const actor = await getActor(user.id);
-    if (!actor || !canManageEvent(actor.role)) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+    if (!actor) {
+      return NextResponse.json(
+        { error: 'No tienes un organizador asignado a este evento' },
+        { status: 403 }
+      );
+    }
+    if (!canManageEvent(actor.role)) {
+      return NextResponse.json(
+        { error: `Tu rol actual (${actor.role || 'sin rol'}) no tiene permiso` },
+        { status: 403 }
+      );
     }
 
     const { id } = await request.json();
@@ -181,7 +223,13 @@ export async function PATCH(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const actor = await getActor(user.id);
-    if (!actor || !canManageUsers(actor.role)) {
+    if (!actor) {
+      return NextResponse.json(
+        { error: "No tienes un organizador asignado a este evento" },
+        { status: 403 }
+      );
+    }
+    if (!canManageUsers(actor.role)) {
       return NextResponse.json({ error: "Solo un administrador puede cambiar roles" }, { status: 403 });
     }
 
