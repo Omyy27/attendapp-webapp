@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import {
   canChangeRole,
   canDeleteMember,
@@ -15,21 +16,10 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-async function verifyUser(request: NextRequest) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const cookies = Object.fromEntries(
-    cookieHeader.split("; ").filter(Boolean).map((c) => {
-      const idx = c.indexOf("=");
-      return [c.substring(0, idx), c.substring(idx + 1)];
-    })
-  );
-
-  const token = cookies["sb-access-token"] || cookies["sb-glwoktgliglzowgsipc-auth-token"];
-  if (!token) return null;
-
-  // Use admin getUser to verify token server-side
-  const { data } = await supabaseAdmin.auth.getUser(token);
-  return data.user || null;
+async function getSessionUser() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user || null;
 }
 
 async function getActor(userId: string) {
@@ -45,7 +35,7 @@ async function getActor(userId: string) {
 // GET: listar equipo del evento
 export async function GET(request: NextRequest) {
   try {
-    const user = await verifyUser(request);
+    const user = await getSessionUser();
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const actor = await getActor(user.id);
@@ -69,7 +59,7 @@ export async function GET(request: NextRequest) {
 // POST: crear miembro del equipo (portero, organizador o admin)
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifyUser(request);
+    const user = await getSessionUser();
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const actor = await getActor(user.id);
@@ -149,7 +139,7 @@ export async function POST(request: NextRequest) {
 // DELETE: eliminar miembro del equipo
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await verifyUser(request);
+    const user = await getSessionUser();
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const actor = await getActor(user.id);
@@ -187,7 +177,7 @@ export async function DELETE(request: NextRequest) {
 // PATCH: cambiar el rol de un miembro (solo admin)
 export async function PATCH(request: NextRequest) {
   try {
-    const user = await verifyUser(request);
+    const user = await getSessionUser();
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
     const actor = await getActor(user.id);
