@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { canManageEvent } from "@/lib/roles";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -37,7 +38,7 @@ export default function LoginPage() {
         .eq("user_id", user.id)
         .single();
 
-      if (organizer?.role === "scanner") {
+      if (!canManageEvent(organizer?.role)) {
         router.push("/scanner");
       } else {
         router.push("/");

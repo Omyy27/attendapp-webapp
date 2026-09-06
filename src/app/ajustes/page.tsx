@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import type { Wedding } from "@/lib/types";
+import {
+  canChangeRole,
+  canDeleteMember,
+  canManageEvent,
+  creatableRoles,
+  roleLabel,
+  type MemberRole,
+} from "@/lib/roles";
 
 const VenueMap = dynamic(() => import("@/components/venue-map"), {
   ssr: false,
@@ -34,11 +42,13 @@ export default function AjustesPage() {
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState("");
   const [role, setRole] = useState("organizer");
-  const [team, setTeam] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [team, setTeam] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
+  const [myId, setMyId] = useState<string | null>(null);
   const [showAddStaff, setShowAddStaff] = useState(false);
   const [staffName, setStaffName] = useState("");
   const [staffEmail, setStaffEmail] = useState("");
   const [staffPassword, setStaffPassword] = useState("");
+  const [staffRole, setStaffRole] = useState<MemberRole>("scanner");
   const [staffError, setStaffError] = useState("");
   const [staffLoading, setStaffLoading] = useState(false);
   const supabase = createClient();
@@ -56,7 +66,7 @@ export default function AjustesPage() {
     if (!organizer?.wedding_id) { setLoading(false); return; }
 
     // Los porteros no acceden a ajustes
-    if (organizer.role === "scanner") {
+    if (!canManageEvent(organizer.role)) {
       router.replace("/");
       return;
     }
@@ -172,10 +182,11 @@ export default function AjustesPage() {
     if (res.ok) {
       const data = await res.json();
       setTeam(data.staff || []);
+      setMyId(data.myId || null);
     }
   }, []);
 
-  useEffect(() => { if (role === "organizer") fetchTeam(); }, [role, fetchTeam]);
+  useEffect(() => { if (canManageEvent(role)) fetchTeam(); }, [role, fetchTeam]);
 
   async function handleAddStaff() {
     if (!staffEmail || !staffPassword) {
@@ -192,13 +203,14 @@ export default function AjustesPage() {
       const res = await fetch("/api/team", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: staffName, email: staffEmail, password: staffPassword }),
+        body: JSON.stringify({ name: staffName, email: staffEmail, password: staffPassword, role: staffRole }),
       });
       const data = await res.json();
       if (!res.ok) { setStaffError(data.error); return; }
       setStaffName("");
       setStaffEmail("");
       setStaffPassword("");
+      setStaffRole("scanner");
       setShowAddStaff(false);
       fetchTeam();
     } catch {
@@ -209,11 +221,30 @@ export default function AjustesPage() {
   }
 
   async function handleRemoveStaff(id: string) {
-    await fetch("/api/team", {
+    const res = await fetch("/api/team", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setStaffError(data?.error || "No se pudo eliminar");
+      return;
+    }
+    fetchTeam();
+  }
+
+  async function handleChangeRole(id: string, newRole: MemberRole) {
+    const res = await fetch("/api/team", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, role: newRole }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setStaffError(data?.error || "No se pudo cambiar el rol");
+      return;
+    }
     fetchTeam();
   }
 
@@ -385,14 +416,14 @@ export default function AjustesPage() {
             )}
           </div>
 
-          {/* Equipo de puerta */}
-          {role === "organizer" && (
+          {/* Equipo */}
+          {canManageEvent(role) && (
           <div className="bg-card rounded-2xl border border-line shadow-card p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-content-soft">Equipo de puerta</p>
+                <p className="text-xs font-semibold text-content-soft">Equipo</p>
                 <p className="text-[11px] text-muted-soft mt-0.5">
-                  Porteros que pueden escanear invitados
+                  Usuarios del evento y sus roles
                 </p>
               </div>
               <button
@@ -409,24 +440,51 @@ export default function AjustesPage() {
             {/* Staff list */}
             {team.length > 0 && (
               <div className="space-y-2">
-                {team.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between p-2.5 bg-field rounded-xl">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-content truncate">{s.name || s.email}</p>
-                      <p className="text-[11px] text-muted truncate">{s.email}</p>
+                {team.map((s) => {
+                  const isSelf = s.id === myId;
+                  return (
+                    <div key={s.id} className="p-2.5 bg-field rounded-xl space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-content truncate">
+                            {s.name || s.email}
+                            {isSelf && <span className="text-[11px] text-muted-soft font-medium"> (tú)</span>}
+                          </p>
+                          <p className="text-[11px] text-muted truncate">{s.email}</p>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-ink/5 dark:bg-gold/15 text-gold-deep dark:text-gold shrink-0">
+                          {roleLabel(s.role)}
+                        </span>
+                        {canDeleteMember(role, s.role, isSelf) && (
+                          <button
+                            onClick={() => handleRemoveStaff(s.id)}
+                            className="w-8 h-8 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center shrink-0 transition-colors"
+                            title="Eliminar"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      {canChangeRole(role, isSelf) && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-muted-soft shrink-0">Rol:</span>
+                          <select
+                            value={s.role}
+                            onChange={(e) => handleChangeRole(s.id, e.target.value as MemberRole)}
+                            className="flex-1 bg-card border border-line-strong rounded-lg px-2.5 py-1.5 text-xs text-content focus:outline-none focus:ring-2 focus:ring-ink/10"
+                          >
+                            <option value="scanner">Portero</option>
+                            <option value="organizer">Organizador</option>
+                            <option value="admin">Administrador</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleRemoveStaff(s.id)}
-                      className="w-8 h-8 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center shrink-0 transition-colors"
-                      title="Eliminar"
-                    >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -454,6 +512,20 @@ export default function AjustesPage() {
                   placeholder="Contraseña (mín. 6 caracteres)"
                   className="w-full bg-field border border-line-strong rounded-xl px-4 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
                 />
+                <div>
+                  <label className="text-xs font-semibold text-muted mb-1.5 block">
+                    Rol
+                  </label>
+                  <select
+                    value={staffRole}
+                    onChange={(e) => setStaffRole(e.target.value as MemberRole)}
+                    className="w-full bg-field border border-line-strong rounded-xl px-4 py-2.5 text-sm text-content focus:outline-none focus:ring-2 focus:ring-ink/10"
+                  >
+                    {creatableRoles(role).map((r) => (
+                      <option key={r} value={r}>{roleLabel(r)}</option>
+                    ))}
+                  </select>
+                </div>
                 {staffError && (
                   <p className="text-xs text-rose-600 dark:text-rose-400">{staffError}</p>
                 )}
@@ -468,7 +540,7 @@ export default function AjustesPage() {
             )}
 
             {team.length === 0 && !showAddStaff && (
-              <p className="text-[11px] text-muted-soft">No hay porteros aún</p>
+              <p className="text-[11px] text-muted-soft">No hay miembros aún</p>
             )}
           </div>
           )}

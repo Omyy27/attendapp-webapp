@@ -12,6 +12,7 @@ import { DeleteConfirm } from "@/components/delete-confirm";
 import { exportToCsv } from "@/lib/csv";
 import { useDriverTour } from "@/lib/use-driver-tour";
 import { UserAvatar } from "@/components/user-avatar";
+import { canManageEvent } from "@/lib/roles";
 
 const dashboardSteps = [
   { element: "#tour-header", popover: { title: "Bienvenido a Attendapp", description: "Aquí ves el nombre de tu evento y notificaciones." } },
@@ -418,7 +419,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Quick Actions */}
-        {role === "organizer" && (
+        {canManageEvent(role) && (
         <section id="tour-actions" className="px-5 pt-5 pb-1">
           <div className="flex gap-3">
             <button
@@ -510,7 +511,7 @@ export default function DashboardPage() {
               <GuestCard
                 key={guest.id}
                 guest={guest}
-                showActions={role === "organizer"}
+                showActions={canManageEvent(role)}
                 onQRClick={() => handleQRClick(guest)}
                 onEditClick={() => handleEditClick(guest)}
                 onDeleteClick={() => handleDeleteClick(guest)}

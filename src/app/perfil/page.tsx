@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { DarkToggle } from "@/components/dark-toggle";
 import { InstallPrompt } from "@/components/install-prompt";
 import { PushPrompt } from "@/components/push-prompt";
+import { roleLabel } from "@/lib/roles";
 import type { Organizer, Wedding } from "@/lib/types";
 
 export default function ProfilePage() {
@@ -121,7 +122,7 @@ export default function ProfilePage() {
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.15em] text-muted font-semibold">Rol</p>
                   <p className="text-content font-semibold text-sm">
-                    {organizer?.role === "scanner" ? "Portero" : "Organizador"}
+                    {roleLabel(organizer?.role)}
                   </p>
                 </div>
               </div>

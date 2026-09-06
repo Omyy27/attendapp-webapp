@@ -8,6 +8,7 @@ import { Toast } from "@/components/ui/toast";
 import { DispatchCard, type GuestGroup } from "@/components/dispatch-card";
 import { useDriverTour } from "@/lib/use-driver-tour";
 import { UserAvatar } from "@/components/user-avatar";
+import { canManageEvent } from "@/lib/roles";
 
 const pasesSteps = [
   { element: "#tour-pases-status", popover: { title: "Estado de envíos", description: "Pases generados, enviados y por enviar en tiempo real." } },
@@ -61,7 +62,7 @@ export default function PassesPage() {
     if (organizer?.name) setOrganizerName(organizer.name);
 
     // Los porteros no acceden a pases
-    if (organizer?.role === "scanner") {
+    if (!canManageEvent(organizer?.role)) {
       router.replace("/");
       return;
     }

@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import {
+  canChangeRole,
+  canDeleteMember,
+  canManageEvent,
+  canManageUsers,
+  creatableRoles,
+  isValidRole,
+  roleLabel,
+} from "@/lib/roles";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,58 +32,64 @@ async function verifyUser(request: NextRequest) {
   return data.user || null;
 }
 
-// GET: listar porteros del evento
+async function getActor(userId: string) {
+  const { data: organizer } = await supabaseAdmin
+    .from("organizers")
+    .select("id, wedding_id, role")
+    .eq("user_id", userId)
+    .single();
+
+  return organizer as { id: string; wedding_id: string; role: string } | null;
+}
+
+// GET: listar equipo del evento
 export async function GET(request: NextRequest) {
   try {
     const user = await verifyUser(request);
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-    const { data: organizer } = await supabaseAdmin
-      .from("organizers")
-      .select("wedding_id, role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!organizer || organizer.role !== "organizer") {
+    const actor = await getActor(user.id);
+    if (!actor || !canManageEvent(actor.role)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
     const { data: staff } = await supabaseAdmin
       .from("organizers")
-      .select("id, name, email, role")
-      .eq("wedding_id", organizer.wedding_id)
-      .eq("role", "scanner");
+      .select("id, user_id, name, email, role")
+      .eq("wedding_id", actor.wedding_id)
+      .order("name");
 
-    return NextResponse.json({ staff: staff || [] });
+    return NextResponse.json({ staff: staff || [], myId: actor.id });
   } catch (error) {
     console.error("Team GET error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-// POST: crear portero
+// POST: crear miembro del equipo (portero, organizador o admin)
 export async function POST(request: NextRequest) {
   try {
     const user = await verifyUser(request);
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-    const { data: organizer } = await supabaseAdmin
-      .from("organizers")
-      .select("wedding_id, role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!organizer || organizer.role !== "organizer") {
+    const actor = await getActor(user.id);
+    if (!actor || !canManageEvent(actor.role)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const { name, email, password } = await request.json();
+    const { name, email, password, role } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email y contraseña son requeridos" }, { status: 400 });
     }
     if (password.length < 6) {
       return NextResponse.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+    }
+    if (!isValidRole(role)) {
+      return NextResponse.json({ error: "Rol inválido" }, { status: 400 });
+    }
+    if (!creatableRoles(actor.role).includes(role)) {
+      return NextResponse.json({ error: "No puedes crear ese rol" }, { status: 403 });
     }
 
     // Verificar si el email ya tiene una cuenta de auth
@@ -88,7 +103,7 @@ export async function POST(request: NextRequest) {
         .from("organizers")
         .select("id")
         .eq("user_id", userId)
-        .eq("wedding_id", organizer.wedding_id)
+        .eq("wedding_id", actor.wedding_id)
         .single();
 
       if (existingMember) {
@@ -113,8 +128,8 @@ export async function POST(request: NextRequest) {
         user_id: userId,
         name: name || email.split("@")[0],
         email,
-        role: "scanner",
-        wedding_id: organizer.wedding_id,
+        role,
+        wedding_id: actor.wedding_id,
       });
 
     if (insertError) {
@@ -123,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       result: "created",
-      message: `Portero ${name || email} agregado al equipo`,
+      message: `${roleLabel(role)} ${name || email} agregado al equipo`,
     });
   } catch (error) {
     console.error("Team POST error:", error);
@@ -131,19 +146,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE: eliminar portero
+// DELETE: eliminar miembro del equipo
 export async function DELETE(request: NextRequest) {
   try {
     const user = await verifyUser(request);
     if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
-    const { data: organizer } = await supabaseAdmin
-      .from("organizers")
-      .select("wedding_id, role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!organizer || organizer.role !== "organizer") {
+    const actor = await getActor(user.id);
+    if (!actor || !canManageEvent(actor.role)) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
@@ -154,11 +164,15 @@ export async function DELETE(request: NextRequest) {
       .from("organizers")
       .select("id, role")
       .eq("id", id)
-      .eq("wedding_id", organizer.wedding_id)
+      .eq("wedding_id", actor.wedding_id)
       .single();
 
-    if (!staffMember || staffMember.role !== "scanner") {
-      return NextResponse.json({ error: "No encontrado o no es portero" }, { status: 404 });
+    if (!staffMember) {
+      return NextResponse.json({ error: "Miembro no encontrado" }, { status: 404 });
+    }
+
+    if (!canDeleteMember(actor.role, staffMember.role, staffMember.id === actor.id)) {
+      return NextResponse.json({ error: "No puedes eliminar a este miembro" }, { status: 403 });
     }
 
     await supabaseAdmin.from("organizers").delete().eq("id", id);
@@ -166,6 +180,54 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ result: "deleted" });
   } catch (error) {
     console.error("Team DELETE error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// PATCH: cambiar el rol de un miembro (solo admin)
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await verifyUser(request);
+    if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+
+    const actor = await getActor(user.id);
+    if (!actor || !canManageUsers(actor.role)) {
+      return NextResponse.json({ error: "Solo un administrador puede cambiar roles" }, { status: 403 });
+    }
+
+    const { id, role } = await request.json();
+    if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+    if (!isValidRole(role)) {
+      return NextResponse.json({ error: "Rol inválido" }, { status: 400 });
+    }
+
+    const { data: staffMember } = await supabaseAdmin
+      .from("organizers")
+      .select("id, role")
+      .eq("id", id)
+      .eq("wedding_id", actor.wedding_id)
+      .single();
+
+    if (!staffMember) {
+      return NextResponse.json({ error: "Miembro no encontrado" }, { status: 404 });
+    }
+
+    if (!canChangeRole(actor.role, staffMember.id === actor.id)) {
+      return NextResponse.json({ error: "No puedes cambiar tu propio rol" }, { status: 403 });
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from("organizers")
+      .update({ role })
+      .eq("id", id);
+
+    if (updateError) {
+      return NextResponse.json({ error: "Error al cambiar el rol" }, { status: 500 });
+    }
+
+    return NextResponse.json({ result: "updated" });
+  } catch (error) {
+    console.error("Team PATCH error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
