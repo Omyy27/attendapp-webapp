@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 import type { Wedding } from "@/lib/types";
 import {
   canChangeRole,
@@ -51,7 +51,7 @@ export default function AjustesPage() {
   const [staffRole, setStaffRole] = useState<MemberRole>("scanner");
   const [staffError, setStaffError] = useState("");
   const [staffLoading, setStaffLoading] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const fetchData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();

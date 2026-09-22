@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 import { UserAvatar } from "@/components/user-avatar";
 import { DarkToggle } from "@/components/dark-toggle";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -16,7 +16,7 @@ export default function ProfilePage() {
   const [wedding, setWedding] = useState<Wedding | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const fetchData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,7 @@ function getStatusBadge(group: GuestGroup) {
   );
 }
 
-export function DispatchCard({
+export const DispatchCard = memo(function DispatchCard({
   group,
   onWhatsApp,
   onEmail,
@@ -137,4 +138,4 @@ export function DispatchCard({
       )}
     </article>
   );
-}
+});

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -18,7 +18,7 @@ export function PushPrompt() {
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
   const [subscribing, setSubscribing] = useState(false);
   const [enabled, setEnabled] = useState(false);
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   useEffect(() => {
     if (typeof window === "undefined") return;

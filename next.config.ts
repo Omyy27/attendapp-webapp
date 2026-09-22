@@ -1,22 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable static exports for PWA
   output: "standalone",
 
-  // Allow external images
+  poweredByHeader: false,
+
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "i.pravatar.cc",
-      },
-      {
-        protocol: "https",
-        hostname: "api.qrserver.com",
-      },
-    ],
+    formats: ["image/avif", "image/webp"],
   },
+
   async headers() {
     return [
       {

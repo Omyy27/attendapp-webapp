@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { AnalyticsRing } from "@/components/analytics-ring";
 import { GuestCard, type Guest } from "@/components/guest-card";
@@ -49,7 +49,7 @@ export default function DashboardPage() {
 
   const ITEMS_PER_PAGE = 20;
 
-  const supabase = createClient();
+  const supabase = useSupabase();
   const { startTour } = useDriverTour("dashboard", dashboardSteps);
 
   useEffect(() => {
@@ -108,19 +108,14 @@ export default function DashboardPage() {
     setWeddingId(organizer.wedding_id);
     setRole(organizer.role || "organizer");
 
-    const { data: wedding } = await supabase
-      .from("weddings")
-      .select("couple_name")
-      .eq("id", organizer.wedding_id)
-      .single();
+    const [weddingResult, groupsResult] = await Promise.all([
+      supabase.from("weddings").select("couple_name").eq("id", organizer.wedding_id).single(),
+      supabase.from("guest_groups").select("id, name, table_number, pass_uuid").eq("wedding_id", organizer.wedding_id),
+    ]);
 
-    if (wedding) setCoupleName(wedding.couple_name);
+    if (weddingResult.data) setCoupleName(weddingResult.data.couple_name);
 
-    const { data: groups } = await supabase
-      .from("guest_groups")
-      .select("id, name, table_number, pass_uuid")
-      .eq("wedding_id", organizer.wedding_id);
-
+    const groups = groupsResult.data;
     const groupMap = new Map();
     (groups || []).forEach((g) => groupMap.set(g.id, g));
 
@@ -155,10 +150,19 @@ export default function DashboardPage() {
   }, [fetchData]);
 
   // Contadores derivados de la lista (se actualizan con realtime)
-  const totalGuests = guests.length;
-  const arrived = guests.filter((g) => g.status === "checked_in").length;
-  const pendingCount = guests.filter((g) => g.status === "pending").length;
-  const confirmedCount = guests.filter((g) => g.status === "confirmed").length;
+  const { totalGuests, arrived, pendingCount, confirmedCount, percentage } = useMemo(() => {
+    const total = guests.length;
+    const arr = guests.filter((g) => g.status === "checked_in").length;
+    const pend = guests.filter((g) => g.status === "pending").length;
+    const conf = guests.filter((g) => g.status === "confirmed").length;
+    return {
+      totalGuests: total,
+      arrived: arr,
+      pendingCount: pend,
+      confirmedCount: conf,
+      percentage: total > 0 ? Math.round((arr / total) * 100) : 0,
+    };
+  }, [guests]);
 
   useEffect(() => {
     setCurrentTime(new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }));
@@ -167,8 +171,6 @@ export default function DashboardPage() {
     }, 60000);
     return () => clearInterval(timer);
   }, []);
-
-  const percentage = totalGuests > 0 ? Math.round((arrived / totalGuests) * 100) : 0;
 
   // Realtime: check-ins en vivo desde cualquier dispositivo
   useEffect(() => {
@@ -205,7 +207,7 @@ export default function DashboardPage() {
 
   useEffect(() => { setPage(1); }, [searchQuery, activeFilter]);
 
-  const filteredGuests = guests.filter((guest) => {
+  const filteredGuests = useMemo(() => guests.filter((guest) => {
     const matchesSearch =
       searchQuery === "" ||
       `${guest.first_name} ${guest.last_name}`
@@ -219,26 +221,26 @@ export default function DashboardPage() {
       (activeFilter === "Sin confirmar" && guest.status === "pending");
 
     return matchesSearch && matchesFilter;
-  });
+  }), [guests, searchQuery, activeFilter]);
 
   const totalPages = Math.ceil(filteredGuests.length / ITEMS_PER_PAGE);
-  const paginatedGuests = filteredGuests.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const paginatedGuests = useMemo(() => filteredGuests.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE), [filteredGuests, page]);
 
-  function handleEditClick(guest: Guest) {
+  const handleEditClick = useCallback((guest: Guest) => {
     setEditingGuest(guest);
     setShowEditModal(true);
-  }
+  }, []);
 
-  function handleDeleteClick(guest: Guest) {
+  const handleDeleteClick = useCallback((guest: Guest) => {
     setDeletingGuest(guest);
     setShowDeleteConfirm(true);
-  }
+  }, []);
 
-  function handleQRClick(guest: Guest) {
+  const handleQRClick = useCallback((guest: Guest) => {
     if (guest.group?.pass_uuid) {
       window.open(`/pase/${guest.group.pass_uuid}`, "_blank");
     }
-  }
+  }, []);
 
   async function handleDeleteConfirm() {
     if (!deletingGuest) return;
@@ -296,7 +298,7 @@ export default function DashboardPage() {
     );
   }
 
-  function handleExportCsv() {
+  const handleExportCsv = useCallback(() => {
     const csvData = guests.map((g) => ({
       Nombre: g.first_name,
       Apellido: g.last_name,
@@ -308,7 +310,7 @@ export default function DashboardPage() {
     }));
 
     exportToCsv(csvData, `attendapp-padron-${new Date().toISOString().slice(0, 10)}.csv`);
-  }
+  }, [guests]);
 
   return (
     <div className="min-h-screen bg-surface pb-28">

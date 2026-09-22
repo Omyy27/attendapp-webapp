@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { Toast } from "@/components/ui/toast";
 import { DispatchCard, type GuestGroup } from "@/components/dispatch-card";
@@ -26,7 +26,7 @@ export default function PassesPage() {
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useSupabase();
   const { startTour } = useDriverTour("pases", pasesSteps);
 
   const showToast = useCallback((message: string) => {
@@ -85,19 +85,24 @@ export default function PassesPage() {
 
     if (!groupsData) { setLoading(false); return; }
 
-    const groupsWithCount = await Promise.all(
-      groupsData.map(async (g) => {
-        const { count } = await supabase
-          .from("guests")
-          .select("*", { count: "exact", head: true })
-          .eq("group_id", g.id);
+    const groupIds = groupsData.map((g) => g.id);
 
-        return {
-          ...g,
-          guest_count: count || 0,
-        };
-      })
-    );
+    let countMap = new Map<string, number>();
+    if (groupIds.length > 0) {
+      const { data: allGuests } = await supabase
+        .from("guests")
+        .select("group_id")
+        .in("group_id", groupIds);
+
+      (allGuests || []).forEach((g) => {
+        countMap.set(g.group_id, (countMap.get(g.group_id) || 0) + 1);
+      });
+    }
+
+    const groupsWithCount = groupsData.map((g) => ({
+      ...g,
+      guest_count: countMap.get(g.id) || 0,
+    }));
 
     setGroups(groupsWithCount as GuestGroup[]);
     setLoading(false);

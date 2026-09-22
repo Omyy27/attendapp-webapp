@@ -2,7 +2,6 @@
 
 import { use, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import QRCode from "qrcode";
 
 const VenueMap = dynamic(() => import("@/components/venue-map"), {
   ssr: false,
@@ -66,6 +65,7 @@ export default function GuestPassPage({
     let cancelled = false;
 
     async function generateQr() {
+      const QRCode = (await import("qrcode")).default;
       const qrUrl = await QRCode.toDataURL(`ATTENDAPP-${uuid.toUpperCase()}`, {
         width: 400,
         margin: 0,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 
 interface AddGuestModalProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ export function AddGuestModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   useEffect(() => {
     if (isOpen) {

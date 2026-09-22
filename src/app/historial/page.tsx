@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 import { Badge } from "@/components/ui/badge";
 
 type LogResult = "valid" | "already_used" | "invalid";
@@ -65,7 +65,7 @@ export default function HistorialPage() {
   const [logs, setLogs] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<(typeof filters)[number]>("Todos");
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   const fetchLogs = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -87,7 +87,21 @@ export default function HistorialPage() {
   useEffect(() => {
     const channel = supabase
       .channel("historial-rt")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "scan_logs" }, () => fetchLogs())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "scan_logs" }, async (payload) => {
+        // Intentar insertar solo la fila nueva (sin refetch completo)
+        const { data } = await supabase
+          .from("scan_logs")
+          .select("id, group_id, result, scanned_at, guest_groups(name, table_number)")
+          .eq("id", payload.new.id)
+          .single();
+
+        if (data) {
+          setLogs((prev) => [data as unknown as LogRow, ...prev].slice(0, 200));
+        } else {
+          // Fallback: refetch completo si la consulta individual falla
+          fetchLogs();
+        }
+      })
       .subscribe();
 
     return () => {

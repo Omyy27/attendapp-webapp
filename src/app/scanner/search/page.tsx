@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 import { Avatar } from "@/components/ui/avatar";
 
 interface SearchResult {
@@ -21,7 +21,7 @@ export default function BackupSearchPage() {
   const [searching, setSearching] = useState(false);
   const [lastCheckin, setLastCheckin] = useState<{ name: string; time: string } | null>(null);
   const [weddingId, setWeddingId] = useState<string | null>(null);
-  const supabase = createClient();
+  const supabase = useSupabase();
 
   useEffect(() => {
     async function init() {

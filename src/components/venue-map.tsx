@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useId } from "react";
 import "leaflet/dist/leaflet.css";
 
 type VenueMapProps = {
@@ -20,18 +20,20 @@ export default function VenueMap({
   draggable = false,
   onPositionChange,
 }: VenueMapProps) {
+  const mapId = useId();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<import("leaflet").Map | null>(null);
+  const markerRef = useRef<import("leaflet").Marker | null>(null);
+
+  // Inicializar mapa una sola vez
   useEffect(() => {
-    let map: import("leaflet").Map | null = null;
-    let marker: import("leaflet").Marker | null = null;
     let cancelled = false;
 
     async function init() {
       const L = await import("leaflet");
+      if (cancelled || !containerRef.current) return;
 
-      const container = document.getElementById("venue-map-canvas");
-      if (!container || cancelled) return;
-
-      map = L.map("venue-map-canvas", {
+      const map = L.map(containerRef.current, {
         center: [lat, lng],
         zoom: 16,
         scrollWheelZoom: false,
@@ -55,38 +57,48 @@ export default function VenueMap({
         popupAnchor: [0, -46],
       });
 
-      marker = L.marker([lat, lng], { icon, draggable }).addTo(map);
-      if (name) {
-        marker.bindPopup(`<b>${name}</b>`);
-      }
+      const marker = L.marker([lat, lng], { icon, draggable }).addTo(map);
+      if (name) marker.bindPopup(`<b>${name}</b>`);
 
       marker.on("dragend", () => {
-        const pos = marker?.getLatLng();
-        if (pos && onPositionChange) {
-          onPositionChange(pos.lat, pos.lng);
-        }
+        const pos = marker.getLatLng();
+        if (pos && onPositionChange) onPositionChange(pos.lat, pos.lng);
       });
 
       map.on("click", (e) => {
-        if (draggable && marker) {
+        if (draggable) {
           marker.setLatLng(e.latlng);
           onPositionChange?.(e.latlng.lat, e.latlng.lng);
         }
       });
+
+      mapRef.current = map;
+      markerRef.current = marker;
     }
 
     init();
 
     return () => {
       cancelled = true;
-      map?.remove();
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Actualizar posición sin destruir el mapa
+  useEffect(() => {
+    if (mapRef.current && markerRef.current) {
+      mapRef.current.setView([lat, lng], 16);
+      markerRef.current.setLatLng([lat, lng]);
+    }
   }, [lat, lng]);
 
   return (
     <div
-      id="venue-map-canvas"
+      ref={containerRef}
+      id={mapId}
       style={{ height, width: "100%", zIndex: 0 }}
       className="rounded-2xl overflow-hidden"
     />

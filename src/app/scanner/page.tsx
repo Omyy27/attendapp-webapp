@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/lib/use-supabase";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { useDriverTour } from "@/lib/use-driver-tour";
 import { UserAvatar } from "@/components/user-avatar";
@@ -33,7 +33,8 @@ export default function ScannerPage() {
   const [organizerName, setOrganizerName] = useState("");
   const scannerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
+  const statsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const supabase = useSupabase();
   const { startTour } = useDriverTour("scanner", scannerSteps);
 
   useEffect(() => {
@@ -63,28 +64,18 @@ export default function ScannerPage() {
     const groupIds = (groups || []).map((g) => g.id);
     if (groupIds.length === 0) return;
 
-    const { count: totalGuests } = await supabase
-      .from("guests")
-      .select("*", { count: "exact", head: true })
-      .in("group_id", groupIds);
+    const [totalResult, checkedInResult, scanLogsResult] = await Promise.all([
+      supabase.from("guests").select("*", { count: "exact", head: true }).in("group_id", groupIds),
+      supabase.from("guests").select("*", { count: "exact", head: true }).in("group_id", groupIds).eq("status", "checked_in"),
+      supabase.from("scan_logs").select("result").in("group_id", groupIds),
+    ]);
 
-    const { count: checkedIn } = await supabase
-      .from("guests")
-      .select("*", { count: "exact", head: true })
-      .in("group_id", groupIds)
-      .eq("status", "checked_in");
-
-    const { data: scanLogs } = await supabase
-      .from("scan_logs")
-      .select("result")
-      .in("group_id", groupIds);
-
-    const rejected = (scanLogs || []).filter((l) => l.result === "already_used").length;
+    const rejected = (scanLogsResult.data || []).filter((l) => l.result === "already_used").length;
 
     setStats({
-      valid: checkedIn || 0,
+      valid: checkedInResult.count || 0,
       rejected,
-      remaining: (totalGuests || 0) - (checkedIn || 0),
+      remaining: (totalResult.count || 0) - (checkedInResult.count || 0),
     });
   }, [supabase]);
 
@@ -137,13 +128,19 @@ export default function ScannerPage() {
 
   // Realtime: stats en vivo desde cualquier dispositivo
   useEffect(() => {
+    const fetchStatsDebounced = () => {
+      if (statsTimerRef.current) clearTimeout(statsTimerRef.current);
+      statsTimerRef.current = setTimeout(() => fetchStats(), 2000);
+    };
+
     const channel = supabase
       .channel("scanner-rt")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "scan_logs" }, () => fetchStats())
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "guests" }, () => fetchStats())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "scan_logs" }, fetchStatsDebounced)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "guests" }, fetchStatsDebounced)
       .subscribe();
 
     return () => {
+      if (statsTimerRef.current) clearTimeout(statsTimerRef.current);
       supabase.removeChannel(channel);
     };
   }, [supabase, fetchStats]);

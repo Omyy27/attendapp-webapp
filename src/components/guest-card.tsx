@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
@@ -54,7 +55,7 @@ function getStatusBadge(status: Guest["status"]) {
   }
 }
 
-export function GuestCard({
+export const GuestCard = memo(function GuestCard({
   guest,
   showActions = true,
   onQRClick,
@@ -122,4 +123,4 @@ export function GuestCard({
       )}
     </article>
   );
-}
+});

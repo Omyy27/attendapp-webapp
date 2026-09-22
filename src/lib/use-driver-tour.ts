@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { driver, type DriveStep, type Driver } from "driver.js";
+import type { DriveStep, Driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
 const STORAGE_PREFIX = "attendapp_tour_";
@@ -16,13 +16,15 @@ export function useDriverTour(pageKey: string, steps: DriveStep[]) {
   }, []);
 
   const startTour = useCallback(
-    (force = false) => {
+    async (force = false) => {
       if (!force && typeof window !== "undefined") {
         const seen = localStorage.getItem(STORAGE_PREFIX + pageKey);
         if (seen === "done") return;
       }
 
       driverRef.current?.destroy();
+
+      const { driver } = await import("driver.js");
 
       const driverObj = driver({
         showProgress: true,
