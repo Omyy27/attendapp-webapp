@@ -1,5 +1,8 @@
 "use client";
 
+import "konva/lib/shapes/Circle";
+import "konva/lib/shapes/Rect";
+import "konva/lib/shapes/Text";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Stage, Layer } from "react-konva";
 import { useSupabase } from "@/lib/use-supabase";
