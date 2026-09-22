@@ -13,6 +13,7 @@ interface EditGuestModalProps {
     phone?: string | null;
     email?: string | null;
     group_id: string;
+    slots: number;
   }) => void;
   guest: {
     id: string;
@@ -21,6 +22,7 @@ interface EditGuestModalProps {
     phone?: string;
     email?: string;
     group_id: string;
+    slots?: number;
   } | null;
 }
 
@@ -40,6 +42,7 @@ export function EditGuestModal({
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [slots, setSlots] = useState(1);
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [groups, setGroups] = useState<GuestGroupOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,6 +56,7 @@ export function EditGuestModal({
       setLastName(guest.last_name);
       setPhone(guest.phone || "");
       setEmail(guest.email || "");
+      setSlots(guest.slots ?? 1);
       setSelectedGroupId(guest.group_id);
       fetchGroups();
     }
@@ -83,6 +87,7 @@ export function EditGuestModal({
           phone: phone.trim() || null,
           email: email.trim() || null,
           group_id: selectedGroupId,
+          slots: slots,
         })
         .eq("id", guest.id);
 
@@ -95,6 +100,7 @@ export function EditGuestModal({
         phone: phone.trim() || null,
         email: email.trim() || null,
         group_id: selectedGroupId,
+        slots: slots,
       });
       onClose();
     } catch (err: unknown) {
@@ -187,6 +193,21 @@ export function EditGuestModal({
               placeholder="correo@ejemplo.com"
               className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
             />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-content-soft mb-1 block">
+              Cupos
+            </label>
+            <input
+              type="number"
+              value={slots}
+              onChange={(e) => setSlots(Math.max(1, parseInt(e.target.value) || 1))}
+              min="1"
+              max="20"
+              className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
+            />
+            <p className="text-[10px] text-muted-soft mt-1">Lugares que ocupa esta invitación</p>
           </div>
 
           <div>

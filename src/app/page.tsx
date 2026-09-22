@@ -151,17 +151,19 @@ export default function DashboardPage() {
   }, [fetchData]);
 
   // Contadores derivados de la lista (se actualizan con realtime)
-  const { totalGuests, arrived, pendingCount, confirmedCount, percentage } = useMemo(() => {
+  const { totalGuests, arrived, pendingCount, confirmedCount, percentage, totalSlots } = useMemo(() => {
     const total = guests.length;
     const arr = guests.filter((g) => g.status === "checked_in").length;
     const pend = guests.filter((g) => g.status === "pending").length;
     const conf = guests.filter((g) => g.status === "confirmed").length;
+    const slots = guests.reduce((sum, g) => sum + (g.slots ?? 1), 0);
     return {
       totalGuests: total,
       arrived: arr,
       pendingCount: pend,
       confirmedCount: conf,
       percentage: total > 0 ? Math.round((arr / total) * 100) : 0,
+      totalSlots: slots,
     };
   }, [guests]);
 
@@ -288,6 +290,7 @@ export default function DashboardPage() {
     phone?: string | null;
     email?: string | null;
     group_id: string;
+    slots: number;
   }) {
     setShowEditModal(false);
     setEditingGuest(null);
@@ -301,6 +304,7 @@ export default function DashboardPage() {
               phone: updated.phone ?? undefined,
               email: updated.email ?? undefined,
               group_id: updated.group_id,
+              slots: updated.slots,
             }
           : g
       )
@@ -313,6 +317,7 @@ export default function DashboardPage() {
       Apellido: g.last_name,
       Grupo: g.group.name,
       Mesa: g.group.table_number,
+      Cupos: g.slots ?? 1,
       Estado: g.status === "checked_in" ? "Llego" : g.status === "confirmed" ? "Confirmado" : "Pendiente",
       Telefono: g.phone || "",
       Email: g.email || "",
@@ -379,9 +384,9 @@ export default function DashboardPage() {
               <div>
                 <p className="text-2xl font-bold text-content leading-none">
                   {arrived}
-                  <span className="text-base text-muted-soft font-medium">/{totalGuests}</span>
+                  <span className="text-base text-muted-soft font-medium">/{totalSlots}</span>
                 </p>
-                <p className="text-xs text-muted mt-1 font-medium">Llegaron</p>
+                <p className="text-xs text-muted mt-1 font-medium">Llegaron · {totalGuests} invitados</p>
               </div>
             </div>
 

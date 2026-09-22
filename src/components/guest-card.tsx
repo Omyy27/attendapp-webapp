@@ -11,6 +11,7 @@ export interface Guest {
   phone?: string;
   email?: string;
   group_id: string;
+  slots: number;
   status: "pending" | "confirmed" | "checked_in";
   checked_in_at?: string;
   group: {
@@ -85,6 +86,11 @@ export const GuestCard = memo(function GuestCard({
             <span className="w-1.5 h-1.5 rounded-full border border-gold" />
             Mesa {guest.group.table_number}
           </span>
+          {(guest.slots ?? 1) > 1 && (
+            <span className="text-[10px] font-semibold text-gold-deep bg-gold-faint dark:text-gold dark:bg-gold/15 px-1.5 py-0.5 rounded-full">
+              {guest.slots} cupos
+            </span>
+          )}
           {getStatusBadge(guest.status)}
         </div>
       </div>

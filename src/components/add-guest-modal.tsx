@@ -26,6 +26,7 @@ export function AddGuestModal({
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [slots, setSlots] = useState(1);
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupTable, setNewGroupTable] = useState("");
@@ -93,6 +94,7 @@ export function AddGuestModal({
         last_name: lastName.trim(),
         phone: phone.trim() || null,
         email: email.trim() || null,
+        slots: slots,
         status: "pending",
       });
 
@@ -102,6 +104,7 @@ export function AddGuestModal({
       setLastName("");
       setPhone("");
       setEmail("");
+      setSlots(1);
       setNewGroupName("");
       setNewGroupTable("");
       setSelectedGroupId("");
@@ -200,6 +203,21 @@ export function AddGuestModal({
               placeholder="correo@ejemplo.com"
               className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
             />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-content-soft mb-1 block">
+              Cupos
+            </label>
+            <input
+              type="number"
+              value={slots}
+              onChange={(e) => setSlots(Math.max(1, parseInt(e.target.value) || 1))}
+              min="1"
+              max="20"
+              className="w-full bg-field border border-line-strong rounded-lg px-3 py-2.5 text-sm text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10"
+            />
+            <p className="text-[10px] text-muted-soft mt-1">Lugares que ocupa esta invitación</p>
           </div>
 
           {/* Group selection */}
