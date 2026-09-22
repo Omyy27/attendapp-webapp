@@ -19,7 +19,7 @@ const dashboardSteps = [
   { element: "#tour-user-avatar", popover: { title: "Tu perfil", description: "Toca tu avatar para ver tu perfil y cerrar sesión." } },
   { element: "#tour-analytics", popover: { title: "Resumen del día", description: "Llegadas, pendientes y mesas activas en tiempo real." } },
   { element: "#tour-actions", popover: { title: "Acciones rápidas", description: "Descarga tu lista de invitados como CSV o agrega nuevos invitados." } },
-  { element: "#tour-search", popover: { title: "Busca invitados", description: "Filtra por nombre, grupo familiar o estado de confirmación." } },
+  { element: "#tour-search", popover: { title: "Busca y filtra", description: "Filtra por nombre, grupo, mesa o estado de confirmación." } },
   { element: "#tour-guest-list", popover: { title: "Tu padrón", description: "Lista completa con el estado de cada invitado. Toca un nombre para ver detalles." } },
   { element: "#tour-nav", popover: { title: "Navegación", description: "Accede a Invitados, Escanear y Enviar pases desde aquí." } },
 ];
@@ -44,6 +44,8 @@ export default function DashboardPage() {
   const [coupleName, setCoupleName] = useState("Mi evento");
   const [currentTime, setCurrentTime] = useState("");
   const [activeTables, setActiveTables] = useState(0);
+  const [tableFilter, setTableFilter] = useState("Todas");
+  const [groupFilter, setGroupFilter] = useState("Todos");
   const [page, setPage] = useState(1);
   const [role, setRole] = useState("organizer");
 
@@ -164,6 +166,16 @@ export default function DashboardPage() {
     };
   }, [guests]);
 
+  const availableTables = useMemo(() => {
+    const tables = new Set(guests.map((g) => g.group?.table_number).filter(Boolean));
+    return Array.from(tables).sort((a, b) => a - b);
+  }, [guests]);
+
+  const availableGroups = useMemo(() => {
+    const names = new Set(guests.map((g) => g.group?.name).filter(Boolean));
+    return Array.from(names).sort();
+  }, [guests]);
+
   useEffect(() => {
     setCurrentTime(new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }));
     const timer = setInterval(() => {
@@ -205,7 +217,7 @@ export default function DashboardPage() {
     };
   }, [supabase]);
 
-  useEffect(() => { setPage(1); }, [searchQuery, activeFilter]);
+  useEffect(() => { setPage(1); }, [searchQuery, activeFilter, tableFilter, groupFilter]);
 
   const filteredGuests = useMemo(() => guests.filter((guest) => {
     const matchesSearch =
@@ -220,8 +232,14 @@ export default function DashboardPage() {
       (activeFilter === "Confirmados" && guest.status === "confirmed") ||
       (activeFilter === "Sin confirmar" && guest.status === "pending");
 
-    return matchesSearch && matchesFilter;
-  }), [guests, searchQuery, activeFilter]);
+    const matchesTable =
+      tableFilter === "Todas" || String(guest.group?.table_number) === tableFilter;
+
+    const matchesGroup =
+      groupFilter === "Todos" || guest.group?.name === groupFilter;
+
+    return matchesSearch && matchesFilter && matchesTable && matchesGroup;
+  }), [guests, searchQuery, activeFilter, tableFilter, groupFilter]);
 
   const totalPages = Math.ceil(filteredGuests.length / ITEMS_PER_PAGE);
   const paginatedGuests = useMemo(() => filteredGuests.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE), [filteredGuests, page]);
@@ -299,7 +317,7 @@ export default function DashboardPage() {
   }
 
   const handleExportCsv = useCallback(() => {
-    const csvData = guests.map((g) => ({
+    const csvData = filteredGuests.map((g) => ({
       Nombre: g.first_name,
       Apellido: g.last_name,
       Grupo: g.group.name,
@@ -310,7 +328,7 @@ export default function DashboardPage() {
     }));
 
     exportToCsv(csvData, `attendapp-padron-${new Date().toISOString().slice(0, 10)}.csv`);
-  }, [guests]);
+  }, [filteredGuests]);
 
   return (
     <div className="min-h-screen bg-surface pb-28">
@@ -426,7 +444,7 @@ export default function DashboardPage() {
           <div className="flex gap-3">
             <button
               onClick={handleExportCsv}
-              disabled={guests.length === 0}
+              disabled={filteredGuests.length === 0}
               className="flex-1 bg-ink dark:bg-gold dark:text-ink text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
             >
               <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -480,6 +498,60 @@ export default function DashboardPage() {
               </button>
             ))}
           </div>
+          {availableTables.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button
+                onClick={() => setTableFilter("Todas")}
+                className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
+                  tableFilter === "Todas"
+                    ? "bg-ink text-white dark:bg-gold dark:text-ink"
+                    : "bg-card border border-line-strong text-content-soft hover:bg-field"
+                }`}
+              >
+                Todas
+              </button>
+              {availableTables.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTableFilter(String(t))}
+                  className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
+                    tableFilter === String(t)
+                      ? "bg-ink text-white dark:bg-gold dark:text-ink"
+                      : "bg-card border border-line-strong text-content-soft hover:bg-field"
+                  }`}
+                >
+                  Mesa {t}
+                </button>
+              ))}
+            </div>
+          )}
+          {availableGroups.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button
+                onClick={() => setGroupFilter("Todos")}
+                className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
+                  groupFilter === "Todos"
+                    ? "bg-ink text-white dark:bg-gold dark:text-ink"
+                    : "bg-card border border-line-strong text-content-soft hover:bg-field"
+                }`}
+              >
+                Todos
+              </button>
+              {availableGroups.map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setGroupFilter(g)}
+                  className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
+                    groupFilter === g
+                      ? "bg-ink text-white dark:bg-gold dark:text-ink"
+                      : "bg-card border border-line-strong text-content-soft hover:bg-field"
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Guest List */}
@@ -487,7 +559,9 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between px-1">
             <h2 className="font-serif text-lg text-content">Padron</h2>
             <span className="text-xs text-muted font-medium">
-              {totalGuests} invitados
+              {filteredGuests.length === totalGuests
+                ? `${totalGuests} invitados`
+                : `${filteredGuests.length} de ${totalGuests}`}
             </span>
           </div>
 
