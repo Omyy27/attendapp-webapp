@@ -19,7 +19,7 @@ const dashboardSteps = [
   { element: "#tour-user-avatar", popover: { title: "Tu perfil", description: "Toca tu avatar para ver tu perfil y cerrar sesión." } },
   { element: "#tour-analytics", popover: { title: "Resumen del día", description: "Llegadas, pendientes y mesas activas en tiempo real." } },
   { element: "#tour-actions", popover: { title: "Acciones rápidas", description: "Descarga tu lista de invitados como CSV o agrega nuevos invitados." } },
-  { element: "#tour-search", popover: { title: "Busca y filtra", description: "Filtra por nombre, grupo, mesa o estado de confirmación." } },
+  { element: "#tour-search", popover: { title: "Busca y filtra", description: "Filtra por nombre, mesa o estado de confirmación." } },
   { element: "#tour-guest-list", popover: { title: "Tu padrón", description: "Lista completa con el estado de cada invitado. Toca un nombre para ver detalles." } },
   { element: "#tour-nav", popover: { title: "Navegación", description: "Accede a Invitados, Escanear y Enviar pases desde aquí." } },
 ];
@@ -45,7 +45,6 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState("");
   const [activeTables, setActiveTables] = useState(0);
   const [tableFilter, setTableFilter] = useState("Todas");
-  const [groupFilter, setGroupFilter] = useState("Todos");
   const [page, setPage] = useState(1);
   const [role, setRole] = useState("organizer");
 
@@ -171,11 +170,6 @@ export default function DashboardPage() {
     return Array.from(tables).sort((a, b) => a - b);
   }, [guests]);
 
-  const availableGroups = useMemo(() => {
-    const names = new Set(guests.map((g) => g.group?.name).filter(Boolean));
-    return Array.from(names).sort();
-  }, [guests]);
-
   useEffect(() => {
     setCurrentTime(new Date().toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }));
     const timer = setInterval(() => {
@@ -217,7 +211,7 @@ export default function DashboardPage() {
     };
   }, [supabase]);
 
-  useEffect(() => { setPage(1); }, [searchQuery, activeFilter, tableFilter, groupFilter]);
+  useEffect(() => { setPage(1); }, [searchQuery, activeFilter, tableFilter]);
 
   const filteredGuests = useMemo(() => guests.filter((guest) => {
     const matchesSearch =
@@ -235,11 +229,8 @@ export default function DashboardPage() {
     const matchesTable =
       tableFilter === "Todas" || String(guest.group?.table_number) === tableFilter;
 
-    const matchesGroup =
-      groupFilter === "Todos" || guest.group?.name === groupFilter;
-
-    return matchesSearch && matchesFilter && matchesTable && matchesGroup;
-  }), [guests, searchQuery, activeFilter, tableFilter, groupFilter]);
+    return matchesSearch && matchesFilter && matchesTable;
+  }), [guests, searchQuery, activeFilter, tableFilter]);
 
   const totalPages = Math.ceil(filteredGuests.length / ITEMS_PER_PAGE);
   const paginatedGuests = useMemo(() => filteredGuests.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE), [filteredGuests, page]);
@@ -469,7 +460,7 @@ export default function DashboardPage() {
         )}
 
         {/* Search & Filters */}
-        <section id="tour-search" className="px-5 pt-4 pb-2 space-y-3">
+        <section id="tour-search" className="px-5 pt-4 pb-1 space-y-2">
           <div className="relative">
             <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
@@ -483,12 +474,12 @@ export default function DashboardPage() {
               className="w-full bg-card border border-line-strong rounded-xl pl-11 pr-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 focus:border-ink/20 shadow-card"
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar items-center">
             {filters.map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
+                className={`whitespace-nowrap text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
                   activeFilter === filter
                     ? "bg-ink text-white dark:bg-gold dark:text-ink"
                     : "bg-card border border-line-strong text-content-soft hover:bg-field"
@@ -497,61 +488,35 @@ export default function DashboardPage() {
                 {filter}
               </button>
             ))}
+            {availableTables.length > 0 && (
+              <>
+                <span className="w-px h-4 bg-line-strong mx-0.5 shrink-0" />
+                <button
+                  onClick={() => setTableFilter("Todas")}
+                  className={`whitespace-nowrap text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                    tableFilter === "Todas"
+                      ? "bg-ink text-white dark:bg-gold dark:text-ink"
+                      : "bg-card border border-line-strong text-content-soft hover:bg-field"
+                  }`}
+                >
+                  Todas
+                </button>
+                {availableTables.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTableFilter(String(t))}
+                    className={`whitespace-nowrap text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                      tableFilter === String(t)
+                        ? "bg-ink text-white dark:bg-gold dark:text-ink"
+                        : "bg-card border border-line-strong text-content-soft hover:bg-field"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
-          {availableTables.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-              <button
-                onClick={() => setTableFilter("Todas")}
-                className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
-                  tableFilter === "Todas"
-                    ? "bg-ink text-white dark:bg-gold dark:text-ink"
-                    : "bg-card border border-line-strong text-content-soft hover:bg-field"
-                }`}
-              >
-                Todas
-              </button>
-              {availableTables.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTableFilter(String(t))}
-                  className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
-                    tableFilter === String(t)
-                      ? "bg-ink text-white dark:bg-gold dark:text-ink"
-                      : "bg-card border border-line-strong text-content-soft hover:bg-field"
-                  }`}
-                >
-                  Mesa {t}
-                </button>
-              ))}
-            </div>
-          )}
-          {availableGroups.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-              <button
-                onClick={() => setGroupFilter("Todos")}
-                className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
-                  groupFilter === "Todos"
-                    ? "bg-ink text-white dark:bg-gold dark:text-ink"
-                    : "bg-card border border-line-strong text-content-soft hover:bg-field"
-                }`}
-              >
-                Todos
-              </button>
-              {availableGroups.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setGroupFilter(g)}
-                  className={`whitespace-nowrap text-xs font-semibold px-4 py-2 rounded-full transition-colors ${
-                    groupFilter === g
-                      ? "bg-ink text-white dark:bg-gold dark:text-ink"
-                      : "bg-card border border-line-strong text-content-soft hover:bg-field"
-                  }`}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
-          )}
         </section>
 
         {/* Guest List */}
