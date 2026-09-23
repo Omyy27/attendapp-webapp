@@ -4,7 +4,7 @@ import "konva/lib/shapes/Circle";
 import "konva/lib/shapes/Rect";
 import "konva/lib/shapes/Text";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Stage, Layer } from "react-konva";
+import { Stage, Layer, Circle } from "react-konva";
 import { useSupabase } from "@/lib/use-supabase";
 import { TableShape } from "./TableShape";
 import { TablePanel } from "./TablePanel";
@@ -205,7 +205,7 @@ export default function VenueEditor() {
             {/* Grid dots */}
             {Array.from({ length: Math.ceil(stageSize.width / 30) }).map((_, i) =>
               Array.from({ length: Math.ceil(stageSize.height / 30) }).map((_, j) => (
-                <circle
+                <Circle
                   key={`${i}-${j}`}
                   x={i * 30}
                   y={j * 30}
