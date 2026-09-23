@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSupabase } from "@/lib/use-supabase";
-import { BottomNav } from "@/components/ui/bottom-nav";
 import { useDriverTour } from "@/lib/use-driver-tour";
 import { UserAvatar } from "@/components/user-avatar";
 
@@ -11,7 +10,7 @@ const scannerSteps = [
   { element: "#tour-scanner-camera", popover: { title: "Escanea códigos QR", description: "Apunta al código QR del pase del invitado para registrar su llegada." } },
   { element: "#tour-scanner-stats", popover: { title: "Estadísticas en tiempo real", description: "Llegadas, rechazados y pendientes del día." } },
   { element: "#tour-scanner-search", popover: { title: "Buscador de respaldo", description: "Si el invitado no tiene código QR, búscalo por nombre." } },
-  { element: "#tour-scanner-nav", popover: { title: "Navegación", description: "Cambia entre secciones desde la barra inferior." } },
+  { element: "#tour-nav", popover: { title: "Navegación", description: "Cambia entre secciones desde la barra inferior." } },
 ];
 
 type ScanResult = {
@@ -218,10 +217,10 @@ export default function ScannerPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface pb-28">
-      <div className="max-w-md mx-auto min-h-screen">
+    <div className="min-h-screen bg-surface pb-28 md:pb-10">
+      <div className="max-w-md md:max-w-4xl mx-auto min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
+        <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md px-5 md:px-8 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <div className="flex items-center gap-3">
             <span className="w-9 h-9 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -244,8 +243,9 @@ export default function ScannerPage() {
           </div>
         </header>
 
-        {/* Camera View */}
-        <section id="tour-scanner-camera" className="relative h-[min(440px,50vh)] bg-slate-900">
+        {/* Camera + side panel (desktop) */}
+        <div className="md:flex md:items-start md:gap-5 md:px-8 md:pt-4">
+        <section id="tour-scanner-camera" className="relative h-[min(440px,50vh)] bg-slate-900 md:w-[400px] md:h-[500px] md:shrink-0 md:rounded-2xl md:overflow-hidden">
           {/* Real camera feed */}
           <div
             ref={containerRef}
@@ -293,7 +293,8 @@ export default function ScannerPage() {
         </section>
 
         {/* Verdict Cards */}
-        <section className="px-5 -mt-8 relative z-20 space-y-3">
+        <div className="md:flex-1 md:min-w-0">
+        <section className="px-5 md:px-0 -mt-8 md:mt-0 relative z-20 space-y-3">
           {scanResult.type === "valid" && (
             <div className="bg-emerald-500 rounded-2xl shadow-lift p-4 flex items-center gap-3.5 border border-emerald-400/40 animate-fade-in">
               <span className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
@@ -334,7 +335,7 @@ export default function ScannerPage() {
         </section>
 
         {/* Stats Strip */}
-        <section id="tour-scanner-stats" className="px-5 pt-8">
+        <section id="tour-scanner-stats" className="px-5 md:px-0 pt-8 md:pt-5">
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-card border border-line rounded-2xl p-3 text-center shadow-card">
               <p className="text-lg font-bold text-emerald-600 leading-none">{stats.valid}</p>
@@ -352,7 +353,7 @@ export default function ScannerPage() {
         </section>
 
         {/* Backup Search */}
-        <section id="tour-scanner-search" className="px-5 pt-5">
+        <section id="tour-scanner-search" className="px-5 md:px-0 pt-5">
           <Link
             href="/scanner/search"
             className="flex items-center justify-between bg-card border border-line rounded-2xl p-4 shadow-card hover:bg-field transition-colors"
@@ -376,7 +377,7 @@ export default function ScannerPage() {
         </section>
 
         {/* Scan History */}
-        <section className="px-5 pt-3 pb-2">
+        <section className="px-5 md:px-0 pt-3 pb-2 md:pb-0">
           <Link
             href="/historial"
             className="flex items-center justify-between bg-card border border-line rounded-2xl p-4 shadow-card hover:bg-field transition-colors"
@@ -398,9 +399,9 @@ export default function ScannerPage() {
             </svg>
           </Link>
         </section>
+        </div>
+        </div>
       </div>
-
-      <div id="tour-scanner-nav"><BottomNav /></div>
 
       <style jsx>{`
         @keyframes scan {

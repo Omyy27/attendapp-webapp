@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSupabase } from "@/lib/use-supabase";
-import { BottomNav } from "@/components/ui/bottom-nav";
 import { AnalyticsRing } from "@/components/analytics-ring";
 import { GuestCard, type Guest } from "@/components/guest-card";
 import { AddGuestModal } from "@/components/add-guest-modal";
@@ -327,10 +326,10 @@ export default function DashboardPage() {
   }, [filteredGuests]);
 
   return (
-    <div className="min-h-screen bg-surface pb-28">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-surface pb-28 md:pb-10">
+      <div className="max-w-md md:max-w-4xl mx-auto">
         {/* Header */}
-        <header id="tour-header" className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
+        <header id="tour-header" className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 md:px-8 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -371,14 +370,14 @@ export default function DashboardPage() {
         </header>
 
         {/* Analytics */}
-        <section id="tour-analytics" className="px-5 pt-5 pb-1">
+        <section id="tour-analytics" className="px-5 md:px-8 pt-5 pb-1">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-serif text-lg text-content">Resumen del dia</h2>
             <span className="text-xs text-muted font-medium" suppressHydrationWarning>
               {currentTime}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-card rounded-2xl p-4 border border-line shadow-card flex items-center gap-3">
               <AnalyticsRing percentage={percentage} />
               <div>
@@ -436,7 +435,7 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         {canManageEvent(role) && (
-        <section id="tour-actions" className="px-5 pt-5 pb-1">
+        <section id="tour-actions" className="px-5 md:px-8 pt-5 pb-1">
           <div className="flex gap-3">
             <button
               onClick={handleExportCsv}
@@ -465,7 +464,7 @@ export default function DashboardPage() {
         )}
 
         {/* Search & Filters */}
-        <section id="tour-search" className="px-5 pt-4 pb-1 space-y-2">
+        <section id="tour-search" className="px-5 md:px-8 pt-4 pb-1 space-y-2">
           <div className="relative">
             <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
@@ -525,7 +524,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Guest List */}
-        <section id="tour-guest-list" className="px-5 pt-3 space-y-3">
+        <section id="tour-guest-list" className="px-5 md:px-8 pt-3 space-y-3">
           <div className="flex items-center justify-between px-1">
             <h2 className="font-serif text-lg text-content">Padron</h2>
             <span className="text-xs text-muted font-medium" suppressHydrationWarning>
@@ -553,16 +552,18 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : (
-            paginatedGuests.map((guest) => (
-              <GuestCard
-                key={guest.id}
-                guest={guest}
-                showActions={canManageEvent(role)}
-                onQRClick={() => handleQRClick(guest)}
-                onEditClick={() => handleEditClick(guest)}
-                onDeleteClick={() => handleDeleteClick(guest)}
-              />
-            ))
+            <div className="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+              {paginatedGuests.map((guest) => (
+                <GuestCard
+                  key={guest.id}
+                  guest={guest}
+                  showActions={canManageEvent(role)}
+                  onQRClick={() => handleQRClick(guest)}
+                  onEditClick={() => handleEditClick(guest)}
+                  onDeleteClick={() => handleDeleteClick(guest)}
+                />
+              ))}
+            </div>
           )}
 
           {/* Pagination */}
@@ -595,8 +596,6 @@ export default function DashboardPage() {
           )}
         </section>
       </div>
-
-      <div id="tour-nav"><BottomNav role={role} /></div>
 
       {weddingId && (
         <AddGuestModal

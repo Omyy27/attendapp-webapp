@@ -121,13 +121,13 @@ export function AddGuestModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end justify-center">
+    <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end md:items-center justify-center">
       <div
         className="absolute inset-0"
         onClick={onClose}
       />
-      <div className="relative max-w-md w-full mx-auto bg-card rounded-t-3xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-h-[85vh] overflow-y-auto">
-        <div className="w-10 h-1 bg-line-strong rounded-full mx-auto mb-4" />
+      <div className="relative max-w-md w-full mx-auto bg-card rounded-t-3xl md:rounded-2xl shadow-[0_-10px_40px_-12px_rgba(10,37,64,.2)] p-6 max-h-[85vh] overflow-y-auto">
+        <div className="w-10 h-1 bg-line-strong rounded-full mx-auto mb-4 hidden md:block" />
         <button
           onClick={onClose}
           className="absolute top-4 right-4 w-11 h-11 rounded-full bg-field flex items-center justify-center text-muted"

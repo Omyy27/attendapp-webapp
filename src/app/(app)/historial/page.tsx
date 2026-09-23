@@ -138,10 +138,10 @@ export default function HistorialPage() {
   }), [logs]);
 
   return (
-    <div className="min-h-screen bg-surface pb-10">
-      <div className="max-w-md mx-auto min-h-screen">
+    <div className="min-h-screen bg-surface pb-28 md:pb-10">
+      <div className="max-w-md md:max-w-3xl mx-auto min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-4 border-b border-line-strong/70">
+        <header className="sticky top-0 z-30 bg-card/90 backdrop-blur-md px-5 md:px-8 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-4 border-b border-line-strong/70">
           <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => router.back()}
@@ -180,7 +180,7 @@ export default function HistorialPage() {
 
         {/* Summary */}
         {!loading && logs.length > 0 && (
-          <section className="px-5 pt-4">
+          <section className="px-5 md:px-8 pt-4">
             <div className="grid grid-cols-4 gap-2 text-center">
               <div className="bg-card rounded-xl border border-line p-2.5 shadow-card">
                 <p className="text-base font-bold text-content leading-none">{counts.total}</p>
@@ -203,7 +203,7 @@ export default function HistorialPage() {
         )}
 
         {/* List */}
-        <section className="px-5 pt-4">
+        <section className="px-5 md:px-8 pt-4">
           {loading ? (
             <div className="text-center py-10 text-muted-soft text-sm">Cargando historial...</div>
           ) : filtered.length === 0 ? (

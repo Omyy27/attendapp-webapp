@@ -257,9 +257,9 @@ export default function AjustesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface pb-28">
-      <div className="max-w-md mx-auto">
-        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
+    <div className="min-h-screen bg-surface pb-28 md:pb-10">
+      <div className="max-w-md md:max-w-2xl mx-auto">
+        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 md:px-8 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-content font-medium text-sm"
@@ -273,7 +273,7 @@ export default function AjustesPage() {
           <span className="w-16" />
         </header>
 
-        <div className="px-5 pt-6 space-y-5">
+        <div className="px-5 md:px-8 pt-6 space-y-5">
           {/* Couple Name */}
           <div>
             <label className="text-xs font-semibold text-muted mb-1.5 block">

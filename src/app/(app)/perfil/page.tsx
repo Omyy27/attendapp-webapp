@@ -68,10 +68,10 @@ export default function ProfilePage() {
     : "Por definir";
 
   return (
-    <div className="min-h-screen bg-surface pb-28">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-surface pb-28 md:pb-10">
+      <div className="max-w-md md:max-w-xl mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
+        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 md:px-8 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-content font-medium text-sm"
@@ -85,7 +85,7 @@ export default function ProfilePage() {
           <span className="w-16" />
         </header>
 
-        <div className="px-5 pt-8 space-y-6">
+        <div className="px-5 md:px-8 pt-8 space-y-6">
           {/* Avatar + Name */}
           <div className="flex flex-col items-center gap-3">
             <UserAvatar name={organizer?.name || ""} size="md" />

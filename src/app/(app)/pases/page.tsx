@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/lib/use-supabase";
-import { BottomNav } from "@/components/ui/bottom-nav";
 import { Toast } from "@/components/ui/toast";
 import { DispatchCard, type GuestGroup } from "@/components/dispatch-card";
 import { useDriverTour } from "@/lib/use-driver-tour";
@@ -15,7 +14,7 @@ const pasesSteps = [
   { element: "#tour-pases-explainer", popover: { title: "¿Cómo funciona?", description: "Cada grupo familiar recibe un enlace único a su Invitación, sin archivos pesados." } },
   { element: "#tour-pases-send-all", popover: { title: "Envío masivo", description: "Envía todos los pases pendientes de una sola vez." } },
   { element: "#tour-pases-list", popover: { title: "Cola de despacho", description: "Envía por WhatsApp, correo o copia el link directamente." } },
-  { element: "#tour-pases-nav", popover: { title: "Navegación", description: "Cambia entre secciones desde la barra inferior." } },
+  { element: "#tour-nav", popover: { title: "Navegación", description: "Cambia entre secciones desde la barra inferior." } },
 ];
 
 export default function PassesPage() {
@@ -236,10 +235,10 @@ export default function PassesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface pb-28">
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-surface pb-28 md:pb-10">
+      <div className="max-w-md md:max-w-2xl mx-auto">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
+        <header className="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-5 md:px-8 pt-[calc(1.25rem+env(safe-area-inset-top,0px))] pb-3 flex items-center justify-between border-b border-line-strong/70">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-full bg-ink text-gold flex items-center justify-center">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -257,7 +256,7 @@ export default function PassesPage() {
         </header>
 
         {/* Status Strip */}
-        <section id="tour-pases-status" className="px-5 pt-5">
+        <section id="tour-pases-status" className="px-5 md:px-8 pt-5">
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-card rounded-2xl p-3.5 border border-line shadow-card text-center">
               <p className="text-xl font-bold text-content leading-none">{emitted}</p>
@@ -275,7 +274,7 @@ export default function PassesPage() {
         </section>
 
         {/* Explainer */}
-        <section id="tour-pases-explainer" className="px-5 pt-5">
+        <section id="tour-pases-explainer" className="px-5 md:px-8 pt-5">
           <div className="bg-card rounded-2xl border border-line shadow-card p-4 flex gap-3">
             <span className="w-10 h-10 rounded-xl bg-sky/10 text-sky flex items-center justify-center shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -291,7 +290,7 @@ export default function PassesPage() {
         </section>
 
         {/* Bulk Actions */}
-        <section id="tour-pases-send-all" className="px-5 pt-5">
+        <section id="tour-pases-send-all" className="px-5 md:px-8 pt-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-serif text-lg text-content">Pendientes</h2>
             <span className="text-xs text-muted font-medium">
@@ -313,7 +312,7 @@ export default function PassesPage() {
         </section>
 
         {/* Dispatch List */}
-        <section id="tour-pases-list" className="px-5 pt-4 space-y-3">
+        <section id="tour-pases-list" className="px-5 md:px-8 pt-4 space-y-3">
           {loading ? (
             <div className="text-center py-10 text-muted-soft text-sm">Cargando grupos...</div>
           ) : groups.length === 0 ? (
@@ -343,7 +342,7 @@ export default function PassesPage() {
         </section>
 
         {/* Security Note */}
-        <section className="px-5 pt-2">
+        <section className="px-5 md:px-8 pt-2">
           <div className="flex items-center gap-2.5 text-muted-soft text-[11px] justify-center py-4">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
@@ -353,8 +352,6 @@ export default function PassesPage() {
           </div>
         </section>
       </div>
-
-      <div id="tour-pases-nav"><BottomNav /></div>
 
       <Toast message={toast} />
     </div>
