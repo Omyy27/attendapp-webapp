@@ -1,4 +1,4 @@
-const CACHE_NAME = "attendapp-v1";
+const CACHE_NAME = "attendapp-v2";
 const STATIC_ASSETS = ["/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"];
 
 // Install: pre-cache shell básico
@@ -20,7 +20,7 @@ self.addEventListener("activate", (event) => {
 });
 
 // Fetch strategy:
-// - Next.js static assets (/_next/static/): Cache First
+// - Next.js static assets (/_next/static/): Network First con fallback cache
 // - Páginas de la app (navegación): Network First con fallback a cache
 // - API: siempre red (datos en vivo)
 self.addEventListener("fetch", (event) => {
@@ -30,18 +30,16 @@ self.addEventListener("fetch", (event) => {
   // API y realtime: nunca cachear
   if (url.pathname.startsWith("/api/")) return;
 
-  // Assets estáticos: Cache First
+  // Assets estáticos: Network First (fallback a cache solo offline)
   if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icon")) {
     event.respondWith(
-      caches.match(event.request).then(
-        (cached) =>
-          cached ||
-          fetch(event.request).then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-            return res;
-          })
-      )
+      fetch(event.request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return res;
+        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }
