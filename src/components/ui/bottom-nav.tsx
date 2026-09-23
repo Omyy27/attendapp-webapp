@@ -62,7 +62,7 @@ export function BottomNav({ role = "organizer" }: { role?: string }) {
 
           if (item.isCenter) {
             return (
-              <Link key={i} href={item.href} className="absolute left-1/2 -translate-x-1/2 -mt-7 flex flex-col items-center gap-1">
+              <Link key={i} href={item.href} className="flex flex-col items-center gap-1 -mt-7">
                 <span className="w-14 h-14 rounded-full bg-ink dark:bg-gold dark:text-ink text-white shadow-lift flex items-center justify-center">
                   {item.icon}
                 </span>
