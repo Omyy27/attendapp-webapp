@@ -374,7 +374,7 @@ export default function DashboardPage() {
         <section id="tour-analytics" className="px-5 pt-5 pb-1">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-serif text-lg text-content">Resumen del dia</h2>
-            <span className="text-xs text-muted font-medium">
+            <span className="text-xs text-muted font-medium" suppressHydrationWarning>
               {currentTime}
             </span>
           </div>
@@ -386,7 +386,7 @@ export default function DashboardPage() {
                   {arrived}
                   <span className="text-base text-muted-soft font-medium">/{totalSlots}</span>
                 </p>
-                <p className="text-xs text-muted mt-1 font-medium">Llegaron · {totalGuests} invitados</p>
+                <p className="text-xs text-muted mt-1 font-medium" suppressHydrationWarning>Llegaron · {totalGuests} invitados</p>
               </div>
             </div>
 
@@ -528,7 +528,7 @@ export default function DashboardPage() {
         <section id="tour-guest-list" className="px-5 pt-3 space-y-3">
           <div className="flex items-center justify-between px-1">
             <h2 className="font-serif text-lg text-content">Padron</h2>
-            <span className="text-xs text-muted font-medium">
+            <span className="text-xs text-muted font-medium" suppressHydrationWarning>
               {filteredGuests.length === totalGuests
                 ? `${totalGuests} invitados`
                 : `${filteredGuests.length} de ${totalGuests}`}
