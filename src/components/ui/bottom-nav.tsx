@@ -43,8 +43,8 @@ const navIconSalon = (
 const allNavItems = [
   { href: "/", label: "Invitados", icon: navIconInvitados },
   { href: "/scanner", label: "Escanear", icon: navIconEscanear },
+  { href: "/pases", label: "Invitaciones", hideForScanner: true, icon: navIconEnviar },
   { href: "/salon", label: "Salon", icon: navIconSalon },
-  { href: "/pases", label: "Enviar", hideForScanner: true, icon: navIconEnviar },
 ];
 
 export function BottomNav({ role = "organizer" }: { role?: string }) {
