@@ -119,8 +119,30 @@ export function TableShape({ table, isSelected, assignedGroups, onSelect, onDrag
         x={-radius}
         y={8}
         width={table.width}
-        height={16}
+        height={14}
       />
+
+      {/* Occupancy bar */}
+      {totalSlots > 0 && (
+        <>
+          <Rect
+            x={-radius * 0.6}
+            y={22}
+            width={radius * 1.2}
+            height={3}
+            cornerRadius={2}
+            fill="rgba(255,255,255,0.25)"
+          />
+          <Rect
+            x={-radius * 0.6}
+            y={22}
+            width={Math.max(radius * 0.12, Math.min(radius * 1.2, (totalSlots / 12) * radius * 1.2))}
+            height={3}
+            cornerRadius={2}
+            fill={totalSlots >= 12 ? "#38bdf8" : "#fff"}
+          />
+        </>
+      )}
     </Group>
   );
 }
