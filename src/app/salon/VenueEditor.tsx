@@ -44,8 +44,40 @@ export default function VenueEditor() {
   const [saving, setSaving] = useState(false);
   const [stageSize, setStageSize] = useState({ width: 390, height: 600 });
   const [zoom, setZoom] = useState(1);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerElRef = useRef<HTMLDivElement | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const supabase = useSupabase();
+
+  const measureContainer = useCallback(() => {
+    const el = containerElRef.current;
+    if (el) {
+      setStageSize({ width: el.offsetWidth, height: el.offsetHeight });
+    }
+  }, []);
+
+  const containerRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      // Cleanup previous observer
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+      containerElRef.current = el;
+      if (el) {
+        measureContainer();
+        const ro = new ResizeObserver(measureContainer);
+        ro.observe(el);
+        resizeObserverRef.current = ro;
+      }
+    },
+    [measureContainer]
+  );
+
+  useEffect(() => {
+    return () => {
+      resizeObserverRef.current?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -75,20 +107,6 @@ export default function VenueEditor() {
     }
     init();
   }, [supabase]);
-
-  useEffect(() => {
-    function updateSize() {
-      if (containerRef.current) {
-        setStageSize({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
-        });
-      }
-    }
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, []);
 
   const getTableGroups = useCallback(
     (tableNumber: number) => groups.filter((g) => g.table_number === tableNumber),
