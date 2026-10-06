@@ -3,6 +3,14 @@
 import { use, useState, useEffect, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import { EnvelopeIntro } from "@/components/envelope-intro";
+import { HeroVideo } from "@/components/invitation/hero-video";
+import { PhotoCarousel } from "@/components/invitation/photo-carousel";
+import {
+  SAMPLE_GALLERY,
+  SAMPLE_HERO_VIDEO,
+  SAMPLE_INVITATION_TEXT,
+} from "@/lib/invitation-sample";
+import { renderPassImage } from "@/lib/pass-image";
 
 const VenueMap = dynamic(() => import("@/components/venue-map"), {
   ssr: false,
@@ -39,6 +47,8 @@ export default function GuestPassPage({
   const [rsvpState, setRsvpState] = useState<"idle" | "loading" | "confirmed">("idle");
   const [phase, setPhase] = useState<"closed" | "opening" | "open">("closed");
   const [openError, setOpenError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "error">("idle");
+  const [copied, setCopied] = useState(false);
 
   // La invitación siempre se ve en modo claro, sin importar el tema del usuario
   useEffect(() => {
@@ -179,12 +189,66 @@ export default function GuestPassPage({
 
   const isOpen = phase === "open";
   const code = uuid.toUpperCase();
+  const formattedCode = `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12, 16)}`;
   const mapsUrl =
     passData.venue_lat && passData.venue_lng
       ? `https://www.google.com/maps/search/?api=1&query=${passData.venue_lat},${passData.venue_lng}`
       : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
           `${passData.venue_name || ""} ${passData.venue_address || ""}`
         )}`;
+
+  async function handleSave() {
+    if (!passData || !qrDataUrl || saveState === "saving") return;
+    setSaveState("saving");
+    try {
+      const blob = await renderPassImage({
+        coupleName: passData.couple_name,
+        eventDate: passData.event_date,
+        groupName: passData.group_name,
+        qrDataUrl,
+        code: formattedCode,
+        guestCount: passData.guest_count,
+        tableNumber: passData.table_number,
+        eventTime: passData.event_time || "17:00 hrs",
+        dressCode: passData.dress_code || "Formal / Gala",
+        venueName: passData.venue_name,
+        venueAddress: passData.venue_address,
+        mapsUrl,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `pase-${slugify(passData.couple_name)}-${slugify(passData.group_name)}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setSaveState("idle");
+    } catch {
+      setSaveState("error");
+      setTimeout(() => setSaveState("idle"), 3000);
+    }
+  }
+
+  async function handleShare() {
+    const link = window.location.href;
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      // Contexto no seguro o navegador antiguo: copia con un textarea temporal
+      const textarea = document.createElement("textarea");
+      textarea.value = link;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   const details = [
     {
@@ -239,49 +303,75 @@ export default function GuestPassPage({
       )}
 
       <main
-        className={`letter-desk min-h-dvh md:px-6 md:py-12 ${isOpen ? "" : "pointer-events-none"}`}
+        className={`letter-desk min-h-dvh ${isOpen ? "letter-open" : "pointer-events-none"}`}
         aria-hidden={!isOpen}
       >
-        <article
-          className={`letter-paper paper-texture relative mx-auto min-h-dvh max-w-lg overflow-hidden md:min-h-0 md:rounded-md md:shadow-[0_30px_70px_-25px_rgba(60,40,10,0.55)] ${
-            isOpen ? "letter-open" : ""
-          }`}
-        >
-          <span className="letter-frame" aria-hidden="true" />
-          <CornerOrnament className="left-5 top-5" />
-          <CornerOrnament className="right-5 top-5 -scale-x-100" />
-          <CornerOrnament className="bottom-5 left-5 -scale-y-100" />
-          <CornerOrnament className="bottom-5 right-5 -scale-100" />
+        {/* 1. Video de los novios */}
+        <HeroVideo
+          src={SAMPLE_HERO_VIDEO.src}
+          poster={SAMPLE_HERO_VIDEO.poster}
+          coupleName={passData.couple_name}
+          eventDate={passData.event_date}
+          active={isOpen}
+          scrollTargetId="carta"
+        />
 
-          <div className="relative px-8 pb-14 pt-16 md:px-12">
-            {/* Encabezado */}
-            <header className="letter-reveal text-center" style={delay(0.05)}>
-              <p className="text-[10px] uppercase tracking-[0.35em] text-gold-deep font-semibold">
-                Se complacen en invitarte
-              </p>
-              <h1 className="font-serif text-4xl text-ink mt-3 leading-tight">
-                {passData.couple_name}
-              </h1>
-              <p className="text-xs text-slate-500 mt-2 tracking-wider">
-                {passData.event_date}
-              </p>
-              <span className="ornament-divider mt-6" />
-            </header>
+        <div id="carta" className="md:px-6 md:py-12">
+          <article
+            className="letter-paper paper-texture relative mx-auto min-h-dvh max-w-lg overflow-hidden md:min-h-0 md:rounded-md md:shadow-[0_30px_70px_-25px_rgba(60,40,10,0.55)]"
+          >
+            <div className="relative px-8 pb-14 pt-16 md:px-12">
+              <span className="letter-frame" aria-hidden="true" />
+              <CornerOrnament className="left-5 top-5" />
+              <CornerOrnament className="right-5 top-5 -scale-x-100" />
+              <CornerOrnament className="bottom-5 left-5 -scale-y-100" />
+              <CornerOrnament className="bottom-5 right-5 -scale-100" />
 
-            {/* Saludo */}
-            <section className="letter-reveal mt-8 text-center" style={delay(0.2)}>
-              <p className="font-serif italic text-lg text-ink">
-                Para {passData.group_name}
-              </p>
-              <p className="text-sm text-slate-600 leading-relaxed mt-3">
-                Con mucha alegría queremos compartir contigo este día tan especial.
-                Tu presencia hará nuestra celebración aún más inolvidable.
-              </p>
-            </section>
+              {/* 2. Texto de invitación */}
+              <section className="letter-reveal text-center" style={delay(0.25)}>
+                <p className="text-[10px] uppercase tracking-[0.35em] text-gold-deep font-semibold">
+                  Se complacen en invitarte
+                </p>
+                <p className="font-serif italic text-xl text-ink mt-4">
+                  Para {passData.group_name}
+                </p>
+                {SAMPLE_INVITATION_TEXT.map((paragraph) => (
+                  <p key={paragraph} className="text-sm text-slate-600 leading-relaxed mt-3">
+                    {paragraph}
+                  </p>
+                ))}
+                <span className="ornament-divider mt-8" />
+              </section>
 
-            {/* QR */}
-            <section className="letter-reveal mt-10 flex flex-col items-center" style={delay(0.35)}>
-              <div className="relative">
+              {/* 3. Información de la boda */}
+              <section className="letter-reveal mt-10" style={delay(0.35)}>
+                <SectionTitle eyebrow="La celebración" title="Información de la boda" />
+                <p className="text-center text-xs text-slate-500 tracking-wider -mt-2 mb-4">
+                  {passData.event_date}
+                </p>
+                <div className="grid grid-cols-2">
+                  {details.map((item, i) => (
+                    <div
+                      key={item.label}
+                      className={`px-2 py-4 text-center border-gold/30 ${i < 2 ? "border-b" : ""} ${
+                        i % 2 === 0 ? "border-r" : ""
+                      }`}
+                    >
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold flex items-center justify-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          {item.icon}
+                        </svg>
+                        {item.label}
+                      </p>
+                      <p className="font-serif text-lg text-ink mt-1.5">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* 4. Tu pase */}
+              <section className="letter-reveal mt-12 flex flex-col items-center" style={delay(0.45)}>
+                <SectionTitle eyebrow="Tu acceso" title="Tu pase" />
                 <div className="qr-stamp">
                   {qrDataUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -294,117 +384,120 @@ export default function GuestPassPage({
                     <div className="w-52 h-52 animate-pulse rounded bg-slate-100" />
                   )}
                 </div>
-                <span className="rsvp-stamp absolute -right-6 -top-5 bg-[#fdfaf3]/90" style={delay(1.1)}>
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                  </svg>
-                  Confirmado
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400 font-mono mt-5 tracking-wider">
-                Código · {code.slice(0, 4)}-{code.slice(4, 8)}-{code.slice(8, 12)}-{code.slice(12, 16)}
-              </p>
-              <p className="mt-2 text-xs font-semibold text-gold-deep">
-                Válido para {passData.guest_count} personas
-              </p>
-              <p className="mt-4 text-center text-xs text-emerald-700">
-                ¡Asistencia confirmada! Presenta este código en la entrada.
-              </p>
-            </section>
-
-            <span className="ornament-divider letter-reveal mt-10" style={delay(0.5)} />
-
-            {/* Detalles */}
-            <section className="letter-reveal mt-8 grid grid-cols-2" style={delay(0.55)}>
-              {details.map((item, i) => (
-                <div
-                  key={item.label}
-                  className={`px-2 py-4 text-center border-gold/30 ${i < 2 ? "border-b" : ""} ${
-                    i % 2 === 0 ? "border-r" : ""
-                  }`}
-                >
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold flex items-center justify-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      {item.icon}
-                    </svg>
-                    {item.label}
-                  </p>
-                  <p className="font-serif text-lg text-ink mt-1.5">{item.value}</p>
-                </div>
-              ))}
-            </section>
-
-            {/* Ubicación */}
-            {passData.venue_name && (
-              <section className="letter-reveal mt-10" style={delay(0.7)}>
-                <div className="photo-frame">
-                  {passData.venue_lat && passData.venue_lng ? (
-                    <VenueMap
-                      lat={passData.venue_lat}
-                      lng={passData.venue_lng}
-                      name={passData.venue_name}
-                      height={180}
-                    />
-                  ) : (
-                    <div className="w-full h-[180px] bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
-                      <span className="w-10 h-10 rounded-full bg-ink flex items-center justify-center shadow-lg">
-                        <svg className="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                        </svg>
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-5 text-center">
-                  <h3 className="font-serif text-lg text-ink">{passData.venue_name}</h3>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    {passData.venue_address}
-                  </p>
-                  <a
-                    href={mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-ink-light"
-                  >
-                    <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                    </svg>
-                    Cómo llegar
-                  </a>
-                </div>
+                <p className="text-[11px] text-slate-400 font-mono mt-5 tracking-wider">
+                  Código · {formattedCode}
+                </p>
+                <p className="mt-2 text-xs font-semibold text-gold-deep">
+                  Válido para {passData.guest_count} personas
+                </p>
+                <p className="mt-4 text-center text-xs text-emerald-700">
+                  ¡Asistencia confirmada! Presenta este código en la entrada.
+                </p>
               </section>
-            )}
 
-            {/* Acciones */}
-            <section className="letter-reveal mt-8 flex gap-3" style={delay(0.8)}>
-              <button className="flex-1 rounded-full border border-gold/40 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-ink transition-colors hover:bg-white">
-                <svg className="w-4 h-4 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Guardar
-              </button>
-              <button className="flex-1 rounded-full border border-gold/40 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-ink transition-colors hover:bg-white">
-                <svg className="w-4 h-4 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <circle cx="18" cy="5" r="3" />
-                  <circle cx="6" cy="12" r="3" />
-                  <circle cx="18" cy="19" r="3" />
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                </svg>
-                Compartir
-              </button>
-            </section>
+              {/* 5. Galería */}
+              <section className="letter-reveal mt-12 -mx-8 md:-mx-12" style={delay(0.55)}>
+                <SectionTitle eyebrow="Nuestra historia" title="Galería" />
+                <PhotoCarousel photos={SAMPLE_GALLERY} />
+              </section>
 
-            {/* Firma */}
-            <footer className="letter-reveal mt-12 text-center" style={delay(0.9)}>
-              <p className="text-sm text-slate-500">Con cariño,</p>
-              <p className="font-serif italic text-2xl text-ink mt-1">{passData.couple_name}</p>
-              <p className="text-[10px] text-slate-400 mt-8 tracking-wide">Protegido por Attendapp</p>
-            </footer>
-          </div>
-        </article>
+              {/* 6. Ubicación */}
+              {passData.venue_name && (
+                <section className="letter-reveal mt-12" style={delay(0.65)}>
+                  <SectionTitle eyebrow="¿Dónde?" title="Ubicación" />
+                  <div className="photo-frame">
+                    {passData.venue_lat && passData.venue_lng ? (
+                      <VenueMap
+                        lat={passData.venue_lat}
+                        lng={passData.venue_lng}
+                        name={passData.venue_name}
+                        height={180}
+                      />
+                    ) : (
+                      <div className="w-full h-[180px] bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
+                        <span className="w-10 h-10 rounded-full bg-ink flex items-center justify-center shadow-lg">
+                          <svg className="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                          </svg>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-5 text-center">
+                    <h3 className="font-serif text-lg text-ink">{passData.venue_name}</h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      {passData.venue_address}
+                    </p>
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-ink-light"
+                    >
+                      <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                      </svg>
+                      Cómo llegar
+                    </a>
+                  </div>
+                </section>
+              )}
+
+              {/* 7. Acciones y firma */}
+              <section className="letter-reveal mt-8" style={delay(0.8)}>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={!qrDataUrl || saveState === "saving"}
+                    className="flex-1 rounded-full border border-gold/40 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-ink transition-colors hover:bg-white disabled:opacity-60"
+                  >
+                    <svg className="w-4 h-4 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    {saveState === "saving" ? "Generando…" : "Guardar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="flex-1 rounded-full border border-gold/40 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-ink transition-colors hover:bg-white"
+                  >
+                    {copied ? (
+                      <svg className="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                      </svg>
+                    )}
+                    {copied ? "¡Enlace copiado!" : "Compartir"}
+                  </button>
+                </div>
+                <p className="mt-2 min-h-4 text-center text-xs" aria-live="polite">
+                  {saveState === "error" ? (
+                    <span className="text-rose-600">No se pudo generar la imagen. Intenta de nuevo.</span>
+                  ) : copied ? (
+                    <span className="text-emerald-700">Enlace de la invitación copiado al portapapeles</span>
+                  ) : null}
+                </p>
+              </section>
+
+              {/* Firma */}
+              <footer className="letter-reveal mt-12 text-center" style={delay(0.9)}>
+                <p className="text-sm text-slate-500">Con cariño,</p>
+                <p className="font-serif italic text-2xl text-ink mt-1">{passData.couple_name}</p>
+                <p className="text-[10px] text-slate-400 mt-8 tracking-wide">Protegido por Attendapp</p>
+              </footer>
+            </div>
+          </article>
+        </div>
       </main>
     </>
   );
@@ -412,6 +505,24 @@ export default function GuestPassPage({
 
 function delay(seconds: number): CSSProperties {
   return { "--d": `${seconds}s` } as CSSProperties;
+}
+
+function slugify(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <header className="mb-5 text-center">
+      <p className="text-[10px] uppercase tracking-[0.35em] text-gold-deep font-semibold">{eyebrow}</p>
+      <h2 className="font-serif text-2xl text-ink mt-1.5">{title}</h2>
+    </header>
+  );
 }
 
 function CornerOrnament({ className = "" }: { className?: string }) {
