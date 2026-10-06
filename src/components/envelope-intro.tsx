@@ -5,12 +5,17 @@ import type { CSSProperties } from "react";
 // Tiempos de la previa (s). Deben coincidir con la coreografía de globals.css:
 // la carta termina de cubrir la pantalla ~2.1 s después de tocar el sello.
 const PREVIEW_START = 1.9;
-const LINE_DURATION = 0.85;
-const FINAL_HOLD = 0.7;
-const FADE = 0.6;
+/** Cada frase: entra, se queda y sale */
+const LINE_DURATION = 1.8;
+/** La siguiente frase entra mientras la anterior se desvanece (crossfade) */
+const LINE_OVERLAP = 0.3;
+const LINE_STEP = LINE_DURATION - LINE_OVERLAP;
+const FINAL_IN = 0.9;
+const FINAL_HOLD = 1.4;
+const FADE = 0.8;
 
 function finalDelay(lineCount: number) {
-  return PREVIEW_START + lineCount * LINE_DURATION;
+  return PREVIEW_START + lineCount * LINE_STEP;
 }
 
 /** Duración total de la apertura, para esperar antes de mostrar la carta abierta */
@@ -49,7 +54,14 @@ export function EnvelopeIntro({
       className={`env-stage fixed inset-0 z-50 overflow-hidden ${
         opening ? "intro-opening" : ""
       }`}
-      style={{ "--intro-fade-delay": `${fadeDelay}s` } as CSSProperties}
+      style={
+        {
+          "--intro-fade-delay": `${fadeDelay}s`,
+          "--intro-fade-duration": `${FADE}s`,
+          "--preview-line-duration": `${LINE_DURATION}s`,
+          "--preview-final-duration": `${FINAL_IN}s`,
+        } as CSSProperties
+      }
     >
       <button
         type="button"
@@ -125,7 +137,7 @@ export function EnvelopeIntro({
           <p
             key={line}
             className="env-preview-line font-serif italic text-2xl md:text-3xl text-ink"
-            style={{ "--d": `${PREVIEW_START + i * LINE_DURATION}s` } as CSSProperties}
+            style={{ "--d": `${PREVIEW_START + i * LINE_STEP}s` } as CSSProperties}
           >
             {line}
           </p>

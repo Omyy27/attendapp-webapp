@@ -475,16 +475,16 @@ body {
 
 /* Coreografía de apertura (la previa y el fade final se sincronizan con openingDurationMs) */
 .intro-opening {
-  animation: intro-fade 0.6s ease var(--intro-fade-delay, 1.95s) forwards;
+  animation: intro-fade var(--intro-fade-duration, 0.6s) ease-in-out var(--intro-fade-delay, 1.95s) forwards;
 }
 .intro-opening .env-letter-inner {
   animation: fade-out 0.3s ease 1.5s forwards;
 }
 .intro-opening .env-preview-line {
-  animation: preview-line 0.85s ease var(--d) both;
+  animation: preview-line var(--preview-line-duration, 1.8s) ease-in-out var(--d) both;
 }
 .intro-opening .env-preview-final {
-  animation: preview-final 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) var(--d) both;
+  animation: preview-final var(--preview-final-duration, 0.9s) cubic-bezier(0.25, 0.6, 0.3, 1) var(--d) both;
 }
 .intro-opening .env-seal {
   animation: none;
@@ -526,13 +526,13 @@ body {
   opacity: 0;
 }
 @keyframes preview-line {
-  0% { opacity: 0; transform: translateY(10px); }
-  25%, 75% { opacity: 1; transform: none; }
-  100% { opacity: 0; transform: translateY(-8px); }
+  0% { opacity: 0; transform: translateY(12px); filter: blur(3px); }
+  28%, 72% { opacity: 1; transform: none; filter: none; }
+  100% { opacity: 0; transform: translateY(-10px); filter: blur(3px); }
 }
 @keyframes preview-final {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; transform: scale(0.96); filter: blur(3px); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 
 /* ----- Carta abierta ----- */
