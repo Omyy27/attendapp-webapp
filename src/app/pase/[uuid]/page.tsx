@@ -1,7 +1,8 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
+import { EnvelopeIntro } from "@/components/envelope-intro";
 
 const VenueMap = dynamic(() => import("@/components/venue-map"), {
   ssr: false,
@@ -36,6 +37,19 @@ export default function GuestPassPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [rsvpState, setRsvpState] = useState<"idle" | "loading" | "confirmed">("idle");
+  const [phase, setPhase] = useState<"closed" | "opening" | "open">("closed");
+  const [openError, setOpenError] = useState<string | null>(null);
+
+  // La invitación siempre se ve en modo claro, sin importar el tema del usuario
+  useEffect(() => {
+    const el = document.documentElement;
+    el.classList.add("force-light");
+    el.style.colorScheme = "light";
+    return () => {
+      el.classList.remove("force-light");
+      el.style.colorScheme = "";
+    };
+  }, []);
 
   useEffect(() => {
     async function loadPass() {
@@ -46,9 +60,10 @@ export default function GuestPassPage({
         const data: PassData = await res.json();
         setPassData(data);
 
-        // Si todos los invitados del grupo ya confirmaron, mostrar como confirmado
+        // Si todos los invitados del grupo ya confirmaron, mostrar carta abierta directo
         if (data.confirmed_count >= data.guest_count && data.guest_count > 0) {
           setRsvpState("confirmed");
+          setPhase("open");
         }
       } catch {
         setError("Invitación no encontrada o expirada");
@@ -58,6 +73,18 @@ export default function GuestPassPage({
     }
     loadPass();
   }, [uuid]);
+
+  // Bloquear scroll mientras el sobre está visible
+  useEffect(() => {
+    if (loading || error || phase === "open") {
+      document.body.style.overflow = "";
+      return;
+    }
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [phase, loading, error]);
 
   // El QR se genera solo cuando la asistencia está confirmada
   useEffect(() => {
@@ -78,7 +105,7 @@ export default function GuestPassPage({
     return () => { cancelled = true; };
   }, [rsvpState, uuid]);
 
-  async function handleRsvp() {
+  async function handleRsvp(): Promise<boolean> {
     setRsvpState("loading");
     try {
       const res = await fetch("/api/rsvp", {
@@ -92,17 +119,41 @@ export default function GuestPassPage({
         if (passData) {
           setPassData({ ...passData, confirmed_count: passData.guest_count });
         }
-      } else {
-        setRsvpState("idle");
+        return true;
       }
+      setRsvpState("idle");
+      return false;
     } catch {
       setRsvpState("idle");
+      return false;
+    }
+  }
+
+  function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function handleOpen() {
+    if (phase !== "closed") return;
+    setPhase("opening");
+    setOpenError(null);
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Duración mínima de la animación del sobre (ver globals.css)
+    const minDuration = reduced ? 150 : 2300;
+
+    const [ok] = await Promise.all([handleRsvp(), wait(minDuration)]);
+    if (ok) {
+      setPhase("open");
+    } else {
+      setPhase("closed");
+      setOpenError("No se pudo confirmar tu asistencia. Intenta de nuevo.");
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen letter-desk flex items-center justify-center">
         <div className="animate-pulse text-slate-400 text-sm">Cargando pase...</div>
       </div>
     );
@@ -110,7 +161,7 @@ export default function GuestPassPage({
 
   if (error || !passData) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
+      <div className="min-h-screen letter-desk flex items-center justify-center px-6">
         <div className="text-center">
           <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -126,269 +177,256 @@ export default function GuestPassPage({
     );
   }
 
+  const isOpen = phase === "open";
+  const code = uuid.toUpperCase();
+  const mapsUrl =
+    passData.venue_lat && passData.venue_lng
+      ? `https://www.google.com/maps/search/?api=1&query=${passData.venue_lat},${passData.venue_lng}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${passData.venue_name || ""} ${passData.venue_address || ""}`
+        )}`;
+
+  const details = [
+    {
+      label: "Mesa",
+      value: `Mesa ${passData.table_number}`,
+      icon: <path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 2v-4h-2V8c0-1.1-.9-2-2-2H10c-1.1 0-2 .9-2 2v2H6v4h2v2h8v-2h2z" />,
+    },
+    {
+      label: "Cupo",
+      value: `${passData.guest_count} invitados`,
+      icon: (
+        <>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </>
+      ),
+    },
+    {
+      label: "Hora",
+      value: passData.event_time || "17:00 hrs",
+      icon: (
+        <>
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </>
+      ),
+    },
+    {
+      label: "Vestimenta",
+      value: passData.dress_code || "Formal / Gala",
+      icon: (
+        <>
+          <path d="M20.38 3.46 16 2 12 3.46 8 2 3.62 3.46a2 2 0 0 0-1.34 1.89v13.3a2 2 0 0 0 2.66 1.89L8 19l4-1.46L16 19l4.38-1.46a2 2 0 0 0 1.34-1.89V5.35a2 2 0 0 0-1.34-1.89z" />
+          <line x1="12" y1="2" x2="12" y2="17.54" />
+        </>
+      ),
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50 pb-10">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <header className="px-6 pt-8 pb-4 text-center">
-          <p className="text-[11px] uppercase tracking-[0.35em] text-gold-deep font-semibold">
-            Se complacen en invitarte
-          </p>
-          <h1 className="font-serif text-3xl text-ink mt-2 leading-tight">
-            {passData.couple_name}
-          </h1>
-          <p className="text-xs text-slate-500 mt-2 tracking-wide">
-            {passData.event_date}
-          </p>
-        </header>
+    <>
+      {!isOpen && (
+        <EnvelopeIntro
+          coupleName={passData.couple_name}
+          eventDate={passData.event_date}
+          opening={phase === "opening"}
+          error={openError}
+          onOpen={handleOpen}
+        />
+      )}
 
-        {/* Pass Card */}
-        <section className="px-6">
-          <div className="bg-white rounded-[28px] shadow-lift border border-slate-100 overflow-hidden">
-            {/* Top strip */}
-            <div className="bg-ink px-6 py-4 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-gold font-semibold">
-                  Invitación
-                </p>
-                <p className="text-white text-sm font-semibold mt-0.5">
-                  {passData.group_name}
-                </p>
-              </div>
-              <span className="w-9 h-9 rounded-full bg-white/10 text-gold flex items-center justify-center">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-              </span>
-            </div>
+      <main
+        className={`letter-desk min-h-dvh md:px-6 md:py-12 ${isOpen ? "" : "pointer-events-none"}`}
+        aria-hidden={!isOpen}
+      >
+        <article
+          className={`letter-paper paper-texture relative mx-auto min-h-dvh max-w-lg overflow-hidden md:min-h-0 md:rounded-md md:shadow-[0_30px_70px_-25px_rgba(60,40,10,0.55)] ${
+            isOpen ? "letter-open" : ""
+          }`}
+        >
+          <span className="letter-frame" aria-hidden="true" />
+          <CornerOrnament className="left-5 top-5" />
+          <CornerOrnament className="right-5 top-5 -scale-x-100" />
+          <CornerOrnament className="bottom-5 left-5 -scale-y-100" />
+          <CornerOrnament className="bottom-5 right-5 -scale-100" />
 
-            {/* QR Zone */}
-            <div className="px-6 pt-7 pb-6 flex flex-col items-center">
-              {rsvpState === "confirmed" ? (
-                <>
-                  <div className="bg-white p-4 rounded-2xl border-2 border-ink">
-                    {qrDataUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={qrDataUrl}
-                        alt="Código de acceso"
-                        className="w-52 h-52 object-contain"
-                      />
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-400 font-mono mt-3 tracking-wider">
-                    Código · {uuid.toUpperCase().slice(0, 4)}-{uuid.toUpperCase().slice(4, 8)}-{uuid.toUpperCase().slice(8, 12)}-{uuid.toUpperCase().slice(12, 16)}
-                  </p>
-                  <div className="flex items-center gap-2 mt-4 bg-emerald-50 text-emerald-700 text-xs font-semibold px-3.5 py-1.5 rounded-full">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                    </svg>
-                    Válido para {passData.guest_count} personas
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-52 h-52 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center gap-3 px-6">
-                    <span className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                      </svg>
-                    </span>
-                    <p className="text-xs text-slate-500 text-center leading-relaxed">
-                      Confirma tu asistencia para desbloquear tu código QR de entrada
-                    </p>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-3 tracking-wide">
-                    Tu código se generará al confirmar
-                  </p>
-                </>
-              )}
-            </div>
+          <div className="relative px-8 pb-14 pt-16 md:px-12">
+            {/* Encabezado */}
+            <header className="letter-reveal text-center" style={delay(0.05)}>
+              <p className="text-[10px] uppercase tracking-[0.35em] text-gold-deep font-semibold">
+                Se complacen en invitarte
+              </p>
+              <h1 className="font-serif text-4xl text-ink mt-3 leading-tight">
+                {passData.couple_name}
+              </h1>
+              <p className="text-xs text-slate-500 mt-2 tracking-wider">
+                {passData.event_date}
+              </p>
+              <span className="ornament-divider mt-6" />
+            </header>
 
-            {/* Perforation */}
-            <div className="relative px-6">
-              <div className="border-t-2 border-dashed border-slate-200" />
-              <span className="absolute -left-3 -top-3 w-6 h-6 rounded-full bg-slate-50" />
-              <span className="absolute -right-3 -top-3 w-6 h-6 rounded-full bg-slate-50" />
-            </div>
+            {/* Saludo */}
+            <section className="letter-reveal mt-8 text-center" style={delay(0.2)}>
+              <p className="font-serif italic text-lg text-ink">
+                Para {passData.group_name}
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed mt-3">
+                Con mucha alegría queremos compartir contigo este día tan especial.
+                Tu presencia hará nuestra celebración aún más inolvidable.
+              </p>
+            </section>
 
-            {/* Details */}
-            <div className="px-6 py-6 grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-semibold flex items-center gap-1.5">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 12c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 2v-4h-2V8c0-1.1-.9-2-2-2H10c-1.1 0-2 .9-2 2v2H6v4h2v2h8v-2h2z" />
-                  </svg>
-                  Mesa
-                </p>
-                <p className="text-lg font-bold text-ink mt-1">
-                  Mesa {passData.table_number}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-semibold flex items-center gap-1.5">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                  Cupo
-                </p>
-                <p className="text-lg font-bold text-ink mt-1">
-                  {passData.guest_count} invitados
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-semibold flex items-center gap-1.5">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  Hora
-                </p>
-                <p className="text-lg font-bold text-ink mt-1">
-                  {passData.event_time || "17:00 hrs"}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-semibold flex items-center gap-1.5">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20.38 3.46 16 2 12 3.46 8 2 3.62 3.46a2 2 0 0 0-1.34 1.89v13.3a2 2 0 0 0 2.66 1.89L8 19l4-1.46L16 19l4.38-1.46a2 2 0 0 0 1.34-1.89V5.35a2 2 0 0 0-1.34-1.89z" />
-                    <line x1="12" y1="2" x2="12" y2="17.54" />
-                  </svg>
-                  Vestimenta
-                </p>
-                <p className="text-lg font-bold text-ink mt-1">
-                  {passData.dress_code || "Formal / Gala"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* RSVP */}
-        <section className="px-6 pt-5">
-          {rsvpState === "confirmed" ? (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
-              <span className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                </svg>
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-emerald-700">¡Asistencia confirmada!</p>
-                <p className="text-xs text-emerald-600 mt-0.5">
-                  Presenta tu código QR en la entrada — ¡nos vemos pronto!
-                </p>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={handleRsvp}
-              disabled={rsvpState === "loading"}
-              className="w-full bg-ink text-white rounded-xl py-3.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-lift hover:bg-ink-light transition-colors disabled:opacity-50"
-            >
-              <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-              </svg>
-              {rsvpState === "loading"
-                ? "Confirmando..."
-                : "Confirmar asistencia"}
-            </button>
-          )}
-        </section>
-
-        {/* Location Card */}
-        {passData.venue_name && (
-          <section className="px-6 pt-5">
-            <div className="bg-white rounded-3xl shadow-card border border-slate-100 overflow-hidden">
-              {/* Map */}
-              {passData.venue_lat && passData.venue_lng ? (
-                <VenueMap
-                  lat={passData.venue_lat}
-                  lng={passData.venue_lng}
-                  name={passData.venue_name}
-                  height={192}
-                />
-              ) : (
-                <div className="w-full h-48 bg-slate-100 flex items-center justify-center relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-200" />
-                  <div className="relative z-10 text-center">
-                    <div className="w-10 h-10 rounded-full bg-ink border-3 border-gold flex items-center justify-center mx-auto shadow-lg">
-                      <svg className="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                      </svg>
-                    </div>
-                  </div>
+            {/* QR */}
+            <section className="letter-reveal mt-10 flex flex-col items-center" style={delay(0.35)}>
+              <div className="relative">
+                <div className="qr-stamp">
+                  {qrDataUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={qrDataUrl}
+                      alt="Código QR de acceso"
+                      className="w-52 h-52 object-contain"
+                    />
+                  ) : (
+                    <div className="w-52 h-52 animate-pulse rounded bg-slate-100" />
+                  )}
                 </div>
-              )}
-              <div className="p-5">
-                <div className="flex items-start gap-3">
-                  <span className="w-10 h-10 rounded-xl bg-gold-faint text-gold-deep flex items-center justify-center shrink-0 mt-0.5">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                    </svg>
-                  </span>
-                  <div>
-                    <h3 className="text-sm font-semibold text-ink">{passData.venue_name}</h3>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                      {passData.venue_address}
-                    </p>
-                  </div>
-                </div>
-                <a
-                  href={
-                    passData.venue_lat && passData.venue_lng
-                      ? `https://www.google.com/maps/search/?api=1&query=${passData.venue_lat},${passData.venue_lng}`
-                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                          `${passData.venue_name || ""} ${passData.venue_address || ""}`
-                        )}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 w-full bg-ink text-white rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-2 shadow-lift hover:bg-ink-light transition-colors"
+                <span className="rsvp-stamp absolute -right-6 -top-5 bg-[#fdfaf3]/90" style={delay(1.1)}>
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                  </svg>
+                  Confirmado
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-mono mt-5 tracking-wider">
+                Código · {code.slice(0, 4)}-{code.slice(4, 8)}-{code.slice(8, 12)}-{code.slice(12, 16)}
+              </p>
+              <p className="mt-2 text-xs font-semibold text-gold-deep">
+                Válido para {passData.guest_count} personas
+              </p>
+              <p className="mt-4 text-center text-xs text-emerald-700">
+                ¡Asistencia confirmada! Presenta este código en la entrada.
+              </p>
+            </section>
+
+            <span className="ornament-divider letter-reveal mt-10" style={delay(0.5)} />
+
+            {/* Detalles */}
+            <section className="letter-reveal mt-8 grid grid-cols-2" style={delay(0.55)}>
+              {details.map((item, i) => (
+                <div
+                  key={item.label}
+                  className={`px-2 py-4 text-center border-gold/30 ${i < 2 ? "border-b" : ""} ${
+                    i % 2 === 0 ? "border-r" : ""
+                  }`}
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                  </svg>
-                  Cómo llegar
-                </a>
-              </div>
-            </div>
-          </section>
-        )}
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold flex items-center justify-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      {item.icon}
+                    </svg>
+                    {item.label}
+                  </p>
+                  <p className="font-serif text-lg text-ink mt-1.5">{item.value}</p>
+                </div>
+              ))}
+            </section>
 
-        {/* Actions */}
-        <section className="px-6 pt-5">
-          <div className="flex gap-3">
-            <button className="flex-1 bg-white border border-slate-200 text-slate-700 rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-card hover:bg-slate-50 transition-colors">
-              <svg className="w-4 h-4 text-sky" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Guardar en fotos
-            </button>
-            <button className="flex-1 bg-white border border-slate-200 text-slate-700 rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-card hover:bg-slate-50 transition-colors">
-              <svg className="w-4 h-4 text-sky" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="18" cy="5" r="3" />
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="18" cy="19" r="3" />
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-              </svg>
-              Compartir
-            </button>
+            {/* Ubicación */}
+            {passData.venue_name && (
+              <section className="letter-reveal mt-10" style={delay(0.7)}>
+                <div className="photo-frame">
+                  {passData.venue_lat && passData.venue_lng ? (
+                    <VenueMap
+                      lat={passData.venue_lat}
+                      lng={passData.venue_lng}
+                      name={passData.venue_name}
+                      height={180}
+                    />
+                  ) : (
+                    <div className="w-full h-[180px] bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
+                      <span className="w-10 h-10 rounded-full bg-ink flex items-center justify-center shadow-lg">
+                        <svg className="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                        </svg>
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-5 text-center">
+                  <h3 className="font-serif text-lg text-ink">{passData.venue_name}</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    {passData.venue_address}
+                  </p>
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-ink-light"
+                  >
+                    <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                    </svg>
+                    Cómo llegar
+                  </a>
+                </div>
+              </section>
+            )}
+
+            {/* Acciones */}
+            <section className="letter-reveal mt-8 flex gap-3" style={delay(0.8)}>
+              <button className="flex-1 rounded-full border border-gold/40 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-ink transition-colors hover:bg-white">
+                <svg className="w-4 h-4 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Guardar
+              </button>
+              <button className="flex-1 rounded-full border border-gold/40 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-ink transition-colors hover:bg-white">
+                <svg className="w-4 h-4 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                Compartir
+              </button>
+            </section>
+
+            {/* Firma */}
+            <footer className="letter-reveal mt-12 text-center" style={delay(0.9)}>
+              <p className="text-sm text-slate-500">Con cariño,</p>
+              <p className="font-serif italic text-2xl text-ink mt-1">{passData.couple_name}</p>
+              <p className="text-[10px] text-slate-400 mt-8 tracking-wide">Protegido por Attendapp</p>
+            </footer>
           </div>
-        </section>
+        </article>
+      </main>
+    </>
+  );
+}
 
-        <footer className="px-6 pt-8 pb-4 text-center">
-          <p className="text-[11px] text-slate-400">Presenta este código QR en la entrada</p>
-          <p className="text-[10px] text-slate-300 mt-1 tracking-wide">Protegido por Attendapp</p>
-        </footer>
-      </div>
-    </div>
+function delay(seconds: number): CSSProperties {
+  return { "--d": `${seconds}s` } as CSSProperties;
+}
+
+function CornerOrnament({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={`pointer-events-none absolute w-10 h-10 text-gold/70 ${className}`}
+      viewBox="0 0 48 48"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      aria-hidden="true"
+    >
+      <path d="M2 46V14C2 7.4 7.4 2 14 2h32" />
+      <path d="M8 46V20c0-6.6 5.4-12 12-12h26" />
+      <circle cx="14" cy="14" r="2.5" fill="currentColor" />
+    </svg>
   );
 }
