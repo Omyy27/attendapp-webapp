@@ -32,6 +32,7 @@ export async function updateSession(request: NextRequest) {
   // Allow public pass pages without auth
   const isPublicPage =
     request.nextUrl.pathname.startsWith("/pase/") ||
+    request.nextUrl.pathname.startsWith("/api/pass/") ||
     request.nextUrl.pathname === "/login" ||
     request.nextUrl.pathname === "/manifest.webmanifest" ||
     request.nextUrl.pathname.startsWith("/api/checkin") ||
