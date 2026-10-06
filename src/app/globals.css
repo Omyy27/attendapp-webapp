@@ -473,9 +473,18 @@ body {
   to { opacity: 0; }
 }
 
-/* Coreografía de apertura (~2.3s, ver minDuration en /pase/[uuid]/page.tsx) */
+/* Coreografía de apertura (la previa y el fade final se sincronizan con openingDurationMs) */
 .intro-opening {
-  animation: intro-fade 0.35s ease 1.95s forwards;
+  animation: intro-fade 0.6s ease var(--intro-fade-delay, 1.95s) forwards;
+}
+.intro-opening .env-letter-inner {
+  animation: fade-out 0.3s ease 1.5s forwards;
+}
+.intro-opening .env-preview-line {
+  animation: preview-line 0.85s ease var(--d) both;
+}
+.intro-opening .env-preview-final {
+  animation: preview-final 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) var(--d) both;
 }
 .intro-opening .env-seal {
   animation: none;
@@ -503,6 +512,27 @@ body {
 }
 .intro-opening .env-front {
   animation: pocket-drop 0.6s cubic-bezier(0.5, 0, 0.75, 0) 1.45s forwards;
+}
+
+/* Previa de frases (tiempos en envelope-intro.tsx) */
+.env-preview-line,
+.env-preview-final {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(86%, 640px);
+  translate: -50% -50%;
+  text-align: center;
+  opacity: 0;
+}
+@keyframes preview-line {
+  0% { opacity: 0; transform: translateY(10px); }
+  25%, 75% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes preview-final {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
 }
 
 /* ----- Carta abierta ----- */

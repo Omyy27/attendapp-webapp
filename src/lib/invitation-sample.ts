@@ -14,6 +14,11 @@ export const SAMPLE_HERO_VIDEO = {
   poster: `${mixkit(40584)}-thumb-720-0.jpg`,
 };
 
+export const SAMPLE_PREVIEW_LINES = [
+  "Tenemos algo que contarte…",
+  "Después de tantos momentos juntos…",
+];
+
 export const SAMPLE_INVITATION_TEXT = [
   "Hay momentos en la vida que se esperan con el corazón, y este es uno de ellos.",
   "Con mucha alegría queremos compartir contigo el día en que uniremos nuestras vidas. Tu presencia hará nuestra celebración aún más inolvidable.",

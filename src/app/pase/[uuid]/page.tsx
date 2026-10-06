@@ -2,13 +2,14 @@
 
 import { use, useState, useEffect, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
-import { EnvelopeIntro } from "@/components/envelope-intro";
+import { EnvelopeIntro, openingDurationMs } from "@/components/envelope-intro";
 import { HeroVideo } from "@/components/invitation/hero-video";
 import { PhotoCarousel } from "@/components/invitation/photo-carousel";
 import {
   SAMPLE_GALLERY,
   SAMPLE_HERO_VIDEO,
   SAMPLE_INVITATION_TEXT,
+  SAMPLE_PREVIEW_LINES,
 } from "@/lib/invitation-sample";
 import { renderPassImage } from "@/lib/pass-image";
 
@@ -149,8 +150,8 @@ export default function GuestPassPage({
     setOpenError(null);
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // Duración mínima de la animación del sobre (ver globals.css)
-    const minDuration = reduced ? 150 : 2300;
+    // Duración mínima de la apertura + previa (tiempos en envelope-intro.tsx)
+    const minDuration = reduced ? 150 : openingDurationMs(SAMPLE_PREVIEW_LINES.length);
 
     const [ok] = await Promise.all([handleRsvp(), wait(minDuration)]);
     if (ok) {
@@ -296,6 +297,7 @@ export default function GuestPassPage({
         <EnvelopeIntro
           coupleName={passData.couple_name}
           eventDate={passData.event_date}
+          previewLines={SAMPLE_PREVIEW_LINES}
           opening={phase === "opening"}
           error={openError}
           onOpen={handleOpen}
@@ -312,7 +314,7 @@ export default function GuestPassPage({
           poster={SAMPLE_HERO_VIDEO.poster}
           coupleName={passData.couple_name}
           eventDate={passData.event_date}
-          active={isOpen}
+          active={phase !== "closed"}
           scrollTargetId="carta"
         />
 
