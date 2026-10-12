@@ -1,4 +1,4 @@
-// Genera una imagen PNG (1080×1800) del pase (QR + datos + ubicación) con Canvas 2D,
+// Genera una imagen PNG (1080×2200) del pase (QR + datos + vestimenta + ubicación) con Canvas 2D,
 // para que el invitado la guarde en su teléfono.
 
 export interface PassImageData {
@@ -14,10 +14,21 @@ export interface PassImageData {
   venueName: string;
   venueAddress: string;
   mapsUrl: string;
+  /** Paleta sugerida del código de vestimenta */
+  palette: PassColor[];
+  /** Colores que los invitados deben evitar */
+  forbidden: PassColor[];
+  /** Aviso de celebración solo para adultos */
+  adultsOnly: string;
+}
+
+export interface PassColor {
+  hex: string;
+  name: string;
 }
 
 const W = 1080;
-const H = 1800;
+const H = 2200;
 const INK = "#0a2540";
 const GOLD = "#c8a054";
 const GOLD_DEEP = "#a8843a";
@@ -62,6 +73,41 @@ function drawWrapped(
   const lines = wrapText(ctx, text, maxWidth).slice(0, maxLines);
   lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight));
   return y + lines.length * lineHeight;
+}
+
+/** Fila de muestras de color centrada en `cx`; las de `crossed` van tachadas */
+function drawSwatches(
+  ctx: CanvasRenderingContext2D,
+  colors: PassColor[],
+  cx: number,
+  y: number,
+  font: string,
+  crossed = false
+) {
+  const r = 34;
+  const gap = 130;
+  const startX = cx - ((colors.length - 1) * gap) / 2;
+  colors.forEach((color, i) => {
+    const x = startX + i * gap;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color.hex;
+    ctx.fill();
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    if (crossed) {
+      ctx.strokeStyle = "#be123c";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(x - r * 0.7, y + r * 0.7);
+      ctx.lineTo(x + r * 0.7, y - r * 0.7);
+      ctx.stroke();
+    }
+    ctx.font = font;
+    ctx.fillStyle = MUTED;
+    ctx.fillText(color.name, x, y + r + 34, gap - 10);
+  });
 }
 
 function setSpacing(ctx: CanvasRenderingContext2D, px: number) {
@@ -199,13 +245,55 @@ export async function renderPassImage(data: PassImageData): Promise<Blob> {
   });
   y += 110;
 
-  // Ubicación: texto a la izquierda y QR a Google Maps a la derecha
-  if (data.venueName && mapsImg) {
+  const divider = () => {
     ctx.strokeStyle = "rgba(200, 160, 84, 0.5)";
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(100, y);
     ctx.lineTo(W - 100, y);
     ctx.stroke();
+  };
+  const swatchFont = `500 22px ${sans}`;
+
+  // Código de vestimenta: paleta sugerida (izquierda) y colores a evitar (derecha)
+  if (data.palette.length > 0 || data.forbidden.length > 0) {
+    divider();
+    y += 60;
+    const split = data.forbidden.length > 0 ? 0.62 : 1;
+    const paletteCx = 100 + (contentW * split) / 2;
+    const forbiddenCx = 100 + contentW * split + (contentW * (1 - split)) / 2;
+
+    ctx.font = fonts.eyebrow;
+    setSpacing(ctx, 4);
+    ctx.fillStyle = GOLD_DEEP;
+    ctx.fillText("PALETA SUGERIDA", paletteCx, y);
+    if (data.forbidden.length > 0) {
+      ctx.fillStyle = "#be123c";
+      ctx.fillText("COLORES A EVITAR", forbiddenCx, y);
+    }
+    setSpacing(ctx, 0);
+
+    drawSwatches(ctx, data.palette, paletteCx, y + 70, swatchFont);
+    drawSwatches(ctx, data.forbidden, forbiddenCx, y + 70, swatchFont, true);
+    y += 180;
+  }
+
+  // Solo adultos
+  if (data.adultsOnly) {
+    divider();
+    ctx.font = fonts.eyebrow;
+    ctx.fillStyle = GOLD_DEEP;
+    setSpacing(ctx, 4);
+    ctx.fillText("CELEBRACIÓN SOLO PARA ADULTOS", cx, y + 56);
+    setSpacing(ctx, 0);
+    ctx.font = fonts.body;
+    ctx.fillStyle = MUTED;
+    y = drawWrapped(ctx, data.adultsOnly, cx, y + 102, contentW, 38, 3) + 4;
+  }
+
+  // Ubicación: texto a la izquierda y QR a Google Maps a la derecha
+  if (data.venueName && mapsImg) {
+    divider();
     y += 60;
 
     const mapsSize = 200;

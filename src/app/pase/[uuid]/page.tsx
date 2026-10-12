@@ -6,6 +6,8 @@ import { EnvelopeIntro, openingDurationMs } from "@/components/envelope-intro";
 import { HeroVideo } from "@/components/invitation/hero-video";
 import { PhotoCarousel } from "@/components/invitation/photo-carousel";
 import {
+  SAMPLE_ADULTS_ONLY,
+  SAMPLE_DRESS_CODE,
   SAMPLE_GALLERY,
   SAMPLE_HERO_VIDEO,
   SAMPLE_INVITATION_TEXT,
@@ -215,6 +217,9 @@ export default function GuestPassPage({
         venueName: passData.venue_name,
         venueAddress: passData.venue_address,
         mapsUrl,
+        palette: SAMPLE_DRESS_CODE.palette,
+        forbidden: SAMPLE_DRESS_CODE.forbidden,
+        adultsOnly: SAMPLE_ADULTS_ONLY,
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -369,6 +374,50 @@ export default function GuestPassPage({
                     </div>
                   ))}
                 </div>
+
+                {/* Código de vestimenta */}
+                <div className="mt-8 border-t border-gold/30 pt-7 text-center">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-gold-deep font-semibold">
+                    Código de vestimenta
+                  </p>
+                  <p className="font-serif text-xl text-ink mt-1.5">
+                    {passData.dress_code || "Formal / Gala"}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-4">Paleta sugerida</p>
+                  <ul className="mt-3 flex justify-center gap-6">
+                    {SAMPLE_DRESS_CODE.palette.map((color) => (
+                      <ColorSwatch key={color.hex} hex={color.hex} name={color.name} />
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Colores a evitar */}
+                <div className="mt-7 border-t border-gold/30 pt-7 text-center">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-rose-700 font-semibold">
+                    Colores a evitar
+                  </p>
+                  <ul className="mt-3 flex justify-center gap-6">
+                    {SAMPLE_DRESS_CODE.forbidden.map((color) => (
+                      <ColorSwatch key={color.hex} hex={color.hex} name={color.name} crossed />
+                    ))}
+                  </ul>
+                  <p className="text-xs text-slate-500 mt-3 leading-relaxed">
+                    {SAMPLE_DRESS_CODE.forbiddenNote}
+                  </p>
+                </div>
+
+                {/* Solo adultos */}
+                <div className="mt-7 border-t border-gold/30 pt-7 text-center">
+                  <svg className="mx-auto h-6 w-6 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M8 22h8" />
+                    <path d="M12 15v7" />
+                    <path d="M7 3h10l-1 6a4 4 0 0 1-8 0z" />
+                  </svg>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-gold-deep font-semibold mt-2">
+                    Celebración solo para adultos
+                  </p>
+                  <p className="text-sm text-slate-600 leading-relaxed mt-2">{SAMPLE_ADULTS_ONLY}</p>
+                </div>
               </section>
 
               {/* 4. Tu pase */}
@@ -516,6 +565,19 @@ function slugify(text: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function ColorSwatch({ hex, name, crossed = false }: { hex: string; name: string; crossed?: boolean }) {
+  return (
+    <li className="flex flex-col items-center gap-1.5">
+      <span
+        className={`swatch ${crossed ? "swatch-crossed" : ""}`}
+        style={{ backgroundColor: hex }}
+        aria-hidden="true"
+      />
+      <span className="text-[11px] text-slate-600">{name}</span>
+    </li>
+  );
 }
 
 function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {

@@ -186,7 +186,7 @@ body {
   /* Dobleces de una carta doblada en tres */
   --letter-creases: linear-gradient(180deg, transparent calc(33.3% - 14px), rgba(120, 90, 40, 0.06) calc(33.3% - 2px), rgba(120, 90, 40, 0.16) 33.3%, rgba(255, 255, 255, 0.85) calc(33.3% + 1px), rgba(255, 255, 255, 0) calc(33.3% + 9px), transparent),
     linear-gradient(180deg, transparent calc(66.6% - 14px), rgba(120, 90, 40, 0.06) calc(66.6% - 2px), rgba(120, 90, 40, 0.16) 66.6%, rgba(255, 255, 255, 0.85) calc(66.6% + 1px), rgba(255, 255, 255, 0) calc(66.6% + 9px), transparent);
-  --env-seal-size: clamp(84px, 22vw, 128px);
+  --env-seal-size: clamp(104px, 28vw, 156px);
   --env-tip: 50%;
 }
 
@@ -415,12 +415,12 @@ body {
   box-shadow: 0 0 10px 3px rgba(246, 220, 144, 0.8);
   opacity: 0;
 }
-.env-sparkles i:nth-child(1) { --dx: -90px; --dy: -60px; }
-.env-sparkles i:nth-child(2) { --dx: 95px; --dy: -50px; }
-.env-sparkles i:nth-child(3) { --dx: -70px; --dy: 70px; }
-.env-sparkles i:nth-child(4) { --dx: 80px; --dy: 80px; }
-.env-sparkles i:nth-child(5) { --dx: 0px; --dy: -110px; }
-.env-sparkles i:nth-child(6) { --dx: 10px; --dy: 105px; }
+.env-sparkles i:nth-child(1) { --dx: -108px; --dy: -72px; }
+.env-sparkles i:nth-child(2) { --dx: 114px; --dy: -60px; }
+.env-sparkles i:nth-child(3) { --dx: -84px; --dy: 84px; }
+.env-sparkles i:nth-child(4) { --dx: 96px; --dy: 96px; }
+.env-sparkles i:nth-child(5) { --dx: 0px; --dy: -132px; }
+.env-sparkles i:nth-child(6) { --dx: 12px; --dy: 126px; }
 
 @keyframes env-enter {
   from { opacity: 0; transform: scale(1.04); }
@@ -585,6 +585,30 @@ body {
 }
 .letter-open .qr-stamp::after {
   animation: qr-shine 1.2s ease 0.9s both;
+}
+
+/* Muestras de color del código de vestimenta */
+.swatch {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(200, 160, 84, 0.6);
+  box-shadow:
+    0 0 0 3px #fbf6ea,
+    0 6px 14px -6px rgba(10, 37, 64, 0.35);
+  overflow: hidden;
+}
+.swatch-crossed::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -10%;
+  width: 2px;
+  height: 120%;
+  background: #be123c;
+  transform: rotate(45deg);
 }
 
 .photo-frame {

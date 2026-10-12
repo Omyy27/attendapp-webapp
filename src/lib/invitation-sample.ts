@@ -33,3 +33,17 @@ export const SAMPLE_GALLERY: GalleryPhoto[] = [
   { src: `${mixkit(40599)}-thumb-720-0.jpg`, alt: "El reencuentro de los novios" },
   { src: `${mixkit(40586)}-thumb-720-0.jpg`, alt: "La novia con su ramo" },
 ];
+
+export const SAMPLE_DRESS_CODE = {
+  palette: [
+    { hex: "#f591b3", name: "Rosa" },
+    { hex: "#5b6540", name: "Verde olivo" },
+    { hex: "#fffdf7", name: "Blanco hueso" },
+  ],
+  // EJEMPLO: reemplazar por los colores prohibidos reales
+  forbidden: [{ hex: "#ffffff", name: "Blanco" }],
+  forbiddenNote: "Por favor evita estos tonos, reservados para los novios.",
+};
+
+export const SAMPLE_ADULTS_ONLY =
+  "Amamos a sus pequeños, pero esta celebración es solo para adultos. Les pedimos asistir sin niños, de ninguna edad.";
