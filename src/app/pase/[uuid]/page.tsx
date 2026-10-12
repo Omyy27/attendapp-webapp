@@ -109,7 +109,7 @@ export default function GuestPassPage({
       const qrUrl = await QRCode.toDataURL(`ATTENDAPP-${uuid.toUpperCase()}`, {
         width: 400,
         margin: 0,
-        color: { dark: "#0a2540", light: "#ffffff" },
+        color: { dark: "#3b4228", light: "#ffffff" },
       });
       if (!cancelled) setQrDataUrl(qrUrl);
     }
@@ -183,7 +183,7 @@ export default function GuestPassPage({
               <path d="m9 9 6 6" />
             </svg>
           </div>
-          <h1 className="font-serif text-xl text-ink mb-2">Invitación no válida</h1>
+          <h1 className="font-serif text-xl text-inv-olive-deep mb-2">Invitación no válida</h1>
           <p className="text-sm text-slate-500">{error}</p>
         </div>
       </div>
@@ -217,8 +217,8 @@ export default function GuestPassPage({
         venueName: passData.venue_name,
         venueAddress: passData.venue_address,
         mapsUrl,
-        palette: SAMPLE_DRESS_CODE.palette,
-        forbidden: SAMPLE_DRESS_CODE.forbidden,
+        avoidNote: SAMPLE_DRESS_CODE.note,
+        avoid: SAMPLE_DRESS_CODE.avoid,
         adultsOnly: SAMPLE_ADULTS_ONLY,
       });
       const url = URL.createObjectURL(blob);
@@ -336,10 +336,10 @@ export default function GuestPassPage({
 
               {/* 2. Texto de invitación */}
               <section className="letter-reveal text-center" style={delay(0.25)}>
-                <p className="text-[10px] uppercase tracking-[0.35em] text-gold-deep font-semibold">
+                <p className="text-[10px] uppercase tracking-[0.35em] text-inv-rose-deep font-semibold">
                   Se complacen en invitarte
                 </p>
-                <p className="font-serif italic text-xl text-ink mt-4">
+                <p className="font-serif italic text-xl text-inv-olive-deep mt-4">
                   Para {passData.group_name}
                 </p>
                 {SAMPLE_INVITATION_TEXT.map((paragraph) => (
@@ -360,60 +360,57 @@ export default function GuestPassPage({
                   {details.map((item, i) => (
                     <div
                       key={item.label}
-                      className={`px-2 py-4 text-center border-gold/30 ${i < 2 ? "border-b" : ""} ${
+                      className={`px-2 py-4 text-center border-inv-rose/50 ${i < 2 ? "border-b" : ""} ${
                         i % 2 === 0 ? "border-r" : ""
                       }`}
                     >
                       <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold flex items-center justify-center gap-1.5">
-                        <svg className="w-3.5 h-3.5 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <svg className="w-3.5 h-3.5 text-inv-rose-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                           {item.icon}
                         </svg>
                         {item.label}
                       </p>
-                      <p className="font-serif text-lg text-ink mt-1.5">{item.value}</p>
+                      <p className="font-serif text-lg text-inv-olive-deep mt-1.5">{item.value}</p>
                     </div>
                   ))}
                 </div>
 
-                {/* Código de vestimenta */}
-                <div className="mt-8 border-t border-gold/30 pt-7 text-center">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-gold-deep font-semibold">
+                {/* Código de vestimenta y colores a evitar */}
+                <div className="mt-8 border-t border-inv-rose/50 pt-7 text-center">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-inv-rose-deep font-semibold">
                     Código de vestimenta
                   </p>
-                  <p className="font-serif text-xl text-ink mt-1.5">
+                  <p className="font-serif text-xl text-inv-olive-deep mt-1.5">
                     {passData.dress_code || "Formal / Gala"}
                   </p>
-                  <p className="text-xs text-slate-500 mt-4">Paleta sugerida</p>
-                  <ul className="mt-3 flex justify-center gap-6">
-                    {SAMPLE_DRESS_CODE.palette.map((color) => (
-                      <ColorSwatch key={color.hex} hex={color.hex} name={color.name} />
-                    ))}
-                  </ul>
-                </div>
 
-                {/* Colores a evitar */}
-                <div className="mt-7 border-t border-gold/30 pt-7 text-center">
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-rose-700 font-semibold">
+                  <p className="mt-6 text-[10px] uppercase tracking-[0.3em] text-rose-700 font-semibold">
                     Colores a evitar
                   </p>
-                  <ul className="mt-3 flex justify-center gap-6">
-                    {SAMPLE_DRESS_CODE.forbidden.map((color) => (
-                      <ColorSwatch key={color.hex} hex={color.hex} name={color.name} crossed />
-                    ))}
-                  </ul>
-                  <p className="text-xs text-slate-500 mt-3 leading-relaxed">
-                    {SAMPLE_DRESS_CODE.forbiddenNote}
-                  </p>
+                  <p className="text-xs text-slate-500 mt-1.5">{SAMPLE_DRESS_CODE.note}</p>
+
+                  {SAMPLE_DRESS_CODE.avoid.map((group) => (
+                    <div key={group.group} className="mt-6">
+                      <p className="text-[11px] uppercase tracking-[0.25em] text-inv-rose-deep font-semibold">
+                        {group.group}
+                      </p>
+                      <ul className="mt-4 grid grid-cols-3 gap-x-3 gap-y-5">
+                        {group.colors.map((color) => (
+                          <ColorSwatch key={color.name} hexes={color.hexes} name={color.name} crossed />
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Solo adultos */}
-                <div className="mt-7 border-t border-gold/30 pt-7 text-center">
-                  <svg className="mx-auto h-6 w-6 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <div className="mt-7 border-t border-inv-rose/50 pt-7 text-center">
+                  <svg className="mx-auto h-6 w-6 text-inv-rose-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M8 22h8" />
                     <path d="M12 15v7" />
                     <path d="M7 3h10l-1 6a4 4 0 0 1-8 0z" />
                   </svg>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-gold-deep font-semibold mt-2">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-inv-rose-deep font-semibold mt-2">
                     Celebración solo para adultos
                   </p>
                   <p className="text-sm text-slate-600 leading-relaxed mt-2">{SAMPLE_ADULTS_ONLY}</p>
@@ -438,7 +435,7 @@ export default function GuestPassPage({
                 <p className="text-[11px] text-slate-400 font-mono mt-5 tracking-wider">
                   Código · {formattedCode}
                 </p>
-                <p className="mt-2 text-xs font-semibold text-gold-deep">
+                <p className="mt-2 text-xs font-semibold text-inv-rose-deep">
                   Válido para {passData.guest_count} personas
                 </p>
                 <p className="mt-4 text-center text-xs text-emerald-700">
@@ -466,8 +463,8 @@ export default function GuestPassPage({
                       />
                     ) : (
                       <div className="w-full h-[180px] bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
-                        <span className="w-10 h-10 rounded-full bg-ink flex items-center justify-center shadow-lg">
-                          <svg className="w-5 h-5 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <span className="w-10 h-10 rounded-full bg-inv-olive flex items-center justify-center shadow-lg">
+                          <svg className="w-5 h-5 text-inv-rose" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                           </svg>
                         </span>
@@ -475,7 +472,7 @@ export default function GuestPassPage({
                     )}
                   </div>
                   <div className="mt-5 text-center">
-                    <h3 className="font-serif text-lg text-ink">{passData.venue_name}</h3>
+                    <h3 className="font-serif text-lg text-inv-olive-deep">{passData.venue_name}</h3>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                       {passData.venue_address}
                     </p>
@@ -483,9 +480,9 @@ export default function GuestPassPage({
                       href={mapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-ink-light"
+                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-inv-olive px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-inv-olive-deep"
                     >
-                      <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <svg className="w-4 h-4 text-inv-rose" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <polygon points="3 11 22 2 13 21 11 13 3 11" />
                       </svg>
                       Cómo llegar
@@ -501,9 +498,9 @@ export default function GuestPassPage({
                     type="button"
                     onClick={handleSave}
                     disabled={!qrDataUrl || saveState === "saving"}
-                    className="flex-1 rounded-full border border-gold/40 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-ink transition-colors hover:bg-white disabled:opacity-60"
+                    className="flex-1 rounded-full border border-inv-rose/50 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-inv-olive-deep transition-colors hover:bg-white disabled:opacity-60"
                   >
-                    <svg className="w-4 h-4 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <svg className="w-4 h-4 text-inv-rose-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                       <polyline points="7 10 12 15 17 10" />
                       <line x1="12" y1="15" x2="12" y2="3" />
@@ -513,14 +510,14 @@ export default function GuestPassPage({
                   <button
                     type="button"
                     onClick={handleShare}
-                    className="flex-1 rounded-full border border-gold/40 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-ink transition-colors hover:bg-white"
+                    className="flex-1 rounded-full border border-inv-rose/50 bg-white/60 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-semibold text-inv-olive-deep transition-colors hover:bg-white"
                   >
                     {copied ? (
                       <svg className="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     ) : (
-                      <svg className="w-4 h-4 text-gold-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <svg className="w-4 h-4 text-inv-rose-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <circle cx="18" cy="5" r="3" />
                         <circle cx="6" cy="12" r="3" />
                         <circle cx="18" cy="19" r="3" />
@@ -543,7 +540,7 @@ export default function GuestPassPage({
               {/* Firma */}
               <footer className="letter-reveal mt-12 text-center" style={delay(0.9)}>
                 <p className="text-sm text-slate-500">Con cariño,</p>
-                <p className="font-serif italic text-2xl text-ink mt-1">{passData.couple_name}</p>
+                <p className="font-serif italic text-2xl text-inv-olive-deep mt-1">{passData.couple_name}</p>
                 <p className="text-[10px] text-slate-400 mt-8 tracking-wide">Protegido por Attendapp</p>
               </footer>
             </div>
@@ -567,15 +564,21 @@ function slugify(text: string) {
     .replace(/^-|-$/g, "");
 }
 
-function ColorSwatch({ hex, name, crossed = false }: { hex: string; name: string; crossed?: boolean }) {
+function swatchBackground(hexes: string[]) {
+  if (hexes.length === 1) return hexes[0];
+  const stops = hexes.map((hex, i) => `${hex} ${(i * 100) / hexes.length}% ${((i + 1) * 100) / hexes.length}%`);
+  return `linear-gradient(90deg, ${stops.join(", ")})`;
+}
+
+function ColorSwatch({ hexes, name, crossed = false }: { hexes: string[]; name: string; crossed?: boolean }) {
   return (
     <li className="flex flex-col items-center gap-1.5">
       <span
         className={`swatch ${crossed ? "swatch-crossed" : ""}`}
-        style={{ backgroundColor: hex }}
+        style={{ background: swatchBackground(hexes) }}
         aria-hidden="true"
       />
-      <span className="text-[11px] text-slate-600">{name}</span>
+      <span className="text-[11px] leading-tight text-slate-600">{name}</span>
     </li>
   );
 }
@@ -583,8 +586,8 @@ function ColorSwatch({ hex, name, crossed = false }: { hex: string; name: string
 function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <header className="mb-5 text-center">
-      <p className="text-[10px] uppercase tracking-[0.35em] text-gold-deep font-semibold">{eyebrow}</p>
-      <h2 className="font-serif text-2xl text-ink mt-1.5">{title}</h2>
+      <p className="text-[10px] uppercase tracking-[0.35em] text-inv-rose-deep font-semibold">{eyebrow}</p>
+      <h2 className="font-serif text-2xl text-inv-olive-deep mt-1.5">{title}</h2>
     </header>
   );
 }
@@ -592,7 +595,7 @@ function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
 function CornerOrnament({ className = "" }: { className?: string }) {
   return (
     <svg
-      className={`pointer-events-none absolute w-10 h-10 text-gold/70 ${className}`}
+      className={`pointer-events-none absolute w-10 h-10 text-inv-rose ${className}`}
       viewBox="0 0 48 48"
       fill="none"
       stroke="currentColor"

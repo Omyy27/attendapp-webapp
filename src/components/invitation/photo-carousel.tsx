@@ -115,7 +115,7 @@ export function PhotoCarousel({ photos }: { photos: GalleryPhoto[] }) {
         onClick={() => goTo(Math.max(active - 1, 0))}
         disabled={active === 0}
         aria-label="Foto anterior"
-        className="absolute left-1 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-ink shadow-lift transition-opacity hover:bg-white disabled:opacity-0 md:flex"
+        className="absolute left-1 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-inv-olive-deep shadow-lift transition-opacity hover:bg-white disabled:opacity-0 md:flex"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <polyline points="15 18 9 12 15 6" />
@@ -126,7 +126,7 @@ export function PhotoCarousel({ photos }: { photos: GalleryPhoto[] }) {
         onClick={() => goTo(Math.min(active + 1, photos.length - 1))}
         disabled={active === photos.length - 1}
         aria-label="Foto siguiente"
-        className="absolute right-1 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-ink shadow-lift transition-opacity hover:bg-white disabled:opacity-0 md:flex"
+        className="absolute right-1 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-inv-olive-deep shadow-lift transition-opacity hover:bg-white disabled:opacity-0 md:flex"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <polyline points="9 18 15 12 9 6" />
@@ -146,7 +146,7 @@ export function PhotoCarousel({ photos }: { photos: GalleryPhoto[] }) {
             aria-label={`Ver foto ${i + 1}`}
             aria-current={i === active}
             className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === active ? "w-5 bg-gold-deep" : "w-1.5 bg-gold/40 hover:bg-gold/70"
+              i === active ? "w-5 bg-inv-rose-deep" : "w-1.5 bg-inv-rose/40 hover:bg-inv-rose/80"
             }`}
           />
         ))}

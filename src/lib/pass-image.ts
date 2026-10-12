@@ -1,5 +1,17 @@
-// Genera una imagen PNG (1080×2200) del pase (QR + datos + vestimenta + ubicación) con Canvas 2D,
-// para que el invitado la guarde en su teléfono.
+// Genera una imagen PNG del pase (QR + datos + colores a evitar + ubicación) con
+// Canvas 2D, para que el invitado la guarde en su teléfono. El alto depende del
+// contenido: se mide en una primera pasada y se dibuja en la segunda.
+
+export interface PassColor {
+  name: string;
+  /** 1–3 tonos; si hay varios la muestra se divide en franjas */
+  hexes: string[];
+}
+
+export interface PassColorGroup {
+  group: string;
+  colors: PassColor[];
+}
 
 export interface PassImageData {
   coupleName: string;
@@ -14,25 +26,22 @@ export interface PassImageData {
   venueName: string;
   venueAddress: string;
   mapsUrl: string;
-  /** Paleta sugerida del código de vestimenta */
-  palette: PassColor[];
-  /** Colores que los invitados deben evitar */
-  forbidden: PassColor[];
+  /** Colores que los invitados deben evitar, por grupo (mujeres / hombres) */
+  avoid: PassColorGroup[];
+  avoidNote: string;
   /** Aviso de celebración solo para adultos */
   adultsOnly: string;
 }
 
-export interface PassColor {
-  hex: string;
-  name: string;
-}
-
 const W = 1080;
-const H = 2200;
-const INK = "#0a2540";
-const GOLD = "#c8a054";
-const GOLD_DEEP = "#a8843a";
+// Alto del lienzo de medición; el alto final del PNG depende del contenido
+const MAX_H = 4000;
+const FOOTER_SPACE = 160;
+const INK = "#3b4228";
+const GOLD = "#f591b3";
+const GOLD_DEEP = "#b84a72";
 const MUTED = "#64748b";
+const WARN = "#be123c";
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -75,39 +84,59 @@ function drawWrapped(
   return y + lines.length * lineHeight;
 }
 
-/** Fila de muestras de color centrada en `cx`; las de `crossed` van tachadas */
-function drawSwatches(
+/**
+ * Rejilla de muestras tachadas centrada en `cx`, con `perRow` por fila (la última
+ * fila se centra sola). Devuelve la `y` siguiente.
+ */
+function drawAvoidSwatches(
   ctx: CanvasRenderingContext2D,
   colors: PassColor[],
   cx: number,
   y: number,
-  font: string,
-  crossed = false
-) {
-  const r = 34;
-  const gap = 130;
-  const startX = cx - ((colors.length - 1) * gap) / 2;
-  colors.forEach((color, i) => {
-    const x = startX + i * gap;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = color.hex;
-    ctx.fill();
-    ctx.strokeStyle = GOLD;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    if (crossed) {
-      ctx.strokeStyle = "#be123c";
+  perRow: number,
+  font: string
+): number {
+  const r = 30;
+  const gap = 164;
+  const rowH = 150;
+  for (let start = 0; start < colors.length; start += perRow) {
+    const row = colors.slice(start, start + perRow);
+    const rowY = y + (start / perRow) * rowH;
+    const startX = cx - ((row.length - 1) * gap) / 2;
+    row.forEach((color, i) => {
+      const x = startX + i * gap;
+
+      // Muestra: círculo recortado con una franja por tono
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, rowY, r, 0, Math.PI * 2);
+      ctx.clip();
+      const stripe = (r * 2) / color.hexes.length;
+      color.hexes.forEach((hex, k) => {
+        ctx.fillStyle = hex;
+        ctx.fillRect(x - r + k * stripe, rowY - r, stripe + 0.5, r * 2);
+      });
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(x, rowY, r, 0, Math.PI * 2);
+      ctx.strokeStyle = GOLD;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Línea roja de "evitar"
+      ctx.strokeStyle = WARN;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(x - r * 0.7, y + r * 0.7);
-      ctx.lineTo(x + r * 0.7, y - r * 0.7);
+      ctx.moveTo(x - r * 0.7, rowY + r * 0.7);
+      ctx.lineTo(x + r * 0.7, rowY - r * 0.7);
       ctx.stroke();
-    }
-    ctx.font = font;
-    ctx.fillStyle = MUTED;
-    ctx.fillText(color.name, x, y + r + 34, gap - 10);
-  });
+
+      ctx.font = font;
+      ctx.fillStyle = MUTED;
+      drawWrapped(ctx, color.name, x, rowY + r + 30, gap - 14, 24, 2);
+    });
+  }
+  return y + Math.ceil(colors.length / perRow) * rowH;
 }
 
 function setSpacing(ctx: CanvasRenderingContext2D, px: number) {
@@ -129,6 +158,7 @@ export async function renderPassImage(data: PassImageData): Promise<Blob> {
     value: `400 38px ${serif}`,
     venue: `400 40px ${serif}`,
     mono: `400 26px ui-monospace, SFMono-Regular, Menlo, monospace`,
+    swatch: `500 20px ${sans}`,
   };
   await Promise.all(Object.values(fonts).map((f) => document.fonts.load(f).catch(() => [])));
 
@@ -144,190 +174,206 @@ export async function renderPassImage(data: PassImageData): Promise<Blob> {
       : Promise.resolve(null),
   ]);
 
-  const canvas = document.createElement("canvas");
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas no disponible");
-
-  // Papel y marco dorado doble
-  const paper = ctx.createLinearGradient(0, 0, 0, H);
-  paper.addColorStop(0, "#fdfaf3");
-  paper.addColorStop(1, "#f6eedc");
-  ctx.fillStyle = paper;
-  ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = GOLD;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(36, 36, W - 72, H - 72);
-  ctx.globalAlpha = 0.45;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(50, 50, W - 100, H - 100);
-  ctx.globalAlpha = 1;
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-  const cx = W / 2;
-  const contentW = W - 200;
-
-  // Encabezado
-  ctx.font = fonts.eyebrow;
-  ctx.fillStyle = GOLD_DEEP;
-  setSpacing(ctx, 8);
-  ctx.fillText("SE COMPLACEN EN INVITARTE", cx, 150);
-  setSpacing(ctx, 0);
-
-  ctx.font = fonts.title;
-  ctx.fillStyle = INK;
-  let y = drawWrapped(ctx, data.coupleName, cx, 250, contentW, 84, 2);
-
-  ctx.font = fonts.body;
-  ctx.fillStyle = MUTED;
-  y = drawWrapped(ctx, data.eventDate, cx, y + 6, contentW, 38, 2);
-
-  ctx.font = fonts.italic;
-  ctx.fillStyle = INK;
-  ctx.fillText(`Para ${data.groupName}`, cx, y + 56, contentW);
-  y += 100;
-
-  // QR de acceso en marco blanco
-  const qrBox = 480;
-  const qrX = cx - qrBox / 2;
-  ctx.save();
-  ctx.shadowColor = "rgba(10, 37, 64, 0.18)";
-  ctx.shadowBlur = 30;
-  ctx.shadowOffsetY = 12;
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.roundRect(qrX, y, qrBox, qrBox, 16);
-  ctx.fill();
-  ctx.restore();
-  ctx.strokeStyle = GOLD;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(qrX, y, qrBox, qrBox, 16);
-  ctx.stroke();
-  ctx.drawImage(qrImg, qrX + 40, y + 40, qrBox - 80, qrBox - 80);
-  y += qrBox + 52;
-
-  ctx.font = fonts.mono;
-  ctx.fillStyle = MUTED;
-  ctx.fillText(`Código · ${data.code}`, cx, y);
-  ctx.font = fonts.bold;
-  ctx.fillStyle = GOLD_DEEP;
-  ctx.fillText(`Válido para ${data.guestCount} personas`, cx, y + 46);
-  y += 120;
-
-  // Mesa / Hora / Vestimenta
-  const cols = [
-    { label: "MESA", value: `Mesa ${data.tableNumber}` },
-    { label: "HORA", value: data.eventTime },
-    { label: "VESTIMENTA", value: data.dressCode },
-  ];
-  const colW = contentW / cols.length;
-  cols.forEach((col, i) => {
-    const x = 100 + colW * i + colW / 2;
-    ctx.font = fonts.eyebrow;
-    ctx.fillStyle = MUTED;
-    setSpacing(ctx, 4);
-    ctx.fillText(col.label, x, y);
-    setSpacing(ctx, 0);
-    ctx.font = fonts.value;
-    ctx.fillStyle = INK;
-    ctx.fillText(col.value, x, y + 52, colW - 20);
-    if (i > 0) {
-      ctx.strokeStyle = "rgba(200, 160, 84, 0.4)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(100 + colW * i, y - 28);
-      ctx.lineTo(100 + colW * i, y + 64);
-      ctx.stroke();
-    }
-  });
-  y += 110;
-
-  const divider = () => {
-    ctx.strokeStyle = "rgba(200, 160, 84, 0.5)";
+  // Dibuja el pase en `ctx` con alto `H` y devuelve la `y` donde termina el contenido
+  const draw = (ctx: CanvasRenderingContext2D, H: number): number => {
+    // Papel y marco dorado doble
+    const paper = ctx.createLinearGradient(0, 0, 0, H);
+    paper.addColorStop(0, "#fffdf7");
+    paper.addColorStop(1, "#f6f0e0");
+    ctx.fillStyle = paper;
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(36, 36, W - 72, H - 72);
+    ctx.globalAlpha = 0.45;
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(100, y);
-    ctx.lineTo(W - 100, y);
-    ctx.stroke();
-  };
-  const swatchFont = `500 22px ${sans}`;
+    ctx.strokeRect(50, 50, W - 100, H - 100);
+    ctx.globalAlpha = 1;
 
-  // Código de vestimenta: paleta sugerida (izquierda) y colores a evitar (derecha)
-  if (data.palette.length > 0 || data.forbidden.length > 0) {
-    divider();
-    y += 60;
-    const split = data.forbidden.length > 0 ? 0.62 : 1;
-    const paletteCx = 100 + (contentW * split) / 2;
-    const forbiddenCx = 100 + contentW * split + (contentW * (1 - split)) / 2;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    const cx = W / 2;
+    const contentW = W - 200;
 
-    ctx.font = fonts.eyebrow;
-    setSpacing(ctx, 4);
-    ctx.fillStyle = GOLD_DEEP;
-    ctx.fillText("PALETA SUGERIDA", paletteCx, y);
-    if (data.forbidden.length > 0) {
-      ctx.fillStyle = "#be123c";
-      ctx.fillText("COLORES A EVITAR", forbiddenCx, y);
-    }
-    setSpacing(ctx, 0);
-
-    drawSwatches(ctx, data.palette, paletteCx, y + 70, swatchFont);
-    drawSwatches(ctx, data.forbidden, forbiddenCx, y + 70, swatchFont, true);
-    y += 180;
-  }
-
-  // Solo adultos
-  if (data.adultsOnly) {
-    divider();
+    // Encabezado
     ctx.font = fonts.eyebrow;
     ctx.fillStyle = GOLD_DEEP;
-    setSpacing(ctx, 4);
-    ctx.fillText("CELEBRACIÓN SOLO PARA ADULTOS", cx, y + 56);
+    setSpacing(ctx, 8);
+    ctx.fillText("SE COMPLACEN EN INVITARTE", cx, 150);
     setSpacing(ctx, 0);
+
+    ctx.font = fonts.title;
+    ctx.fillStyle = INK;
+    let y = drawWrapped(ctx, data.coupleName, cx, 250, contentW, 84, 2);
+
     ctx.font = fonts.body;
     ctx.fillStyle = MUTED;
-    y = drawWrapped(ctx, data.adultsOnly, cx, y + 102, contentW, 38, 3) + 4;
-  }
+    y = drawWrapped(ctx, data.eventDate, cx, y + 6, contentW, 38, 2);
 
-  // Ubicación: texto a la izquierda y QR a Google Maps a la derecha
-  if (data.venueName && mapsImg) {
-    divider();
-    y += 60;
-
-    const mapsSize = 200;
-    const mapsX = W - 100 - mapsSize;
-    const textW = mapsX - 140;
-
-    ctx.textAlign = "left";
-    ctx.font = fonts.eyebrow;
-    ctx.fillStyle = GOLD_DEEP;
-    setSpacing(ctx, 6);
-    ctx.fillText("UBICACIÓN", 100, y);
-    setSpacing(ctx, 0);
-    ctx.font = fonts.venue;
+    ctx.font = fonts.italic;
     ctx.fillStyle = INK;
-    const nameEnd = drawWrapped(ctx, data.venueName, 100, y + 56, textW, 46, 2);
-    if (data.venueAddress) {
+    ctx.fillText(`Para ${data.groupName}`, cx, y + 56, contentW);
+    y += 100;
+
+    // QR de acceso en marco blanco
+    const qrBox = 480;
+    const qrX = cx - qrBox / 2;
+    ctx.save();
+    ctx.shadowColor = "rgba(59, 66, 40, 0.18)";
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetY = 12;
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.roundRect(qrX, y, qrBox, qrBox, 16);
+    ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(qrX, y, qrBox, qrBox, 16);
+    ctx.stroke();
+    ctx.drawImage(qrImg, qrX + 40, y + 40, qrBox - 80, qrBox - 80);
+    y += qrBox + 52;
+
+    ctx.font = fonts.mono;
+    ctx.fillStyle = MUTED;
+    ctx.fillText(`Código · ${data.code}`, cx, y);
+    ctx.font = fonts.bold;
+    ctx.fillStyle = GOLD_DEEP;
+    ctx.fillText(`Válido para ${data.guestCount} personas`, cx, y + 46);
+    y += 120;
+
+    // Mesa / Hora / Vestimenta
+    const cols = [
+      { label: "MESA", value: `Mesa ${data.tableNumber}` },
+      { label: "HORA", value: data.eventTime },
+      { label: "VESTIMENTA", value: data.dressCode },
+    ];
+    const colW = contentW / cols.length;
+    cols.forEach((col, i) => {
+      const x = 100 + colW * i + colW / 2;
+      ctx.font = fonts.eyebrow;
+      ctx.fillStyle = MUTED;
+      setSpacing(ctx, 4);
+      ctx.fillText(col.label, x, y);
+      setSpacing(ctx, 0);
+      ctx.font = fonts.value;
+      ctx.fillStyle = INK;
+      ctx.fillText(col.value, x, y + 52, colW - 20);
+      if (i > 0) {
+        ctx.strokeStyle = "rgba(245, 145, 179, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(100 + colW * i, y - 28);
+        ctx.lineTo(100 + colW * i, y + 64);
+        ctx.stroke();
+      }
+    });
+    y += 110;
+
+    const divider = () => {
+      ctx.strokeStyle = "rgba(245, 145, 179, 0.5)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(100, y);
+      ctx.lineTo(W - 100, y);
+      ctx.stroke();
+    };
+
+    // Colores a evitar, por grupo
+    if (data.avoid.length > 0) {
+      divider();
+      ctx.font = fonts.eyebrow;
+      ctx.fillStyle = WARN;
+      setSpacing(ctx, 4);
+      ctx.fillText("COLORES A EVITAR", cx, y + 60);
+      setSpacing(ctx, 0);
       ctx.font = fonts.body;
       ctx.fillStyle = MUTED;
-      drawWrapped(ctx, data.venueAddress, 100, nameEnd + 6, textW, 36, 3);
+      ctx.fillText(data.avoidNote, cx, y + 102, contentW);
+      y += 170;
+
+      for (const group of data.avoid) {
+        ctx.font = fonts.eyebrow;
+        ctx.fillStyle = GOLD_DEEP;
+        setSpacing(ctx, 4);
+        ctx.fillText(group.group.toUpperCase(), cx, y);
+        setSpacing(ctx, 0);
+        y = drawAvoidSwatches(ctx, group.colors, cx, y + 56, 5, fonts.swatch) + 30;
+      }
+      y += 20;
     }
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(mapsX - 12, y - 24, mapsSize + 24, mapsSize + 24);
-    ctx.drawImage(mapsImg, mapsX, y - 12, mapsSize, mapsSize);
-    ctx.textAlign = "center";
-    ctx.font = `600 20px ${sans}`;
-    ctx.fillStyle = MUTED;
-    ctx.fillText("Escanea para cómo llegar", mapsX + mapsSize / 2, y + mapsSize + 36);
-  }
+    // Solo adultos
+    if (data.adultsOnly) {
+      divider();
+      ctx.font = fonts.eyebrow;
+      ctx.fillStyle = GOLD_DEEP;
+      setSpacing(ctx, 4);
+      ctx.fillText("CELEBRACIÓN SOLO PARA ADULTOS", cx, y + 56);
+      setSpacing(ctx, 0);
+      ctx.font = fonts.body;
+      ctx.fillStyle = MUTED;
+      y = drawWrapped(ctx, data.adultsOnly, cx, y + 102, contentW, 38, 3) + 4;
+    }
 
-  ctx.textAlign = "center";
-  ctx.font = `400 22px ${sans}`;
-  ctx.fillStyle = MUTED;
-  ctx.fillText("Presenta este código QR en la entrada · Attendapp", cx, H - 90);
+    // Ubicación: texto a la izquierda y QR a Google Maps a la derecha
+    if (data.venueName && mapsImg) {
+      divider();
+      y += 60;
+
+      const mapsSize = 200;
+      const mapsX = W - 100 - mapsSize;
+      const textW = mapsX - 140;
+
+      ctx.textAlign = "left";
+      ctx.font = fonts.eyebrow;
+      ctx.fillStyle = GOLD_DEEP;
+      setSpacing(ctx, 6);
+      ctx.fillText("UBICACIÓN", 100, y);
+      setSpacing(ctx, 0);
+      ctx.font = fonts.venue;
+      ctx.fillStyle = INK;
+      const nameEnd = drawWrapped(ctx, data.venueName, 100, y + 56, textW, 46, 2);
+      if (data.venueAddress) {
+        ctx.font = fonts.body;
+        ctx.fillStyle = MUTED;
+        drawWrapped(ctx, data.venueAddress, 100, nameEnd + 6, textW, 36, 3);
+      }
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(mapsX - 12, y - 24, mapsSize + 24, mapsSize + 24);
+      ctx.drawImage(mapsImg, mapsX, y - 12, mapsSize, mapsSize);
+      ctx.textAlign = "center";
+      ctx.font = `600 20px ${sans}`;
+      ctx.fillStyle = MUTED;
+      ctx.fillText("Escanea para cómo llegar", mapsX + mapsSize / 2, y + mapsSize + 36);
+      // El bloque de ubicación termina bajo el QR de Maps
+      y += mapsSize + 60;
+    }
+
+    ctx.textAlign = "center";
+    ctx.font = `400 22px ${sans}`;
+    ctx.fillStyle = MUTED;
+    ctx.fillText("Presenta este código QR en la entrada · Attendapp", cx, H - 90);
+
+    return y;
+  };
+
+  // 1ª pasada: medir cuánto ocupa el contenido. 2ª: dibujar con el alto exacto.
+  const measure = document.createElement("canvas");
+  measure.width = W;
+  measure.height = MAX_H;
+  const measureCtx = measure.getContext("2d");
+  if (!measureCtx) throw new Error("Canvas no disponible");
+  const endY = draw(measureCtx, MAX_H);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = Math.min(MAX_H, Math.ceil(endY + FOOTER_SPACE));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas no disponible");
+  draw(ctx, canvas.height);
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob falló"))), "image/png")

@@ -34,15 +34,44 @@ export const SAMPLE_GALLERY: GalleryPhoto[] = [
   { src: `${mixkit(40586)}-thumb-720-0.jpg`, alt: "La novia con su ramo" },
 ];
 
-export const SAMPLE_DRESS_CODE = {
-  palette: [
-    { hex: "#f591b3", name: "Rosa" },
-    { hex: "#5b6540", name: "Verde olivo" },
-    { hex: "#fffdf7", name: "Blanco hueso" },
+export interface AvoidColor {
+  name: string;
+  /** 1–3 tonos representativos; una "gama" se ve como muestra dividida en franjas */
+  hexes: string[];
+}
+
+export interface AvoidGroup {
+  group: string;
+  colors: AvoidColor[];
+}
+
+// Los hex son representativos (los novios solo indicaron nombres): afinar aquí.
+export const SAMPLE_DRESS_CODE: { note: string; avoid: AvoidGroup[] } = {
+  note: "Por favor evita estos tonos.",
+  avoid: [
+    {
+      group: "Mujeres",
+      colors: [
+        { name: "Rosa (toda la gama)", hexes: ["#f9c5d6", "#f591b3", "#e0508a"] },
+        { name: "Terracota", hexes: ["#cc6b4a"] },
+        { name: "Blanco y beige", hexes: ["#ffffff", "#f1e6cf"] },
+        { name: "Gris claro", hexes: ["#cfd2d6"] },
+        { name: "Gris oscuro", hexes: ["#5b6068"] },
+        { name: "Verde (toda la gama)", hexes: ["#9cc58a", "#4f8a4a", "#2f5d3a"] },
+        { name: "Rojo", hexes: ["#d11a2a"] },
+        { name: "Negro", hexes: ["#111111"] },
+        { name: "Dorado", hexes: ["#d4af37"] },
+      ],
+    },
+    {
+      group: "Hombres",
+      colors: [
+        { name: "Gris claro", hexes: ["#cfd2d6"] },
+        { name: "Gris oscuro", hexes: ["#5b6068"] },
+        { name: "Blanco", hexes: ["#ffffff"] },
+      ],
+    },
   ],
-  // EJEMPLO: reemplazar por los colores prohibidos reales
-  forbidden: [{ hex: "#ffffff", name: "Blanco" }],
-  forbiddenNote: "Por favor evita estos tonos, reservados para los novios.",
 };
 
 export const SAMPLE_ADULTS_ONLY =

@@ -60,7 +60,7 @@ export function HeroVideo({
   }
 
   return (
-    <section ref={sectionRef} className="hero-full relative w-full overflow-hidden bg-ink">
+    <section ref={sectionRef} className="hero-full relative w-full overflow-hidden bg-inv-olive-deep">
       <video
         ref={videoRef}
         className="absolute inset-0 h-full w-full object-cover"
@@ -78,7 +78,7 @@ export function HeroVideo({
         className="letter-reveal absolute inset-x-0 bottom-[22%] px-8 text-center text-white"
         style={{ "--d": "0.1s" } as CSSProperties}
       >
-        <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-gold font-semibold">
+        <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-inv-rose font-semibold">
           Nos casamos
         </p>
         <h1 className="font-serif text-4xl md:text-6xl mt-3 leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
@@ -93,7 +93,7 @@ export function HeroVideo({
         onClick={scrollToLetter}
         aria-label="Desplazarse a la invitación"
         tabIndex={heroVisible ? 0 : -1}
-        className={`scroll-dock absolute left-1/2 -translate-x-1/2 rounded-full p-3 text-white/85 transition-opacity duration-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
+        className={`scroll-dock absolute left-1/2 -translate-x-1/2 rounded-full p-3 text-white/85 transition-opacity duration-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inv-rose ${
           heroVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >

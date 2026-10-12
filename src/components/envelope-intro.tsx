@@ -76,10 +76,10 @@ export function EnvelopeIntro({
         {/* Carta dentro del sobre */}
         <span className="env-letter paper-texture" aria-hidden="true">
           <span className="env-letter-inner">
-            <span className="block text-[10px] uppercase tracking-[0.35em] text-gold-deep font-semibold">
+            <span className="block text-[10px] uppercase tracking-[0.35em] text-inv-rose-deep font-semibold">
               Se complacen en invitarte
             </span>
-            <span className="block font-serif text-3xl md:text-4xl text-ink mt-3 leading-tight">
+            <span className="block font-serif text-3xl md:text-4xl text-inv-olive-deep mt-3 leading-tight">
               {coupleName}
             </span>
             <span className="ornament-divider mt-4" />
@@ -97,10 +97,10 @@ export function EnvelopeIntro({
 
         {/* Nombres en el frente del sobre */}
         <span className="env-address">
-          <span className="block text-[10px] md:text-[11px] uppercase tracking-[0.35em] text-gold-deep font-semibold">
+          <span className="block text-[10px] md:text-[11px] uppercase tracking-[0.35em] text-inv-rose-deep font-semibold">
             Se complacen en invitarte
           </span>
-          <span className="block font-serif text-3xl md:text-5xl text-ink mt-3 leading-tight">
+          <span className="block font-serif text-3xl md:text-5xl text-inv-olive-deep mt-3 leading-tight">
             {coupleName}
           </span>
           <span className="block text-xs md:text-sm text-slate-500 mt-2 tracking-wider">
@@ -136,7 +136,7 @@ export function EnvelopeIntro({
         {previewLines.map((line, i) => (
           <p
             key={line}
-            className="env-preview-line font-serif italic text-2xl md:text-3xl text-ink"
+            className="env-preview-line font-serif italic text-2xl md:text-3xl text-inv-olive-deep"
             style={{ "--d": `${PREVIEW_START + i * LINE_STEP}s` } as CSSProperties}
           >
             {line}
@@ -146,10 +146,10 @@ export function EnvelopeIntro({
           className="env-preview-final text-center"
           style={{ "--d": `${finalDelay(previewLines.length)}s` } as CSSProperties}
         >
-          <p className="text-[11px] md:text-xs uppercase tracking-[0.4em] text-gold-deep font-semibold">
+          <p className="text-[11px] md:text-xs uppercase tracking-[0.4em] text-inv-rose-deep font-semibold">
             ¡Nos casamos!
           </p>
-          <p className="font-serif text-4xl md:text-6xl text-ink mt-3 leading-tight">{coupleName}</p>
+          <p className="font-serif text-4xl md:text-6xl text-inv-olive-deep mt-3 leading-tight">{coupleName}</p>
           <span className="ornament-divider mt-5" />
         </div>
       </div>
