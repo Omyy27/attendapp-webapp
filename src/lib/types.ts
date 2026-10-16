@@ -12,6 +12,14 @@ export interface Wedding {
   venue_lat: number | null;
   venue_lng: number | null;
   dress_code: string | null;
+  /** Lugar sorpresa: solo se entrega a quien confirma (ver /api/pass) */
+  reveal_venue_name?: string | null;
+  reveal_venue_address?: string | null;
+  reveal_venue_city?: string | null;
+  reveal_venue_country?: string | null;
+  reveal_venue_lat?: number | null;
+  reveal_venue_lng?: number | null;
+  reveal_message?: string | null;
 }
 
 export interface GuestGroup {
@@ -34,7 +42,7 @@ export interface Guest {
   last_name: string;
   phone: string | null;
   email: string | null;
-  status: "pending" | "confirmed" | "checked_in";
+  status: "pending" | "opened" | "confirmed" | "checked_in";
   checked_in_at: string | null;
   checked_in_method: string | null;
   group?: GuestGroup;

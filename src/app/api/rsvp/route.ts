@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       .from("guests")
       .select("*", { count: "exact", head: true })
       .eq("group_id", group.id)
-      .eq("status", "pending");
+      .in("status", ["pending", "opened"]);
 
     if (!pendingCount || pendingCount === 0) {
       return NextResponse.json({ result: "already_confirmed", message: "Asistencia ya confirmada" });
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       .from("guests")
       .update({ status: "confirmed" })
       .eq("group_id", group.id)
-      .eq("status", "pending");
+      .in("status", ["pending", "opened"]);
 
     // 4. Conteos finales
     const { count: totalCount } = await supabaseAdmin

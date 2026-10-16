@@ -12,7 +12,7 @@ https://attendapp-demo.netlify.app
 - **Estilos:** Tailwind CSS v4
 - **Base de datos:** Supabase (PostgreSQL + Auth + RLS)
 - **Editor de salón:** Konva + react-konva (canvas interactivo)
-- **Mapa:** Leaflet
+- **Mapa:** Leaflet + Mapbox (tiles y geocodificación)
 - **Email:** Resend
 - **Push:** Web Push (VAPID)
 - **Tours:** Driver.js
@@ -32,7 +32,7 @@ https://attendapp-demo.netlify.app
 - **Despacho de pases:** Envío real por WhatsApp y correo (Resend), copia de enlace
 - **Búsqueda de respaldo:** Validación manual sin QR
 - **Editor de salón:** Canvas Konva con zoom, mesas circulares/rectangulares y ocupación
-- **Mapa del venue:** Ubicación con Leaflet en Ajustes
+- **Mapa del venue:** Ubicación con Leaflet y Mapbox en Ajustes
 - **Roles:** Administrador, Organizador y Portero con permisos diferenciados
 - **Gestión de equipo:** Alta y baja de miembros con cambio de rol
 - **Notificaciones push:** Suscripción VAPID para recordatorios
@@ -107,6 +107,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 # Requerido para equipo (API team) y despacho por email
 SUPABASE_SERVICE_ROLE_KEY=
+
+# Recomendado: mapa y búsqueda de direcciones con Mapbox (token PÚBLICO pk.…, restringido por URL).
+# Sin él, el mapa usa OpenStreetMap y la búsqueda de direcciones no funciona.
+NEXT_PUBLIC_MAPBOX_TOKEN=
 
 # Opcional: notificaciones push (sin ellas, push queda deshabilitado)
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=

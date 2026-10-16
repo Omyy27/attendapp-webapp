@@ -12,7 +12,7 @@ interface SearchResult {
   table_number: number;
   group_name: string;
   guest_count: number;
-  status: "pending" | "checked_in";
+  status: "pending" | "opened" | "confirmed" | "checked_in";
 }
 
 export default function BackupSearchPage() {
@@ -103,7 +103,11 @@ export default function BackupSearchPage() {
   async function handleCheckin(guestId: string, name: string) {
     await supabase
       .from("guests")
-      .update({ status: "checked_in" })
+      .update({
+        status: "checked_in",
+        checked_in_at: new Date().toISOString(),
+        checked_in_method: "manual",
+      })
       .eq("id", guestId);
 
     const { data: guest } = await supabase
@@ -222,7 +226,7 @@ export default function BackupSearchPage() {
                     Mesa {result.table_number} · {result.group_name}
                   </p>
                 </div>
-                {result.status === "pending" ? (
+                {result.status !== "checked_in" ? (
                   <button
                     onClick={() => handleCheckin(result.id, `${result.first_name} ${result.last_name}`)}
                     className="bg-ink dark:bg-gold dark:text-ink text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg whitespace-nowrap hover:bg-ink-light dark:hover:bg-gold-deep transition-colors shrink-0"

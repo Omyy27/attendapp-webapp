@@ -23,7 +23,7 @@ const dashboardSteps = [
   { element: "#tour-nav", popover: { title: "Navegación", description: "Accede a Invitados, Escanear y Enviar pases desde aquí." } },
 ];
 
-const filters = ["Todos", "Confirmados", "Sin confirmar"];
+const filters = ["Todos", "Confirmados", "Abrieron", "Sin confirmar"];
 
 export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState("Todos");
@@ -150,16 +150,19 @@ export default function DashboardPage() {
   }, [fetchData]);
 
   // Contadores derivados de la lista (se actualizan con realtime)
-  const { totalGuests, arrived, pendingCount, confirmedCount, percentage, totalSlots } = useMemo(() => {
+  const { totalGuests, arrived, pendingCount, openedCount, confirmedCount, percentage, totalSlots } = useMemo(() => {
     const total = guests.length;
     const arr = guests.filter((g) => g.status === "checked_in").length;
-    const pend = guests.filter((g) => g.status === "pending").length;
+    const opened = guests.filter((g) => g.status === "opened").length;
+    // "Sin confirmar" incluye a quienes solo abrieron la carta
+    const pend = guests.filter((g) => g.status === "pending").length + opened;
     const conf = guests.filter((g) => g.status === "confirmed").length;
     const slots = guests.reduce((sum, g) => sum + (g.slots ?? 1), 0);
     return {
       totalGuests: total,
       arrived: arr,
       pendingCount: pend,
+      openedCount: opened,
       confirmedCount: conf,
       percentage: total > 0 ? Math.round((arr / total) * 100) : 0,
       totalSlots: slots,
@@ -225,7 +228,8 @@ export default function DashboardPage() {
     const matchesFilter =
       activeFilter === "Todos" ||
       (activeFilter === "Confirmados" && guest.status === "confirmed") ||
-      (activeFilter === "Sin confirmar" && guest.status === "pending");
+      (activeFilter === "Abrieron" && guest.status === "opened") ||
+      (activeFilter === "Sin confirmar" && (guest.status === "pending" || guest.status === "opened"));
 
     const matchesTable =
       tableFilter === "Todas" || String(guest.group?.table_number) === tableFilter;
@@ -317,7 +321,7 @@ export default function DashboardPage() {
       Grupo: g.group.name,
       Mesa: g.group.table_number,
       Cupos: g.slots ?? 1,
-      Estado: g.status === "checked_in" ? "Llego" : g.status === "confirmed" ? "Confirmado" : "Pendiente",
+      Estado: g.status === "checked_in" ? "Llego" : g.status === "confirmed" ? "Confirmado" : g.status === "opened" ? "Abrió la carta" : "Pendiente",
       Telefono: g.phone || "",
       Email: g.email || "",
     }));
@@ -412,7 +416,9 @@ export default function DashboardPage() {
               </span>
               <div>
                 <p className="text-2xl font-bold text-content leading-none">{pendingCount}</p>
-                <p className="text-xs text-muted font-medium">Sin confirmar</p>
+                <p className="text-xs text-muted font-medium">
+                  Sin confirmar{openedCount > 0 ? ` · ${openedCount} abrieron` : ""}
+                </p>
               </div>
             </div>
 

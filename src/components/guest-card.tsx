@@ -12,7 +12,7 @@ export interface Guest {
   email?: string;
   group_id: string;
   slots: number;
-  status: "pending" | "confirmed" | "checked_in";
+  status: "pending" | "opened" | "confirmed" | "checked_in";
   checked_in_at?: string;
   group: {
     name: string;
@@ -37,6 +37,13 @@ function getStatusBadge(status: Guest["status"]) {
         <Badge variant="success">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           Adentro
+        </Badge>
+      );
+    case "opened":
+      return (
+        <Badge variant="warning">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          Abrió la carta
         </Badge>
       );
     case "confirmed":

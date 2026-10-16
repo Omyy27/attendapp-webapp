@@ -76,3 +76,15 @@ export const SAMPLE_DRESS_CODE: { note: string; avoid: AvoidGroup[] } = {
 
 export const SAMPLE_ADULTS_ONLY =
   "Amamos a sus pequeños, pero esta celebración es solo para adultos. Les pedimos asistir sin niños, de ninguna edad.";
+
+// Textos fijos del lugar sorpresa; el mensaje principal lo escribe la novia en Ajustes.
+export const SAMPLE_REVEAL_COPY = {
+  confirmEyebrow: "Tu respuesta",
+  confirmTitle: "Confirma tu asistencia",
+  confirmText: "Al confirmar te contaremos algo especial sobre el lugar.",
+  eyebrow: "Un secreto para ti",
+  title: "El lugar cambió",
+  updatedBadge: "Lugar actualizado",
+  defaultMessage:
+    "Por ser fiel y confirmar, te contamos que la celebración no será donde decía la invitación. Nos vemos en:",
+};

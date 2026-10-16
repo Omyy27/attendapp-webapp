@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         checked_in_method: "qr",
       })
       .eq("group_id", group.id)
-      .eq("status", "pending");
+      .in("status", ["pending", "opened", "confirmed"]);
 
     await supabaseAdmin
       .from("guest_groups")

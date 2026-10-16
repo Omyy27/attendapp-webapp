@@ -698,3 +698,13 @@ body {
     animation: none;
   }
 }
+
+/* Revelación del lugar sorpresa */
+.reveal-overlay {
+  animation: env-enter 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-overlay {
+    animation-duration: 0.01ms !important;
+  }
+}

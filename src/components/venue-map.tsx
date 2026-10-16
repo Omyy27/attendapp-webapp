@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useId } from "react";
 import "leaflet/dist/leaflet.css";
+import { MAPBOX_TOKEN, MAPBOX_STYLE } from "@/lib/mapbox";
 
 type VenueMapProps = {
   lat: number;
@@ -41,10 +42,24 @@ export default function VenueMap({
         zoomControl: draggable,
       });
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
-      }).addTo(map);
+      if (MAPBOX_TOKEN) {
+        L.tileLayer(
+          `https://api.mapbox.com/styles/v1/mapbox/${MAPBOX_STYLE}/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`,
+          {
+            tileSize: 512,
+            zoomOffset: -1,
+            maxZoom: 19,
+            attribution:
+              '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/about/">OpenStreetMap</a>',
+          }
+        ).addTo(map);
+      } else {
+        // Sin token de Mapbox: tiles de OpenStreetMap
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
+        }).addTo(map);
+      }
 
       const icon = L.divIcon({
         className: "venue-map-pin",

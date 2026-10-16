@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useSupabase } from "@/lib/use-supabase";
 import type { Wedding } from "@/lib/types";
+import { geocodePlace } from "@/lib/mapbox";
 import {
   canChangeRole,
   canDeleteMember,
@@ -41,6 +42,20 @@ export default function AjustesPage() {
   const [pinLng, setPinLng] = useState<number | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState("");
+
+  // Lugar sorpresa: solo lo ve quien confirma (lo entrega /api/pass)
+  const [revealOn, setRevealOn] = useState(false);
+  const [revealName, setRevealName] = useState("");
+  const [revealCountry, setRevealCountry] = useState("");
+  const [revealCity, setRevealCity] = useState("");
+  const [revealAddress, setRevealAddress] = useState("");
+  const [revealMessage, setRevealMessage] = useState("");
+  const [revealMapLat, setRevealMapLat] = useState<number | null>(null);
+  const [revealMapLng, setRevealMapLng] = useState<number | null>(null);
+  const [revealPinLat, setRevealPinLat] = useState<number | null>(null);
+  const [revealPinLng, setRevealPinLng] = useState<number | null>(null);
+  const [revealGeocoding, setRevealGeocoding] = useState(false);
+  const [revealGeocodeError, setRevealGeocodeError] = useState("");
   const [role, setRole] = useState("organizer");
   const [team, setTeam] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
   const [myId, setMyId] = useState<string | null>(null);
@@ -94,6 +109,18 @@ export default function AjustesPage() {
         setPinLat(w.venue_lat);
         setPinLng(w.venue_lng);
       }
+      setRevealOn(!!w.reveal_venue_name);
+      setRevealName(w.reveal_venue_name || "");
+      setRevealCountry(w.reveal_venue_country || "");
+      setRevealCity(w.reveal_venue_city || "");
+      setRevealAddress(w.reveal_venue_address || "");
+      setRevealMessage(w.reveal_message || "");
+      if (w.reveal_venue_lat && w.reveal_venue_lng) {
+        setRevealMapLat(w.reveal_venue_lat);
+        setRevealMapLng(w.reveal_venue_lng);
+        setRevealPinLat(w.reveal_venue_lat);
+        setRevealPinLng(w.reveal_venue_lng);
+      }
     }
     setLoading(false);
   }, [supabase, router]);
@@ -101,54 +128,33 @@ export default function AjustesPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   async function handleGeocode() {
-    // Normalizar: quitar # y limpiar formato colombiano/latinoamericano
-    const normalizedStreet = venueAddress
-      .replace(/#/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (!normalizedStreet && !venueCity && !venueCountry) {
-      setGeocodeError("Escribe la dirección, ciudad y país para buscar en el mapa");
-      return;
-    }
     setGeocoding(true);
     setGeocodeError("");
-
-    try {
-      // Query estructurado de Nominatim - mucho más preciso que query libre
-      const params = new URLSearchParams({
-        format: "json",
-        limit: "1",
-        addressdetails: "1",
-      });
-
-      if (venueName || normalizedStreet) {
-        params.set("street", [venueName, normalizedStreet].filter(Boolean).join(" "));
-      }
-      if (venueCity) params.set("city", venueCity);
-      if (venueCountry) params.set("country", venueCountry);
-
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?${params.toString()}`
-      );
-      const data = (await res.json()) as { lat: string; lon: string; display_name: string }[];
-
-      if (!data || data.length === 0) {
-        setGeocodeError("No se encontró la dirección. Intenta con más detalle.");
-        return;
-      }
-
-      const lat = parseFloat(data[0].lat);
-      const lng = parseFloat(data[0].lon);
-      setMapLat(lat);
-      setMapLng(lng);
-      setPinLat(lat);
-      setPinLng(lng);
-    } catch {
-      setGeocodeError("Error al buscar. Verifica tu conexión.");
-    } finally {
-      setGeocoding(false);
+    const result = await geocodePlace({ name: venueName, address: venueAddress, city: venueCity, country: venueCountry });
+    if ("error" in result) {
+      setGeocodeError(result.error);
+    } else {
+      setMapLat(result.lat);
+      setMapLng(result.lng);
+      setPinLat(result.lat);
+      setPinLng(result.lng);
     }
+    setGeocoding(false);
+  }
+
+  async function handleRevealGeocode() {
+    setRevealGeocoding(true);
+    setRevealGeocodeError("");
+    const result = await geocodePlace({ name: revealName, address: revealAddress, city: revealCity, country: revealCountry });
+    if ("error" in result) {
+      setRevealGeocodeError(result.error);
+    } else {
+      setRevealMapLat(result.lat);
+      setRevealMapLng(result.lng);
+      setRevealPinLat(result.lat);
+      setRevealPinLng(result.lng);
+    }
+    setRevealGeocoding(false);
   }
 
   async function handleSave() {
@@ -168,6 +174,19 @@ export default function AjustesPage() {
         venue_address: venueAddress || null,
         venue_lat: pinLat,
         venue_lng: pinLng,
+        // Lugar sorpresa: desactivado = se borran los datos (la función queda apagada).
+        // Solo se envía si la migración 003 ya existe, para no romper el guardado.
+        ...(wedding && "reveal_venue_name" in wedding
+          ? {
+              reveal_venue_name: revealOn && revealName.trim() ? revealName.trim() : null,
+              reveal_venue_country: revealOn ? revealCountry || null : null,
+              reveal_venue_city: revealOn ? revealCity || null : null,
+              reveal_venue_address: revealOn ? revealAddress || null : null,
+              reveal_venue_lat: revealOn ? revealPinLat : null,
+              reveal_venue_lng: revealOn ? revealPinLng : null,
+              reveal_message: revealOn ? revealMessage.trim() || null : null,
+            }
+          : {}),
       })
       .eq("id", wedding.id);
 
@@ -413,6 +432,135 @@ export default function AjustesPage() {
                   {pinLat?.toFixed(5)}, {pinLng?.toFixed(5)}
                 </p>
               </div>
+            )}
+          </div>
+
+          {/* Lugar sorpresa */}
+          <div className="bg-card rounded-2xl border border-line shadow-card p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-content-soft">Lugar sorpresa</p>
+                <p className="text-[11px] text-muted-soft mt-0.5">
+                  Solo lo ven quienes confirman su asistencia. El lugar de arriba es el que ven
+                  todos (y va en el correo): ponlo como el lugar que quieres mostrar al inicio.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={revealOn}
+                aria-label="Activar lugar sorpresa"
+                onClick={() => setRevealOn(!revealOn)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                  revealOn ? "bg-ink dark:bg-gold" : "bg-line-strong"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    revealOn ? "translate-x-5" : ""
+                  }`}
+                />
+              </button>
+            </div>
+
+            {revealOn && (
+              <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-muted mb-1.5 block">Lugar real del evento</label>
+                <input
+                  type="text"
+                  value={revealName}
+                  onChange={(e) => setRevealName(e.target.value)}
+                  placeholder="Salón de eventos"
+                  className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted mb-1.5 block">País</label>
+                <input
+                  type="text"
+                  value={revealCountry}
+                  onChange={(e) => setRevealCountry(e.target.value)}
+                  placeholder="México"
+                  className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted mb-1.5 block">Ciudad</label>
+                <input
+                  type="text"
+                  value={revealCity}
+                  onChange={(e) => setRevealCity(e.target.value)}
+                  placeholder="Ciudad de México"
+                  className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted mb-1.5 block">Dirección (calle y número)</label>
+                <input
+                  type="text"
+                  value={revealAddress}
+                  onChange={(e) => setRevealAddress(e.target.value)}
+                  placeholder="Av. Insurgentes 123"
+                  className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted mb-1.5 block">
+                  Mensaje de revelación
+                </label>
+                <textarea
+                  value={revealMessage}
+                  onChange={(e) => setRevealMessage(e.target.value)}
+                  rows={4}
+                  placeholder="Por ser fiel y confirmar, te contamos que la celebración no será donde decía la invitación. Nos vemos en:"
+                  className="w-full bg-card border border-line-strong rounded-xl px-4 py-3 resize-none text-base text-content placeholder:text-muted-soft focus:outline-none focus:ring-2 focus:ring-ink/10 shadow-card"
+                />
+                <p className="text-[11px] text-muted-soft mt-1">
+                  Si lo dejas vacío se usa el texto por defecto.
+                </p>
+              </div>
+
+              <button
+                onClick={handleRevealGeocode}
+                disabled={revealGeocoding}
+                className="w-full bg-ink dark:bg-gold dark:text-ink text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-card hover:bg-ink-light dark:hover:bg-gold-deep transition-colors disabled:opacity-50"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+                {revealGeocoding ? "Buscando..." : "Buscar en mapa"}
+              </button>
+
+              {revealGeocodeError && (
+                <p className="text-xs text-rose-600 dark:text-rose-400">{revealGeocodeError}</p>
+              )}
+
+              {revealMapLat !== null && revealMapLng !== null && (
+                <div className="space-y-2">
+                  <VenueMap
+                    lat={revealMapLat}
+                    lng={revealMapLng}
+                    name={revealName || "Lugar sorpresa"}
+                    height={220}
+                    draggable
+                    onPositionChange={(lat, lng) => {
+                      setRevealPinLat(lat);
+                      setRevealPinLng(lng);
+                    }}
+                  />
+                  <p className="text-[11px] text-muted-soft text-center font-mono">
+                    {revealPinLat?.toFixed(5)}, {revealPinLng?.toFixed(5)}
+                  </p>
+                </div>
+              )}
+
+              <p className="text-[11px] text-muted-soft">
+                Al activarlo, abrir la invitación ya no confirma: los invitados confirman con un
+                botón. Si lo desactivas y guardas, se borran estos datos.
+              </p>
+            </div>
             )}
           </div>
 
