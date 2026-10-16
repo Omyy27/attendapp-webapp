@@ -1,18 +1,62 @@
-// Contenido de ejemplo para la invitación (/pase). Reemplazar por el video y
-// las fotos reales de los novios; más adelante puede venir de `weddings`.
-// Fuente: Mixkit (licencia libre), misma pareja en video y galería.
+// Contenido de la invitación (/pase): video de portada, fotos del carrusel y textos.
+//
+// Video y fotos personales: se suben a Supabase Storage con
+// `node scripts/upload-media.mjs` (lee ./media-src/). Mientras `enabled` sea
+// false se muestra contenido de muestra de Mixkit (licencia libre).
 
 export interface GalleryPhoto {
   src: string;
   alt: string;
 }
 
+export const INVITATION_MEDIA = {
+  /** true cuando ya subiste tu video y fotos con el script */
+  enabled: true,
+  /** número de fotos subidas (lo imprime el script) */
+  photoCount: 8,
+  /** súbelo (1 → 2…) si reemplazas archivos, para que los teléfonos no usen la copia vieja */
+  version: 2,
+  bucket: "invitation-media",
+};
+
+const mediaUrl = (file: string) =>
+  process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${INVITATION_MEDIA.bucket}/${file}?v=${INVITATION_MEDIA.version}`
+    : "";
+
+// ---- contenido de muestra (Mixkit), usado hasta activar el propio ----
 const mixkit = (id: number) => `https://assets.mixkit.co/videos/${id}/${id}`;
 
-export const SAMPLE_HERO_VIDEO = {
+const MIXKIT_VIDEO = {
   src: `${mixkit(40584)}-720.mp4`,
   poster: `${mixkit(40584)}-thumb-720-0.jpg`,
 };
+
+const MIXKIT_GALLERY: GalleryPhoto[] = [
+  { src: `${mixkit(40601)}-thumb-720-0.jpg`, alt: "Los novios posando en el jardín" },
+  { src: `${mixkit(40627)}-thumb-720-0.jpg`, alt: "Los novios tomados de la mano" },
+  { src: `${mixkit(40593)}-thumb-720-0.jpg`, alt: "Los novios sonriendo" },
+  { src: `${mixkit(40590)}-thumb-720-0.jpg`, alt: "Los novios en su jardín de bodas" },
+  { src: `${mixkit(40596)}-thumb-720-0.jpg`, alt: "Los novios caminando juntos" },
+  { src: `${mixkit(40599)}-thumb-720-0.jpg`, alt: "El reencuentro de los novios" },
+  { src: `${mixkit(40586)}-thumb-720-0.jpg`, alt: "La novia con su ramo" },
+];
+
+const personal = INVITATION_MEDIA.enabled && !!mediaUrl("hero.mp4");
+
+export const SAMPLE_HERO_VIDEO = personal
+  ? { src: mediaUrl("hero.mp4"), poster: mediaUrl("poster.webp") }
+  : MIXKIT_VIDEO;
+
+/** Descripciones de las fotos (opcional): índice 0 = photo-1. Si faltan se usa un texto genérico. */
+const PHOTO_ALTS: string[] = [];
+
+export const SAMPLE_GALLERY: GalleryPhoto[] = personal
+  ? Array.from({ length: INVITATION_MEDIA.photoCount }, (_, i) => ({
+      src: mediaUrl(`photo-${i + 1}.webp`),
+      alt: PHOTO_ALTS[i] || `Foto ${i + 1} de los novios`,
+    }))
+  : MIXKIT_GALLERY;
 
 export const SAMPLE_PREVIEW_LINES = [
   "Tenemos algo que contarte…",
@@ -22,16 +66,6 @@ export const SAMPLE_PREVIEW_LINES = [
 export const SAMPLE_INVITATION_TEXT = [
   "Hay momentos en la vida que se esperan con el corazón, y este es uno de ellos.",
   "Con mucha alegría queremos compartir contigo el día en que uniremos nuestras vidas. Tu presencia hará nuestra celebración aún más inolvidable.",
-];
-
-export const SAMPLE_GALLERY: GalleryPhoto[] = [
-  { src: `${mixkit(40601)}-thumb-720-0.jpg`, alt: "Los novios posando en el jardín" },
-  { src: `${mixkit(40627)}-thumb-720-0.jpg`, alt: "Los novios tomados de la mano" },
-  { src: `${mixkit(40593)}-thumb-720-0.jpg`, alt: "Los novios sonriendo" },
-  { src: `${mixkit(40590)}-thumb-720-0.jpg`, alt: "Los novios en su jardín de bodas" },
-  { src: `${mixkit(40596)}-thumb-720-0.jpg`, alt: "Los novios caminando juntos" },
-  { src: `${mixkit(40599)}-thumb-720-0.jpg`, alt: "El reencuentro de los novios" },
-  { src: `${mixkit(40586)}-thumb-720-0.jpg`, alt: "La novia con su ramo" },
 ];
 
 export interface AvoidColor {

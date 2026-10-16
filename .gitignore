@@ -42,3 +42,5 @@ yarn-error.log*
 next-env.d.ts
 
 .opencode/
+# originales de la invitación (se suben con scripts/upload-media.mjs)
+/media-src/
