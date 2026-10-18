@@ -15,7 +15,7 @@ export const INVITATION_MEDIA = {
   /** número de fotos subidas (lo imprime el script) */
   photoCount: 8,
   /** súbelo (1 → 2…) si reemplazas archivos, para que los teléfonos no usen la copia vieja */
-  version: 2,
+  version: 3,
   bucket: "invitation-media",
 };
 

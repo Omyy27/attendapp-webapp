@@ -476,7 +476,7 @@ export default function GuestPassPage({
           poster={SAMPLE_HERO_VIDEO.poster}
           coupleName={passData.couple_name}
           eventDate={passData.event_date}
-          active={phase !== "closed"}
+          active={isOpen}
           scrollTargetId="carta"
         />
 
