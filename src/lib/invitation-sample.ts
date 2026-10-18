@@ -15,7 +15,7 @@ export const INVITATION_MEDIA = {
   /** número de fotos subidas (lo imprime el script) */
   photoCount: 8,
   /** súbelo (1 → 2…) si reemplazas archivos, para que los teléfonos no usen la copia vieja */
-  version: 10,
+  version: 12,
   bucket: "invitation-media",
 };
 
@@ -23,6 +23,18 @@ const mediaUrl = (file: string) =>
   process.env.NEXT_PUBLIC_SUPABASE_URL
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${INVITATION_MEDIA.bucket}/${file}?v=${INVITATION_MEDIA.version}`
     : "";
+
+export const INVITATION_MUSIC = {
+  /** true cuando ya subiste media-src/music.mp3 con el script */
+  enabled: false,
+  /** nombre que se muestra un momento en el mini reproductor */
+  title: "Nuestra canción",
+  /** volumen final (0–1); en iOS lo fija el volumen del teléfono */
+  volume: 0.5,
+};
+
+/** Música de fondo (vacío = sin reproductor) */
+export const SAMPLE_MUSIC_SRC = INVITATION_MUSIC.enabled ? mediaUrl("music.mp3") : "";
 
 // ---- contenido de muestra (Mixkit), usado hasta activar el propio ----
 const mixkit = (id: number) => `https://assets.mixkit.co/videos/${id}/${id}`;

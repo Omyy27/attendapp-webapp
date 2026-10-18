@@ -1,16 +1,19 @@
 "use client";
 
-import { use, useState, useEffect, useCallback, type CSSProperties } from "react";
+import { use, useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import { EnvelopeIntro, openingDurationMs } from "@/components/envelope-intro";
 import { HeroVideo } from "@/components/invitation/hero-video";
+import { MusicPlayer, type MusicPlayerHandle } from "@/components/invitation/music-player";
 import { PhotoCarousel } from "@/components/invitation/photo-carousel";
 import {
+  INVITATION_MUSIC,
   SAMPLE_ADULTS_ONLY,
   SAMPLE_DRESS_CODE,
   SAMPLE_GALLERY,
   SAMPLE_HERO_VIDEO,
   SAMPLE_INVITATION_TEXT,
+  SAMPLE_MUSIC_SRC,
   SAMPLE_PREVIEW_LINES,
   SAMPLE_REVEAL_COPY,
 } from "@/lib/invitation-sample";
@@ -101,6 +104,7 @@ export default function GuestPassPage({
   // La revelación del lugar se muestra una sola vez por dispositivo
   const [revealSeen, setRevealSeen] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const musicRef = useRef<MusicPlayerHandle>(null);
   // Pantalla de revelación del lugar: confirmado, lugar entregado y aún no vista
   const revealVisible =
     phase === "open" && rsvpState === "confirmed" && !!passData?.venue_revealed && !revealSeen;
@@ -275,6 +279,8 @@ export default function GuestPassPage({
     if (phase !== "closed") return;
     setPhase("opening");
     setOpenError(null);
+    // El toque en el sello es el gesto que permite el audio; suena al abrir la carta
+    musicRef.current?.unlock();
     // Registrar que abrió la carta (estado `opened`); no bloquea la animación
     fetch(`/api/pass/${uuid}/opened`, { method: "POST", keepalive: true }).catch(() => {});
     writeFlag(`pase-opened-${uuid}`);
@@ -463,6 +469,16 @@ export default function GuestPassPage({
           venueAddress={passData.venue_address}
           onSeeVenue={() => closeReveal(true)}
           onContinue={() => closeReveal(false)}
+        />
+      )}
+
+      {SAMPLE_MUSIC_SRC && (
+        <MusicPlayer
+          ref={musicRef}
+          src={SAMPLE_MUSIC_SRC}
+          title={INVITATION_MUSIC.title}
+          volume={INVITATION_MUSIC.volume}
+          active={isOpen && !revealVisible}
         />
       )}
 

@@ -3,6 +3,7 @@
 //   Originales en ./media-src/:
 //     video.mp4        video de portada (MP4 H.264, sin audio, < ~10 MB ideal)
 //     poster.jpg       (opcional) portada mientras carga el video
+//     music.mp3        (opcional) música de fondo, ~2–4 MB (128 kbps, 1.5–3 min)
 //     photos/          6–8 fotos (01.jpg, 02.jpg… se ordenan por nombre)
 //
 //   node scripts/upload-media.mjs             # procesa y sube
@@ -25,6 +26,7 @@ const POSTER_WIDTH = 1080;
 const POSTER_HEIGHT = 1920; // vertical: el video cubre la pantalla del celular
 const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif", ".tif", ".tiff"]);
 const MAX_VIDEO_MB = 15;
+const MAX_MUSIC_MB = 6;
 const CACHE = "31536000";
 
 const args = process.argv.slice(2);
@@ -132,6 +134,23 @@ async function main() {
     console.warn("⚠ No hay video.mp4: solo se subirán las fotos.");
   }
 
+  // ---- música ----
+  const musicSrc = await findFile(SRC, "music", [".mp3"]);
+  if (musicSrc) {
+    const size = (await stat(musicSrc)).size;
+    if (size > MAX_MUSIC_MB * 1024 * 1024) {
+      console.warn(
+        `⚠ La música pesa ${mb(size)}: conviene comprimirla a ~128 kbps (menos de ~${MAX_MUSIC_MB} MB).`
+      );
+    }
+    uploads.push({ name: "music.mp3", body: await readFile(musicSrc), contentType: "audio/mpeg", from: "music.mp3" });
+  } else {
+    const other = await findFile(SRC, "music", [".m4a", ".wav", ".ogg", ".aac", ".flac"]);
+    if (other) {
+      console.warn(`⚠ Encontré ${path.basename(other)}, pero la música debe ser MP3: guárdala como music.mp3.`);
+    }
+  }
+
   if (uploads.length === 0) {
     console.error("No hay nada que subir.");
     process.exit(1);
@@ -176,8 +195,10 @@ async function main() {
     console.log(`✓ ${u.name}`);
   }
 
+  const hasMusic = uploads.some((u) => u.name === "music.mp3");
   console.log(`\nListo. Ahora en src/lib/invitation-sample.ts pon:`);
   console.log(`  INVITATION_MEDIA = { enabled: true, photoCount: ${photoCount}, version: <súbelo si reemplazas archivos> }`);
+  if (hasMusic) console.log(`  INVITATION_MUSIC = { enabled: true, title: "<nombre de la canción>" }`);
   console.log(`Ejemplo de URL: ${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/photo-1.webp`);
 }
 
