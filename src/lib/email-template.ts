@@ -6,6 +6,12 @@ export type InvitationEmailData = {
   venueName: string;
   venueAddress: string;
   dressCode: string;
+  /** Modo "organizer": se confirma respondiendo a quien envió la invitación */
+  confirmViaSender?: boolean;
+  /** Hora de la recepción (el lugar de después de la ceremonia) */
+  receptionTime?: string;
+  /** Ceremonia (opcional) */
+  ceremony?: { name: string; address: string; date: string; time: string } | null;
 };
 
 export function invitationEmailSubject(data: InvitationEmailData): string {
@@ -36,7 +42,11 @@ export function invitationEmailHtml(data: InvitationEmailData): string {
               <p style="margin:0;color:#0a2540;font-size:16px;font-weight:700;">Hola, ${data.groupName} 👋</p>
               <p style="margin:12px 0 0;color:#64748b;font-size:14px;line-height:1.6;">
                 Nos encantaría contar con tu presencia en este día tan especial.
-                Confirma tu asistencia y presenta tu código QR en la entrada.
+                ${
+                  data.confirmViaSender
+                    ? "Para confirmar tu asistencia, responde a quien te envió esta invitación. Tu código QR se habilitará cuando se confirme."
+                    : "Confirma tu asistencia y presenta tu código QR en la entrada."
+                }
               </p>
               <a href="${data.passUrl}" style="display:inline-block;margin:20px 0 0;background-color:#0a2540;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:14px 32px;border-radius:12px;">
                 Ver mi invitación
@@ -47,8 +57,15 @@ export function invitationEmailHtml(data: InvitationEmailData): string {
           <tr>
             <td style="padding:0 24px 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                ${
+                  data.ceremony
+                    ? `<tr>
+                  <td style="padding:8px 0;border-top:1px solid #f1f5f9;color:#64748b;font-size:13px;">⛪ Ceremonia: <strong style="color:#0a2540;">${data.ceremony.name}</strong><br/><span style="font-size:12px;">${data.ceremony.address}</span><br/><span style="font-size:12px;">${[data.ceremony.date, data.ceremony.time].filter(Boolean).join(" · ")}</span></td>
+                </tr>`
+                    : ""
+                }
                 <tr>
-                  <td style="padding:8px 0;border-top:1px solid #f1f5f9;color:#64748b;font-size:13px;">📍 <strong style="color:#0a2540;">${data.venueName}</strong><br/><span style="font-size:12px;">${data.venueAddress}</span></td>
+                  <td style="padding:8px 0;border-top:1px solid #f1f5f9;color:#64748b;font-size:13px;">📍 ${data.ceremony ? "Recepción: " : ""}<strong style="color:#0a2540;">${data.venueName}</strong><br/><span style="font-size:12px;">${data.venueAddress}</span>${data.receptionTime ? `<br/><span style="font-size:12px;">🕔 ${data.receptionTime}</span>` : ""}</td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0;border-top:1px solid #f1f5f9;color:#64748b;font-size:13px;">👔 Vestimenta: <strong style="color:#0a2540;">${data.dressCode}</strong></td>
@@ -75,10 +92,20 @@ export function invitationEmailText(data: InvitationEmailData): string {
     ``,
     `${data.coupleName} te invitan a su boda.`,
     `Fecha: ${data.eventDate}`,
-    `Lugar: ${data.venueName} — ${data.venueAddress}`,
+    ...(data.ceremony
+      ? [
+          `Ceremonia: ${data.ceremony.name} — ${data.ceremony.address}`,
+          `Cuándo: ${[data.ceremony.date, data.ceremony.time].filter(Boolean).join(" · ")}`,
+        ]
+      : []),
+    `${data.ceremony ? "Recepción" : "Lugar"}: ${data.venueName} — ${data.venueAddress}${
+      data.receptionTime ? ` (${data.receptionTime})` : ""
+    }`,
     `Vestimenta: ${data.dressCode}`,
     ``,
-    `Confirma tu asistencia y ve tu invitación aquí:`,
+    data.confirmViaSender
+      ? `Ve tu invitación aquí (para confirmar tu asistencia, responde a quien te la envió):`
+      : `Confirma tu asistencia y ve tu invitación aquí:`,
     data.passUrl,
   ].join("\n");
 }

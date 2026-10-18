@@ -14,6 +14,7 @@ export interface Guest {
   slots: number;
   status: "pending" | "opened" | "confirmed" | "checked_in";
   checked_in_at?: string;
+  opened_at?: string | null;
   group: {
     name: string;
     table_number: number;
@@ -26,6 +27,7 @@ interface GuestCardProps {
   showActions?: boolean;
   onQRClick?: () => void;
   onMessageClick?: () => void;
+  onToggleConfirm?: () => void;
   onEditClick?: () => void;
   onDeleteClick?: () => void;
 }
@@ -68,69 +70,102 @@ export const GuestCard = memo(function GuestCard({
   showActions = true,
   onQRClick,
   onMessageClick,
+  onToggleConfirm,
   onEditClick,
   onDeleteClick,
 }: GuestCardProps) {
   const initials = `${guest.first_name.charAt(0)}${guest.last_name.charAt(0)}`;
 
+  const isConfirmed = guest.status === "confirmed";
+  const actionBase =
+    "flex-1 min-w-0 h-11 rounded-lg px-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 text-[11px] font-semibold transition-colors";
+  const actionIdle = "text-muted hover:bg-field";
+
   return (
-    <article className="bg-card rounded-xl border border-line shadow-card p-4 flex items-center gap-3 hover:shadow-lift transition-shadow">
-      <Avatar
-        initials={initials}
-        variant={guest.status === "checked_in" ? "gold" : "slate"}
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-content truncate">
-            {guest.first_name} {guest.last_name}
-          </h3>
-          <span className="text-[11px] text-muted-soft font-medium bg-field px-2 py-0.5 rounded-full truncate">
-            {guest.group.name}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-muted font-medium flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full border border-gold" />
-            Mesa {guest.group.table_number}
-          </span>
-          {(guest.slots ?? 1) > 1 && (
-            <span className="text-[10px] font-semibold text-gold-deep bg-gold-faint dark:text-gold dark:bg-gold/15 px-1.5 py-0.5 rounded-full">
-              {guest.slots} cupos
+    <article className="bg-card rounded-xl border border-line shadow-card p-4 flex flex-col gap-3 hover:shadow-lift transition-shadow">
+      <div className="flex items-center gap-3">
+        <Avatar
+          initials={initials}
+          variant={guest.status === "checked_in" ? "gold" : "slate"}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="text-sm font-semibold text-content truncate max-w-full">
+              {guest.first_name} {guest.last_name}
+            </h3>
+            <span className="text-[11px] text-muted-soft font-medium bg-field px-2 py-0.5 rounded-full truncate max-w-full">
+              {guest.group.name}
             </span>
-          )}
-          {getStatusBadge(guest.status)}
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
+            <span className="text-xs text-muted font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full border border-gold" />
+              Mesa {guest.group.table_number}
+            </span>
+            {(guest.slots ?? 1) > 1 && (
+              <span className="text-[10px] font-semibold text-gold-deep bg-gold-faint dark:text-gold dark:bg-gold/15 px-1.5 py-0.5 rounded-full">
+                {guest.slots} cupos
+              </span>
+            )}
+            {getStatusBadge(guest.status)}
+          </div>
         </div>
       </div>
+
       {showActions && (
-        <div className="flex items-center gap-1">
+        <div className="flex items-stretch gap-1 border-t border-line pt-2.5">
           <button
             onClick={onQRClick}
-            className="w-11 h-11 rounded-lg text-muted-soft hover:text-content hover:bg-field flex items-center justify-center transition-colors"
+            className={`${actionBase} ${actionIdle} hover:text-content`}
             title="Ver QR"
+            aria-label="Ver QR"
           >
-            <svg className="w-5 h-5" viewBox="0 -0.09 122.88 122.88" fill="currentColor">
+            <svg className="w-4 h-4 shrink-0" viewBox="0 -0.09 122.88 122.88" fill="currentColor" aria-hidden="true">
               <path fillRule="evenodd" clipRule="evenodd" d="M0.18,0h44.63v44.45H0.18V0z M111.5,111.5h11.38v11.2H111.5V111.5z M89.63,111.48h11.38v10.67H89.63h-0.01H78.25v-21.82h11.02V89.27h11.21V67.22h11.38v10.84h10.84v11.2h-10.84v11.2h-11.21h-0.17H89.63V111.48z M55.84,89.09h11.02v-11.2H56.2v-11.2h10.66v-11.2H56.02v11.2H44.63v-11.2h11.2V22.23h11.38v33.25h11.02v11.2h10.84v-11.2h11.38v11.2H89.63v11.2H78.25v22.05H67.22v22.23H55.84V89.09z M111.31,55.48h11.38v11.2h-11.38V55.48z M22.41,55.48h11.38v11.2H22.41V55.48z M0.18,55.48h11.38v11.2H0.18V55.48z M55.84,0h11.38v11.2H55.84V0z M0,78.06h44.63v44.45H0V78.06z M10.84,88.86h22.95v22.86H10.84V88.86z M78.06,0h44.63v44.45H78.06V0z M88.91,10.8h22.95v22.86H88.91V10.8z M11.02,10.8h22.95v22.86H11.02V10.8z" />
             </svg>
+            <span>QR</span>
           </button>
+          {guest.status !== "checked_in" && (
+            <button
+              onClick={onToggleConfirm}
+              className={`${actionBase} ${
+                isConfirmed
+                  ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25"
+                  : `${actionIdle} hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10`
+              }`}
+              title={isConfirmed ? "Desconfirmar" : "Marcar confirmado"}
+              aria-label={isConfirmed ? "Desconfirmar" : "Marcar confirmado"}
+            >
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="m8.5 12.5 2.5 2.5 4.5-5" />
+              </svg>
+              <span>{isConfirmed ? "Desconfirmar" : "Confirmar"}</span>
+            </button>
+          )}
           <button
             onClick={onEditClick}
-            className="w-11 h-11 rounded-lg text-muted-soft hover:text-sky hover:bg-sky/10 flex items-center justify-center transition-colors"
+            className={`${actionBase} ${actionIdle} hover:text-sky hover:bg-sky/10`}
             title="Editar"
+            aria-label="Editar"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
             </svg>
+            <span>Editar</span>
           </button>
           <button
             onClick={onDeleteClick}
-            className="w-11 h-11 rounded-lg text-muted-soft hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors"
+            className={`${actionBase} ${actionIdle} hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10`}
             title="Eliminar"
+            aria-label="Eliminar"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M3 6h18" />
               <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
               <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
             </svg>
+            <span>Eliminar</span>
           </button>
         </div>
       )}

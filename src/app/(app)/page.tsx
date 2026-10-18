@@ -256,6 +256,19 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // El organizador marca (o desmarca) la confirmación de un invitado, p. ej. cuando
+  // confirmó por WhatsApp con quien le envió la invitación. Desbloquea su QR.
+  async function handleToggleConfirm(guest: Guest) {
+    if (guest.status === "checked_in") return;
+    const next: Guest["status"] =
+      guest.status === "confirmed" ? (guest.opened_at ? "opened" : "pending") : "confirmed";
+
+    // Optimista: actualizar la lista y revertir recargando si falla
+    setGuests((prev) => prev.map((g) => (g.id === guest.id ? { ...g, status: next } : g)));
+    const { error } = await supabase.from("guests").update({ status: next }).eq("id", guest.id);
+    if (error) fetchData({ silent: true });
+  }
+
   async function handleDeleteConfirm() {
     if (!deletingGuest) return;
 
@@ -565,6 +578,7 @@ export default function DashboardPage() {
                   guest={guest}
                   showActions={canManageEvent(role)}
                   onQRClick={() => handleQRClick(guest)}
+                  onToggleConfirm={() => handleToggleConfirm(guest)}
                   onEditClick={() => handleEditClick(guest)}
                   onDeleteClick={() => handleDeleteClick(guest)}
                 />

@@ -20,6 +20,17 @@ export interface Wedding {
   reveal_venue_lat?: number | null;
   reveal_venue_lng?: number | null;
   reveal_message?: string | null;
+  /** Ceremonia (opcional) y hora de la recepción; venue_* es la recepción */
+  ceremony_name?: string | null;
+  ceremony_address?: string | null;
+  ceremony_city?: string | null;
+  ceremony_country?: string | null;
+  ceremony_lat?: number | null;
+  ceremony_lng?: number | null;
+  ceremony_date?: string | null;
+  ceremony_time?: string | null;
+  reception_time?: string | null;
+  confirmation_mode?: "in_app" | "organizer";
 }
 
 export interface GuestGroup {

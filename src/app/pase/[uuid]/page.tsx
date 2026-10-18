@@ -41,7 +41,44 @@ interface PassData {
   /** El servidor ya entregó el lugar real (el grupo confirmó) */
   venue_revealed: boolean;
   reveal_message: string | null;
+  /** El servidor decide si el grupo cuenta como confirmado (depende del modo) */
+  confirmed?: boolean;
+  /** in_app: el invitado confirma aquí. organizer: confirma con quien le envió la invitación */
+  confirm_mode?: "in_app" | "organizer";
+  /** Ceremonia (opcional); venue_* y event_time son los de la recepción */
+  ceremony?: {
+    name: string;
+    address: string;
+    lat: number | null;
+    lng: number | null;
+    date: string;
+    time: string;
+  } | null;
 }
+
+function mapsLink(lat: number | null, lng: number | null, name: string, address: string) {
+  return lat && lng
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name || ""} ${address || ""}`)}`;
+}
+
+const isConfirmed = (d: PassData) =>
+  d.confirmed ?? (d.confirmed_count >= d.guest_count && d.guest_count > 0);
+
+// Banderas por dispositivo (localStorage puede no estar disponible: se ignoran los errores)
+const readFlag = (key: string) => {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+};
+const writeFlag = (key: string) => {
+  try {
+    localStorage.setItem(key, "1");
+  } catch {}
+};
+const REFRESH_MS = 20000;
 
 export default function GuestPassPage({
   params,
@@ -59,7 +96,12 @@ export default function GuestPassPage({
   const [saveState, setSaveState] = useState<"idle" | "saving" | "error">("idle");
   const [copied, setCopied] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [revealOpen, setRevealOpen] = useState(false);
+  // La revelación del lugar se muestra una sola vez por dispositivo
+  const [revealSeen, setRevealSeen] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  // Pantalla de revelación del lugar: confirmado, lugar entregado y aún no vista
+  const revealVisible =
+    phase === "open" && rsvpState === "confirmed" && !!passData?.venue_revealed && !revealSeen;
 
   // La invitación siempre se ve en modo claro, sin importar el tema del usuario
   useEffect(() => {
@@ -84,10 +126,15 @@ export default function GuestPassPage({
         const data = await fetchPass();
         setPassData(data);
 
-        // Si todos los invitados del grupo ya confirmaron, mostrar carta abierta directo
-        if (data.confirmed_count >= data.guest_count && data.guest_count > 0) {
+        // Si el grupo ya confirmó, mostrar carta abierta directo. En modo "organizer"
+        // el organizador pudo confirmar antes de que abra el link: se muestra el sobre
+        // hasta que este dispositivo lo haya abierto (así queda registrado `opened`).
+        if (isConfirmed(data)) {
           setRsvpState("confirmed");
-          setPhase("open");
+          setRevealSeen(readFlag(`pase-reveal-seen-${uuid}`));
+          if (data.confirm_mode !== "organizer" || readFlag(`pase-opened-${uuid}`)) {
+            setPhase("open");
+          }
         }
       } catch {
         setError("Invitación no encontrada o expirada");
@@ -96,11 +143,11 @@ export default function GuestPassPage({
       }
     }
     loadPass();
-  }, [fetchPass]);
+  }, [fetchPass, uuid]);
 
   // Bloquear scroll mientras el sobre está visible
   useEffect(() => {
-    if (loading || error || (phase === "open" && !revealOpen)) {
+    if (loading || error || (phase === "open" && !revealVisible)) {
       document.body.style.overflow = "";
       return;
     }
@@ -108,7 +155,7 @@ export default function GuestPassPage({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [phase, loading, error, revealOpen]);
+  }, [phase, loading, error, revealVisible]);
 
   // El QR se genera solo cuando la asistencia está confirmada
   useEffect(() => {
@@ -145,7 +192,7 @@ export default function GuestPassPage({
           try {
             const fresh = await fetchPass();
             setPassData(fresh);
-            if (fresh.venue_revealed) setRevealOpen(true);
+            setRevealSeen(false); // si hay lugar revelado, se muestra la pantalla de revelación
             return true;
           } catch {
             // Confirmó, pero no pudimos traer el lugar: se verá al recargar
@@ -164,6 +211,43 @@ export default function GuestPassPage({
     }
   }
 
+  // Modo "organizer": consulta si el organizador ya confirmó este grupo
+  const refreshPass = useCallback(async () => {
+    try {
+      const fresh = await fetchPass();
+      setPassData(fresh);
+      if (isConfirmed(fresh)) {
+        setRevealSeen(!fresh.venue_revealed);
+        setRsvpState("confirmed");
+      }
+    } catch {
+      // sin conexión: se reintenta en el siguiente ciclo
+    }
+  }, [fetchPass]);
+
+  async function handleManualRefresh() {
+    setRefreshing(true);
+    await refreshPass();
+    setRefreshing(false);
+  }
+
+  const waitingForOrganizer =
+    passData?.confirm_mode === "organizer" && rsvpState !== "confirmed" && phase === "open";
+
+  useEffect(() => {
+    if (!waitingForOrganizer) return;
+    const tick = () => {
+      if (document.visibilityState === "visible") void refreshPass();
+    };
+    tick();
+    const timer = setInterval(tick, REFRESH_MS);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [waitingForOrganizer, refreshPass]);
+
   async function handleConfirm() {
     if (rsvpState === "loading") return;
     setConfirmError(null);
@@ -172,7 +256,8 @@ export default function GuestPassPage({
   }
 
   function closeReveal(scrollToVenue: boolean) {
-    setRevealOpen(false);
+    writeFlag(`pase-reveal-seen-${uuid}`);
+    setRevealSeen(true);
     if (scrollToVenue) {
       setTimeout(() => {
         document.getElementById("ubicacion")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -190,13 +275,14 @@ export default function GuestPassPage({
     setOpenError(null);
     // Registrar que abrió la carta (estado `opened`); no bloquea la animación
     fetch(`/api/pass/${uuid}/opened`, { method: "POST", keepalive: true }).catch(() => {});
+    writeFlag(`pase-opened-${uuid}`);
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Duración mínima de la apertura + previa (tiempos en envelope-intro.tsx)
     const minDuration = reduced ? 150 : openingDurationMs(SAMPLE_PREVIEW_LINES.length);
 
-    // Con lugar sorpresa, abrir el sobre no confirma: se confirma con el botón
-    if (passData?.reveal_enabled) {
+    // Con lugar sorpresa o confirmación por el organizador, abrir el sobre no confirma
+    if (passData?.reveal_enabled || passData?.confirm_mode === "organizer") {
       await wait(minDuration);
       setPhase("open");
       return;
@@ -240,12 +326,11 @@ export default function GuestPassPage({
   const isOpen = phase === "open";
   const code = uuid.toUpperCase();
   const formattedCode = `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12, 16)}`;
-  const mapsUrl =
-    passData.venue_lat && passData.venue_lng
-      ? `https://www.google.com/maps/search/?api=1&query=${passData.venue_lat},${passData.venue_lng}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          `${passData.venue_name || ""} ${passData.venue_address || ""}`
-        )}`;
+  const mapsUrl = mapsLink(passData.venue_lat, passData.venue_lng, passData.venue_name, passData.venue_address);
+  const ceremony = passData.ceremony ?? null;
+  const ceremonyMapsUrl = ceremony
+    ? mapsLink(ceremony.lat, ceremony.lng, ceremony.name, ceremony.address)
+    : "";
 
   async function handleSave() {
     if (!passData || !qrDataUrl || saveState === "saving") return;
@@ -264,6 +349,15 @@ export default function GuestPassPage({
         venueName: passData.venue_name,
         venueAddress: passData.venue_address,
         mapsUrl,
+        ceremony: ceremony
+          ? {
+              name: ceremony.name,
+              address: ceremony.address,
+              date: ceremony.date,
+              time: ceremony.time,
+              mapsUrl: ceremonyMapsUrl,
+            }
+          : null,
         avoidNote: SAMPLE_DRESS_CODE.note,
         avoid: SAMPLE_DRESS_CODE.avoid,
         adultsOnly: SAMPLE_ADULTS_ONLY,
@@ -303,6 +397,19 @@ export default function GuestPassPage({
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const clockIcon = (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </>
+  );
+  const dressIcon = (
+    <>
+      <path d="M20.38 3.46 16 2 12 3.46 8 2 3.62 3.46a2 2 0 0 0-1.34 1.89v13.3a2 2 0 0 0 2.66 1.89L8 19l4-1.46L16 19l4.38-1.46a2 2 0 0 0 1.34-1.89V5.35a2 2 0 0 0-1.34-1.89z" />
+      <line x1="12" y1="2" x2="12" y2="17.54" />
+    </>
+  );
+
   const details = [
     {
       label: "Mesa",
@@ -321,26 +428,16 @@ export default function GuestPassPage({
         </>
       ),
     },
-    {
-      label: "Hora",
-      value: passData.event_time || "17:00 hrs",
-      icon: (
-        <>
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </>
-      ),
-    },
-    {
-      label: "Vestimenta",
-      value: passData.dress_code || "Formal / Gala",
-      icon: (
-        <>
-          <path d="M20.38 3.46 16 2 12 3.46 8 2 3.62 3.46a2 2 0 0 0-1.34 1.89v13.3a2 2 0 0 0 2.66 1.89L8 19l4-1.46L16 19l4.38-1.46a2 2 0 0 0 1.34-1.89V5.35a2 2 0 0 0-1.34-1.89z" />
-          <line x1="12" y1="2" x2="12" y2="17.54" />
-        </>
-      ),
-    },
+    // Con ceremonia se muestran las dos horas (la vestimenta ya tiene su propio bloque)
+    ...(ceremony
+      ? [
+          { label: "Ceremonia", value: ceremony.time || "Por confirmar", icon: clockIcon },
+          { label: "Recepción", value: passData.event_time || "17:00 hrs", icon: clockIcon },
+        ]
+      : [
+          { label: "Hora", value: passData.event_time || "17:00 hrs", icon: clockIcon },
+          { label: "Vestimenta", value: passData.dress_code || "Formal / Gala", icon: dressIcon },
+        ]),
   ];
 
   return (
@@ -356,7 +453,7 @@ export default function GuestPassPage({
         />
       )}
 
-      {revealOpen && (
+      {revealVisible && (
         <RevealOverlay
           message={passData.reveal_message || SAMPLE_REVEAL_COPY.defaultMessage}
           venueName={passData.venue_name}
@@ -407,8 +504,9 @@ export default function GuestPassPage({
                 <span className="ornament-divider mt-8" />
               </section>
 
-              {/* Confirmar asistencia (solo con lugar sorpresa) */}
-              {passData.reveal_enabled && rsvpState !== "confirmed" && (
+              {/* Confirmar asistencia: con botón (lugar sorpresa) o con quien envió la invitación */}
+              {(passData.reveal_enabled || passData.confirm_mode === "organizer") &&
+                rsvpState !== "confirmed" && (
                 <section id="confirmar" className="letter-reveal mt-10" style={delay(0.3)}>
                   <div className="rounded-md border border-inv-rose/50 bg-white/60 px-6 py-7 text-center shadow-lift">
                     <p className="text-[10px] uppercase tracking-[0.3em] text-inv-rose-deep font-semibold">
@@ -417,23 +515,46 @@ export default function GuestPassPage({
                     <p className="font-serif text-xl text-inv-olive-deep mt-2">
                       {SAMPLE_REVEAL_COPY.confirmTitle}
                     </p>
-                    <p className="text-sm text-slate-600 leading-relaxed mt-2">
-                      {SAMPLE_REVEAL_COPY.confirmText}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleConfirm}
-                      disabled={rsvpState === "loading"}
-                      className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-inv-olive px-7 py-3 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-inv-olive-deep disabled:opacity-60"
-                    >
-                      <svg className="w-4 h-4 text-inv-rose" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                      </svg>
-                      {rsvpState === "loading" ? "Confirmando…" : "Confirmar asistencia"}
-                    </button>
-                    <p className="mt-3 min-h-4 text-xs text-rose-600" role="alert">
-                      {confirmError}
-                    </p>
+                    {passData.confirm_mode === "organizer" ? (
+                      <>
+                        <p className="text-sm text-slate-600 leading-relaxed mt-2">
+                          {SAMPLE_REVEAL_COPY.organizerText}
+                          {passData.reveal_enabled ? ` ${SAMPLE_REVEAL_COPY.organizerRevealText}` : ""}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleManualRefresh}
+                          disabled={refreshing}
+                          className="mt-5 inline-flex items-center justify-center gap-2 rounded-full border border-inv-rose/60 bg-white/70 px-6 py-2.5 text-sm font-semibold text-inv-olive-deep transition-colors hover:bg-white disabled:opacity-60"
+                        >
+                          <svg className={`w-4 h-4 text-inv-rose-deep ${refreshing ? "animate-spin" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M21 12a9 9 0 1 1-3-6.7" />
+                            <polyline points="21 3 21 9 15 9" />
+                          </svg>
+                          {refreshing ? "Revisando…" : SAMPLE_REVEAL_COPY.refreshLabel}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-slate-600 leading-relaxed mt-2">
+                          {SAMPLE_REVEAL_COPY.confirmText}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleConfirm}
+                          disabled={rsvpState === "loading"}
+                          className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-inv-olive px-7 py-3 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-inv-olive-deep disabled:opacity-60"
+                        >
+                          <svg className="w-4 h-4 text-inv-rose" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                          </svg>
+                          {rsvpState === "loading" ? "Confirmando…" : "Confirmar asistencia"}
+                        </button>
+                        <p className="mt-3 min-h-4 text-xs text-rose-600" role="alert">
+                          {confirmError}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </section>
               )}
@@ -554,58 +675,59 @@ export default function GuestPassPage({
                 <PhotoCarousel photos={SAMPLE_GALLERY} />
               </section>
 
-              {/* 6. Ubicación */}
-              {passData.venue_name && (
-                <section id="ubicacion" className="letter-reveal mt-12 scroll-mt-6" style={delay(0.65)}>
-                  <SectionTitle eyebrow="¿Dónde?" title="Ubicación" />
-                  {passData.venue_revealed && (
-                    <div className="mb-5 rounded-md border border-inv-rose/50 bg-inv-rose/10 px-4 py-3 text-center">
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-inv-rose-deep font-semibold">
-                        {SAMPLE_REVEAL_COPY.updatedBadge}
-                      </p>
-                      {(passData.reveal_message || SAMPLE_REVEAL_COPY.defaultMessage) && (
-                        <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
-                          {passData.reveal_message || SAMPLE_REVEAL_COPY.defaultMessage}
-                        </p>
-                      )}
+              {/* 6. Ubicación: ceremonia (opcional) y recepción */}
+              {(passData.venue_name || ceremony) && (
+                <section className="letter-reveal mt-12" style={delay(0.65)}>
+                  <SectionTitle
+                    eyebrow="¿Dónde?"
+                    title={ceremony ? "Ceremonia y recepción" : "Ubicación"}
+                  />
+
+                  {ceremony && (
+                    <div className="mb-10">
+                      <PlaceHeading
+                        label="Ceremonia"
+                        details={[ceremony.date, ceremony.time]}
+                      />
+                      <VenuePlace
+                        name={ceremony.name}
+                        address={ceremony.address}
+                        lat={ceremony.lat}
+                        lng={ceremony.lng}
+                        mapsUrl={ceremonyMapsUrl}
+                      />
                     </div>
                   )}
-                  <div className="photo-frame">
-                    {passData.venue_lat && passData.venue_lng ? (
-                      <VenueMap
-                        key={`${passData.venue_lat},${passData.venue_lng}`}
+
+                  {passData.venue_name && (
+                    <div id="ubicacion" className="scroll-mt-6">
+                      {ceremony && (
+                        <PlaceHeading
+                          label="Recepción"
+                          details={["Después de la ceremonia", passData.event_time]}
+                        />
+                      )}
+                      {passData.venue_revealed && (
+                        <div className="mb-5 rounded-md border border-inv-rose/50 bg-inv-rose/10 px-4 py-3 text-center">
+                          <p className="text-[10px] uppercase tracking-[0.3em] text-inv-rose-deep font-semibold">
+                            {SAMPLE_REVEAL_COPY.updatedBadge}
+                          </p>
+                          {(passData.reveal_message || SAMPLE_REVEAL_COPY.defaultMessage) && (
+                            <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+                              {passData.reveal_message || SAMPLE_REVEAL_COPY.defaultMessage}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      <VenuePlace
+                        name={passData.venue_name}
+                        address={passData.venue_address}
                         lat={passData.venue_lat}
                         lng={passData.venue_lng}
-                        name={passData.venue_name}
-                        height={180}
+                        mapsUrl={mapsUrl}
                       />
-                    ) : (
-                      <div className="w-full h-[180px] bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
-                        <span className="w-10 h-10 rounded-full bg-inv-olive flex items-center justify-center shadow-lg">
-                          <svg className="w-5 h-5 text-inv-rose" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                          </svg>
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-5 text-center">
-                    <h3 className="font-serif text-lg text-inv-olive-deep">{passData.venue_name}</h3>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      {passData.venue_address}
-                    </p>
-                    <a
-                      href={mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-inv-olive px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-inv-olive-deep"
-                    >
-                      <svg className="w-4 h-4 text-inv-rose" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                      </svg>
-                      Cómo llegar
-                    </a>
-                  </div>
+                    </div>
+                  )}
                 </section>
               )}
 
@@ -737,6 +859,63 @@ function RevealOverlay({
         </div>
       </div>
     </div>
+  );
+}
+
+function PlaceHeading({ label, details }: { label: string; details: (string | undefined)[] }) {
+  const line = details.filter(Boolean).join(" · ");
+  return (
+    <div className="mb-4 text-center">
+      <p className="text-[11px] uppercase tracking-[0.3em] text-inv-rose-deep font-semibold">{label}</p>
+      {line && <p className="mt-1 text-xs text-slate-500 capitalize-first">{line}</p>}
+    </div>
+  );
+}
+
+function VenuePlace({
+  name,
+  address,
+  lat,
+  lng,
+  mapsUrl,
+}: {
+  name: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  mapsUrl: string;
+}) {
+  return (
+    <>
+      <div className="photo-frame">
+        {lat && lng ? (
+          <VenueMap key={`${lat},${lng}`} lat={lat} lng={lng} name={name} height={180} />
+        ) : (
+          <div className="w-full h-[180px] bg-gradient-to-br from-slate-50 to-slate-200 flex items-center justify-center">
+            <span className="w-10 h-10 rounded-full bg-inv-olive flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-inv-rose" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+              </svg>
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="mt-5 text-center">
+        <h3 className="font-serif text-lg text-inv-olive-deep">{name}</h3>
+        {address && <p className="text-xs text-slate-500 mt-1 leading-relaxed">{address}</p>}
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-inv-olive px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition-colors hover:bg-inv-olive-deep"
+        >
+          <svg className="w-4 h-4 text-inv-rose" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <polygon points="3 11 22 2 13 21 11 13 3 11" />
+          </svg>
+          Cómo llegar
+        </a>
+      </div>
+    </>
   );
 }
 

@@ -9,6 +9,7 @@ import { InstallPrompt } from "@/components/install-prompt";
 import { PushPrompt } from "@/components/push-prompt";
 import { roleLabel } from "@/lib/roles";
 import type { Organizer, Wedding } from "@/lib/types";
+import { formatEventDate } from "@/lib/event-format";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -59,13 +60,7 @@ export default function ProfilePage() {
     );
   }
 
-  const eventDate = wedding?.event_date
-    ? new Date(wedding.event_date).toLocaleDateString("es-MX", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : "Por definir";
+  const eventDate = formatEventDate(wedding?.event_date) || "Por definir";
 
   return (
     <div className="min-h-screen bg-surface pb-28 md:pb-10">

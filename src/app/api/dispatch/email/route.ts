@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
+import { formatEventDate, formatLongDate, formatTime } from "@/lib/event-format";
 import {
   invitationEmailHtml,
   invitationEmailSubject,
@@ -62,6 +63,23 @@ export async function POST(request: NextRequest) {
       .eq("id", organizer.wedding_id)
       .single();
 
+    // Modo de confirmación (la columna puede no existir si falta la migración 005)
+    const { data: modeRow } = await supabase
+      .from("weddings")
+      .select("confirmation_mode")
+      .eq("id", organizer.wedding_id)
+      .single();
+    const confirmViaSender = modeRow?.confirmation_mode === "organizer";
+
+    // Ceremonia y hora de la recepción (columnas de la migración 006; si faltan se omiten)
+    const { data: ceremonyRow } = await supabase
+      .from("weddings")
+      .select(
+        "ceremony_name, ceremony_address, ceremony_city, ceremony_country, ceremony_date, ceremony_time, reception_time, event_date"
+      )
+      .eq("id", organizer.wedding_id)
+      .single();
+
     // 4. Invitados del grupo con correo
     const { data: guests } = await supabase
       .from("guests")
@@ -81,13 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Construir datos del correo
-    const eventDate = wedding?.event_date
-      ? new Date(wedding.event_date).toLocaleDateString("es-MX", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
-      : "";
+    const eventDate = formatEventDate(wedding?.event_date);
     const venueAddress = [wedding?.venue_address, wedding?.venue_city]
       .filter(Boolean)
       .join(", ");
@@ -100,6 +112,18 @@ export async function POST(request: NextRequest) {
       venueName: wedding?.venue_name || "",
       venueAddress,
       dressCode: wedding?.dress_code || "Formal",
+      confirmViaSender,
+      receptionTime: formatTime(ceremonyRow?.reception_time),
+      ceremony: ceremonyRow?.ceremony_name
+        ? {
+            name: ceremonyRow.ceremony_name,
+            address: [ceremonyRow.ceremony_address, ceremonyRow.ceremony_city, ceremonyRow.ceremony_country]
+              .filter(Boolean)
+              .join(", "),
+            date: formatLongDate(ceremonyRow.ceremony_date) || formatEventDate(ceremonyRow.event_date, true),
+            time: formatTime(ceremonyRow.ceremony_time),
+          }
+        : null,
     };
 
     const from = process.env.RESEND_FROM || "Attendapp <onboarding@resend.dev>";

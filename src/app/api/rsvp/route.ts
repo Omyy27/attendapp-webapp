@@ -25,6 +25,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pase no encontrado" }, { status: 404 });
     }
 
+    // Modo "organizer": la confirmación la marca el organizador en el panel, no el invitado.
+    // Si la columna aún no existe (migración 005 pendiente), se asume el modo original.
+    const { data: wedding } = await supabaseAdmin
+      .from("weddings")
+      .select("confirmation_mode")
+      .eq("id", group.wedding_id)
+      .single();
+    if (wedding?.confirmation_mode === "organizer") {
+      return NextResponse.json(
+        { result: "disabled", message: "La confirmación se hace con quien te envió la invitación" },
+        { status: 403 }
+      );
+    }
+
     // 2. Contar pendientes antes de confirmar
     const { count: pendingCount } = await supabaseAdmin
       .from("guests")

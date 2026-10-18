@@ -708,3 +708,8 @@ body {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Pone en mayúscula solo la primera letra (p. ej. fechas "sábado, 17 de…") */
+.capitalize-first::first-letter {
+  text-transform: uppercase;
+}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { formatEventDate, formatLongDate, formatTime } from "@/lib/event-format";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,6 +36,18 @@ export async function GET(
           reveal_venue_lat,
           reveal_venue_lng,
           reveal_message`;
+    const MODE_FIELD = `,
+          confirmation_mode`;
+    const CEREMONY_FIELDS = `,
+          ceremony_name,
+          ceremony_address,
+          ceremony_city,
+          ceremony_country,
+          ceremony_lat,
+          ceremony_lng,
+          ceremony_date,
+          ceremony_time,
+          reception_time`;
     // El select se arma en tiempo de ejecución: se tipa a mano el resultado
     type GroupRow = { id: string; name: string; table_number: number | null; weddings: unknown };
     type GroupResult = { data: GroupRow | null; error: { message: string } | null };
@@ -45,11 +58,15 @@ export async function GET(
         .eq("pass_uuid", uuid)
         .single() as unknown as Promise<GroupResult>;
 
-    let { data: group, error: groupError } = await query(BASE_FIELDS + REVEAL_FIELDS);
-    // Si la migración 003 (lugar sorpresa) aún no se ejecutó, las columnas no
-    // existen: se responde sin la función en vez de romper todos los pases.
-    if (groupError && /reveal_/.test(groupError.message || "")) {
-      ({ data: group, error: groupError } = await query(BASE_FIELDS));
+    // Si una migración aún no se ejecutó (006 ceremonia, 005 modo de confirmación,
+    // 003 lugar sorpresa), faltan columnas: se va quitando la función más reciente
+    // hasta que la consulta funcione, en vez de romper todos los pases.
+    const FIELD_GROUPS = [BASE_FIELDS, REVEAL_FIELDS, MODE_FIELD, CEREMONY_FIELDS];
+    const MISSING_COLUMN = /reveal_|confirmation_mode|ceremony_|reception_time/;
+    let { data: group, error: groupError } = await query(FIELD_GROUPS.join(""));
+    for (let n = FIELD_GROUPS.length - 1; n >= 1 && groupError; n--) {
+      if (!MISSING_COLUMN.test(groupError.message || "")) break;
+      ({ data: group, error: groupError } = await query(FIELD_GROUPS.slice(0, n).join("")));
     }
 
     if (groupError || !group) {
@@ -84,12 +101,28 @@ export async function GET(
       reveal_venue_lat?: number | null;
       reveal_venue_lng?: number | null;
       reveal_message?: string | null;
+      confirmation_mode?: "in_app" | "organizer";
+      ceremony_name?: string | null;
+      ceremony_address?: string | null;
+      ceremony_city?: string | null;
+      ceremony_country?: string | null;
+      ceremony_lat?: number | null;
+      ceremony_lng?: number | null;
+      ceremony_date?: string | null;
+      ceremony_time?: string | null;
+      reception_time?: string | null;
     };
 
     // Lugar sorpresa: el servidor decide qué lugar entregar. Antes de confirmar
     // solo sale el lugar público; los campos `reveal_*` nunca viajan al cliente.
     const guestCount = count || 0;
-    const confirmed = guestCount > 0 && (confirmedCount || 0) >= guestCount;
+    const confirmMode = wedding.confirmation_mode === "organizer" ? "organizer" : "in_app";
+    // in_app: confirma todo el grupo a la vez. organizer: el organizador marca
+    // invitados uno a uno, así que basta con que haya al menos uno confirmado.
+    const confirmed =
+      confirmMode === "organizer"
+        ? (confirmedCount || 0) > 0
+        : guestCount > 0 && (confirmedCount || 0) >= guestCount;
     const revealEnabled = !!wedding.reveal_venue_name;
     const revealed = revealEnabled && confirmed;
 
@@ -111,7 +144,24 @@ export async function GET(
           lng: wedding.venue_lng,
         };
 
-    const eventDate = new Date(wedding.event_date);
+    // Ceremonia (opcional): lugar, fecha y hora. Sin fecha propia usa la del evento.
+    const ceremonyAddress = [
+      wedding.ceremony_address,
+      wedding.ceremony_city,
+      wedding.ceremony_country,
+    ]
+      .filter(Boolean)
+      .join(", ");
+    const ceremony = wedding.ceremony_name
+      ? {
+          name: wedding.ceremony_name,
+          address: ceremonyAddress,
+          lat: wedding.ceremony_lat ?? null,
+          lng: wedding.ceremony_lng ?? null,
+          date: formatLongDate(wedding.ceremony_date) || formatEventDate(wedding.event_date, true),
+          time: formatTime(wedding.ceremony_time),
+        }
+      : null;
     const fullAddress = [venue.address, venue.city, venue.country]
       .filter(Boolean)
       .join(", ");
@@ -122,18 +172,18 @@ export async function GET(
         table_number: group.table_number,
         guest_count: guestCount,
         confirmed_count: confirmedCount || 0,
-        event_time: "17:00 hrs",
+        // Hora de la recepción (lugar de después de la ceremonia)
+        event_time: formatTime(wedding.reception_time) || "17:00 hrs",
+        ceremony,
         dress_code: wedding.dress_code || "Formal / Gala",
         venue_name: venue.name,
         venue_address: fullAddress || venue.address || "",
         venue_lat: venue.lat,
         venue_lng: venue.lng,
         couple_name: wedding.couple_name,
-        event_date: eventDate.toLocaleDateString("es-MX", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }) + (fullAddress ? ` \u00b7 ${fullAddress}` : ""),
+        event_date: formatEventDate(wedding.event_date) + (fullAddress ? ` \u00b7 ${fullAddress}` : ""),
+        confirmed,
+        confirm_mode: confirmMode,
         reveal_enabled: revealEnabled,
         venue_revealed: revealed,
         reveal_message: revealed ? wedding.reveal_message ?? null : null,

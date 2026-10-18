@@ -26,6 +26,14 @@ export interface PassImageData {
   venueName: string;
   venueAddress: string;
   mapsUrl: string;
+  /** Ceremonia (opcional); venueName/eventTime son los de la recepción */
+  ceremony?: {
+    name: string;
+    address: string;
+    date: string;
+    time: string;
+    mapsUrl: string;
+  } | null;
   /** Colores que los invitados deben evitar, por grupo (mujeres / hombres) */
   avoid: PassColorGroup[];
   avoidNote: string;
@@ -163,15 +171,16 @@ export async function renderPassImage(data: PassImageData): Promise<Blob> {
   await Promise.all(Object.values(fonts).map((f) => document.fonts.load(f).catch(() => [])));
 
   const QRCode = (await import("qrcode")).default;
-  const [qrImg, mapsImg] = await Promise.all([
+  const mapsQr = (url: string) =>
+    QRCode.toDataURL(url, {
+      width: 240,
+      margin: 0,
+      color: { dark: INK, light: "#ffffff" },
+    }).then(loadImage);
+  const [qrImg, mapsImg, ceremonyImg] = await Promise.all([
     loadImage(data.qrDataUrl),
-    data.venueName
-      ? QRCode.toDataURL(data.mapsUrl, {
-          width: 240,
-          margin: 0,
-          color: { dark: INK, light: "#ffffff" },
-        }).then(loadImage)
-      : Promise.resolve(null),
+    data.venueName ? mapsQr(data.mapsUrl) : Promise.resolve(null),
+    data.ceremony ? mapsQr(data.ceremony.mapsUrl) : Promise.resolve(null),
   ]);
 
   // Dibuja el pase en `ctx` con alto `H` y devuelve la `y` donde termina el contenido
@@ -243,12 +252,19 @@ export async function renderPassImage(data: PassImageData): Promise<Blob> {
     ctx.fillText(`Válido para ${data.guestCount} personas`, cx, y + 46);
     y += 120;
 
-    // Mesa / Hora / Vestimenta
-    const cols = [
-      { label: "MESA", value: `Mesa ${data.tableNumber}` },
-      { label: "HORA", value: data.eventTime },
-      { label: "VESTIMENTA", value: data.dressCode },
-    ];
+    // Mesa / horas / Vestimenta (con ceremonia: las dos horas por separado)
+    const cols = data.ceremony
+      ? [
+          { label: "MESA", value: `Mesa ${data.tableNumber}` },
+          { label: "CEREMONIA", value: data.ceremony.time || "—" },
+          { label: "RECEPCIÓN", value: data.eventTime },
+          { label: "VESTIMENTA", value: data.dressCode },
+        ]
+      : [
+          { label: "MESA", value: `Mesa ${data.tableNumber}` },
+          { label: "HORA", value: data.eventTime },
+          { label: "VESTIMENTA", value: data.dressCode },
+        ];
     const colW = contentW / cols.length;
     cols.forEach((col, i) => {
       const x = 100 + colW * i + colW / 2;
@@ -317,8 +333,14 @@ export async function renderPassImage(data: PassImageData): Promise<Blob> {
       y = drawWrapped(ctx, data.adultsOnly, cx, y + 102, contentW, 38, 3) + 4;
     }
 
-    // Ubicación: texto a la izquierda y QR a Google Maps a la derecha
-    if (data.venueName && mapsImg) {
+    // Lugares: texto a la izquierda y QR a Google Maps a la derecha
+    const drawPlace = (
+      label: string,
+      name: string,
+      address: string,
+      meta: string,
+      qr: HTMLImageElement
+    ) => {
       divider();
       y += 60;
 
@@ -330,26 +352,54 @@ export async function renderPassImage(data: PassImageData): Promise<Blob> {
       ctx.font = fonts.eyebrow;
       ctx.fillStyle = GOLD_DEEP;
       setSpacing(ctx, 6);
-      ctx.fillText("UBICACIÓN", 100, y);
+      ctx.fillText(label, 100, y);
       setSpacing(ctx, 0);
+
+      let textY = y + 56;
+      if (meta) {
+        ctx.font = `500 24px ${sans}`;
+        ctx.fillStyle = GOLD_DEEP;
+        textY = drawWrapped(ctx, meta, 100, y + 44, textW, 30, 2) + 22;
+      }
       ctx.font = fonts.venue;
       ctx.fillStyle = INK;
-      const nameEnd = drawWrapped(ctx, data.venueName, 100, y + 56, textW, 46, 2);
-      if (data.venueAddress) {
+      const nameEnd = drawWrapped(ctx, name, 100, textY, textW, 46, 2);
+      if (address) {
         ctx.font = fonts.body;
         ctx.fillStyle = MUTED;
-        drawWrapped(ctx, data.venueAddress, 100, nameEnd + 6, textW, 36, 3);
+        drawWrapped(ctx, address, 100, nameEnd + 6, textW, 36, 3);
       }
 
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(mapsX - 12, y - 24, mapsSize + 24, mapsSize + 24);
-      ctx.drawImage(mapsImg, mapsX, y - 12, mapsSize, mapsSize);
+      ctx.drawImage(qr, mapsX, y - 12, mapsSize, mapsSize);
       ctx.textAlign = "center";
       ctx.font = `600 20px ${sans}`;
       ctx.fillStyle = MUTED;
       ctx.fillText("Escanea para cómo llegar", mapsX + mapsSize / 2, y + mapsSize + 36);
-      // El bloque de ubicación termina bajo el QR de Maps
+      // El bloque termina bajo el QR de Maps
       y += mapsSize + 60;
+    };
+
+    const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+    if (data.ceremony && ceremonyImg) {
+      drawPlace(
+        "CEREMONIA",
+        data.ceremony.name,
+        data.ceremony.address,
+        [capitalize(data.ceremony.date), data.ceremony.time].filter(Boolean).join(" · "),
+        ceremonyImg
+      );
+    }
+    if (data.venueName && mapsImg) {
+      drawPlace(
+        data.ceremony ? "RECEPCIÓN" : "UBICACIÓN",
+        data.venueName,
+        data.venueAddress,
+        data.ceremony ? ["Después de la ceremonia", data.eventTime].filter(Boolean).join(" · ") : "",
+        mapsImg
+      );
     }
 
     ctx.textAlign = "center";

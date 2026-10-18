@@ -116,6 +116,11 @@ export const SAMPLE_REVEAL_COPY = {
   confirmEyebrow: "Tu respuesta",
   confirmTitle: "Confirma tu asistencia",
   confirmText: "Al confirmar te contaremos algo especial sobre el lugar.",
+  // Confirmación con quien envió la invitación (modo "organizer")
+  organizerText:
+    "Para confirmar tu asistencia, avísale a la persona que te envió esta invitación. Cuando lo haga, aquí se desbloqueará tu código QR de entrada.",
+  organizerRevealText: "También te contaremos algo especial sobre el lugar.",
+  refreshLabel: "Ya confirmé, actualizar",
   eyebrow: "Un secreto para ti",
   title: "El lugar cambió",
   updatedBadge: "Lugar actualizado",

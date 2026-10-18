@@ -22,6 +22,8 @@ export default function PassesPage() {
   const [loading, setLoading] = useState(true);
   const [organizerName, setOrganizerName] = useState("");
   const [coupleName, setCoupleName] = useState("");
+  // Modo "organizer": los invitados confirman respondiendo a quien envió la invitación
+  const [confirmViaSender, setConfirmViaSender] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
@@ -75,6 +77,14 @@ export default function PassesPage() {
       .single();
 
     if (wedding?.couple_name) setCoupleName(wedding.couple_name);
+
+    // La columna puede no existir si falta la migración 005: se ignora el error
+    const { data: modeRow } = await supabase
+      .from("weddings")
+      .select("confirmation_mode")
+      .eq("id", organizer.wedding_id)
+      .single();
+    setConfirmViaSender(modeRow?.confirmation_mode === "organizer");
 
     const { data: groupsData } = await supabase
       .from("guest_groups")
@@ -147,7 +157,9 @@ export default function PassesPage() {
 
   async function handleWhatsApp(group: GuestGroup) {
     const url = `${window.location.origin}/pase/${group.pass_uuid}`;
-    const message = `¡Hola! ${coupleName || "Te invitamos a nuestra boda"} 💍\nConfirma tu asistencia y ve tu invitación aquí:\n${url}`;
+    const message = confirmViaSender
+      ? `¡Hola! ${coupleName || "Te invitamos a nuestra boda"} 💍\nVe tu invitación aquí:\n${url}\n\nPara confirmar tu asistencia, responde a este mensaje.`
+      : `¡Hola! ${coupleName || "Te invitamos a nuestra boda"} 💍\nConfirma tu asistencia y ve tu invitación aquí:\n${url}`;
 
     // Intentar abrir el chat directo con el primer teléfono del grupo
     let phone: string | null = null;
