@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { formatEventDate, formatLongDate, formatTime } from "@/lib/event-format";
+import { coupleInitials, formatEventDate, formatLongDate, formatTime } from "@/lib/event-format";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,6 +48,8 @@ export async function GET(
           ceremony_date,
           ceremony_time,
           reception_time`;
+    const COVER_FIELD = `,
+          cover_initials`;
     // El select se arma en tiempo de ejecución: se tipa a mano el resultado
     type GroupRow = { id: string; name: string; table_number: number | null; weddings: unknown };
     type GroupResult = { data: GroupRow | null; error: { message: string } | null };
@@ -61,8 +63,8 @@ export async function GET(
     // Si una migración aún no se ejecutó (006 ceremonia, 005 modo de confirmación,
     // 003 lugar sorpresa), faltan columnas: se va quitando la función más reciente
     // hasta que la consulta funcione, en vez de romper todos los pases.
-    const FIELD_GROUPS = [BASE_FIELDS, REVEAL_FIELDS, MODE_FIELD, CEREMONY_FIELDS];
-    const MISSING_COLUMN = /reveal_|confirmation_mode|ceremony_|reception_time/;
+    const FIELD_GROUPS = [BASE_FIELDS, REVEAL_FIELDS, MODE_FIELD, CEREMONY_FIELDS, COVER_FIELD];
+    const MISSING_COLUMN = /reveal_|confirmation_mode|ceremony_|reception_time|cover_initials/;
     let { data: group, error: groupError } = await query(FIELD_GROUPS.join(""));
     for (let n = FIELD_GROUPS.length - 1; n >= 1 && groupError; n--) {
       if (!MISSING_COLUMN.test(groupError.message || "")) break;
@@ -111,6 +113,7 @@ export async function GET(
       ceremony_date?: string | null;
       ceremony_time?: string | null;
       reception_time?: string | null;
+      cover_initials?: boolean | null;
     };
 
     // Lugar sorpresa: el servidor decide qué lugar entregar. Antes de confirmar
@@ -181,6 +184,8 @@ export async function GET(
         venue_lat: venue.lat,
         venue_lng: venue.lng,
         couple_name: wedding.couple_name,
+        // Iniciales para el sobre y la previa (null = mostrar el nombre completo)
+        couple_initials: wedding.cover_initials ? coupleInitials(wedding.couple_name) : null,
         event_date: formatEventDate(wedding.event_date) + (fullAddress ? ` \u00b7 ${fullAddress}` : ""),
         confirmed,
         confirm_mode: confirmMode,

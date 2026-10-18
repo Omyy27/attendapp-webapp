@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useSupabase } from "@/lib/use-supabase";
 import type { Wedding } from "@/lib/types";
 import { geocodePlace } from "@/lib/mapbox";
+import { coupleInitials } from "@/lib/event-format";
 import {
   canChangeRole,
   canDeleteMember,
@@ -142,6 +143,9 @@ export default function AjustesPage() {
   const [ceremonyGeocoding, setCeremonyGeocoding] = useState(false);
   const [ceremonyGeocodeError, setCeremonyGeocodeError] = useState("");
 
+  // Sobre y previa con solo las iniciales de los novios
+  const [coverInitials, setCoverInitials] = useState(false);
+
   // Instantánea de lo guardado, para saber si hay cambios sin guardar
   const [baseline, setBaseline] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
@@ -228,6 +232,7 @@ export default function AjustesPage() {
         setRevealPinLat(w.reveal_venue_lat);
         setRevealPinLng(w.reveal_venue_lng);
       }
+      setCoverInitials(!!w.cover_initials);
       setCeremonyName(w.ceremony_name || "");
       setCeremonyCountry(w.ceremony_country || "");
       setCeremonyCity(w.ceremony_city || "");
@@ -261,6 +266,7 @@ export default function AjustesPage() {
           revealMessage: w.reveal_message || "",
           revealPinLat: w.reveal_venue_lat && w.reveal_venue_lng ? w.reveal_venue_lat : null,
           revealPinLng: w.reveal_venue_lat && w.reveal_venue_lng ? w.reveal_venue_lng : null,
+          coverInitials: !!w.cover_initials,
           ceremonyName: w.ceremony_name || "",
           ceremonyCountry: w.ceremony_country || "",
           ceremonyCity: w.ceremony_city || "",
@@ -346,6 +352,8 @@ export default function AjustesPage() {
         venue_address: venueAddress || null,
         venue_lat: pinLat,
         venue_lng: pinLng,
+        // Iniciales en el sobre: solo si la migración 007 ya existe
+        ...(wedding && "cover_initials" in wedding ? { cover_initials: coverInitials } : {}),
         // Ceremonia y hora de la recepción: solo si la migración 006 ya existe
         ...(wedding && "ceremony_name" in wedding
           ? {
@@ -481,6 +489,7 @@ export default function AjustesPage() {
     revealMessage,
     revealPinLat,
     revealPinLng,
+    coverInitials,
     ceremonyName,
     ceremonyCountry,
     ceremonyCity,
@@ -539,6 +548,33 @@ export default function AjustesPage() {
                 className={inputCls}
               />
             </Field>
+            <div className="space-y-2">
+              <SwitchRow
+                title="Mostrar solo las iniciales en el sobre"
+                description="En el sobre y la previa se verán solo las iniciales; los nombres completos aparecen con el video y dentro de la invitación."
+                checked={coverInitials}
+                onChange={setCoverInitials}
+              />
+              {coverInitials && (
+                <p className="text-[11px] text-muted-soft">
+                  {coupleInitials(coupleName) ? (
+                    <>
+                      Se verá: <span className="font-semibold text-content">{coupleInitials(coupleName)}</span>
+                    </>
+                  ) : (
+                    <span className="text-amber-600 dark:text-amber-400">
+                      Escribe el nombre como &quot;Ana &amp; Carlos&quot; para generar las iniciales; mientras
+                      tanto se mostrará el nombre completo.
+                    </span>
+                  )}
+                </p>
+              )}
+              {wedding && !("cover_initials" in wedding) && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                  Falta ejecutar la migración 007_cover_initials.sql en Supabase para guardar esta opción.
+                </p>
+              )}
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Fecha del evento">
                 <input

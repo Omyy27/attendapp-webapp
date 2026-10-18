@@ -25,6 +25,8 @@ export function openingDurationMs(lineCount: number) {
 
 export interface EnvelopeIntroProps {
   coupleName: string;
+  /** coupleName son las iniciales (p. ej. "D & M"): se dibujan más grandes */
+  initials?: boolean;
   eventDate: string;
   /** Frases que aparecen una tras otra antes de «¡Nos casamos!» */
   previewLines: string[];
@@ -41,6 +43,7 @@ export interface EnvelopeIntroProps {
  */
 export function EnvelopeIntro({
   coupleName,
+  initials = false,
   eventDate,
   previewLines,
   opening,
@@ -79,7 +82,11 @@ export function EnvelopeIntro({
             <span className="block text-[10px] uppercase tracking-[0.35em] text-inv-rose-deep font-semibold">
               Se complacen en invitarte
             </span>
-            <span className="block font-serif text-3xl md:text-4xl text-inv-olive-deep mt-3 leading-tight">
+            <span
+              className={`block font-serif text-inv-olive-deep mt-3 leading-tight ${
+                initials ? "text-5xl md:text-6xl tracking-[0.12em]" : "text-3xl md:text-4xl"
+              }`}
+            >
               {coupleName}
             </span>
             <span className="ornament-divider mt-4" />
@@ -100,7 +107,11 @@ export function EnvelopeIntro({
           <span className="block text-[10px] md:text-[11px] uppercase tracking-[0.35em] text-inv-rose-deep font-semibold">
             Se complacen en invitarte
           </span>
-          <span className="block font-serif text-3xl md:text-5xl text-inv-olive-deep mt-3 leading-tight">
+          <span
+            className={`block font-serif text-inv-olive-deep mt-3 leading-tight ${
+              initials ? "text-6xl md:text-8xl tracking-[0.12em]" : "text-3xl md:text-5xl"
+            }`}
+          >
             {coupleName}
           </span>
           <span className="block text-xs md:text-sm text-slate-500 mt-2 tracking-wider">
@@ -149,7 +160,13 @@ export function EnvelopeIntro({
           <p className="text-[11px] md:text-xs uppercase tracking-[0.4em] text-inv-rose-deep font-semibold">
             ¡Nos casamos!
           </p>
-          <p className="font-serif text-4xl md:text-6xl text-inv-olive-deep mt-3 leading-tight">{coupleName}</p>
+          <p
+            className={`font-serif text-inv-olive-deep mt-3 leading-tight ${
+              initials ? "text-7xl md:text-9xl tracking-[0.12em]" : "text-4xl md:text-6xl"
+            }`}
+          >
+            {coupleName}
+          </p>
           <span className="ornament-divider mt-5" />
         </div>
       </div>

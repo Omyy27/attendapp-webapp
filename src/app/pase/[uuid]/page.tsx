@@ -45,6 +45,8 @@ interface PassData {
   confirmed?: boolean;
   /** in_app: el invitado confirma aquí. organizer: confirma con quien le envió la invitación */
   confirm_mode?: "in_app" | "organizer";
+  /** Iniciales de la pareja para el sobre y la previa; null = nombre completo */
+  couple_initials?: string | null;
   /** Ceremonia (opcional); venue_* y event_time son los de la recepción */
   ceremony?: {
     name: string;
@@ -444,7 +446,8 @@ export default function GuestPassPage({
     <>
       {!isOpen && (
         <EnvelopeIntro
-          coupleName={passData.couple_name}
+          coupleName={passData.couple_initials || passData.couple_name}
+          initials={!!passData.couple_initials}
           eventDate={passData.event_date}
           previewLines={SAMPLE_PREVIEW_LINES}
           opening={phase === "opening"}

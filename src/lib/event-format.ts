@@ -40,3 +40,22 @@ export function formatLongDate(isoDate?: string | null, weekday = true): string 
 export function formatEventDate(eventDate?: string | null, weekday = false): string {
   return formatLongDate(eventDate, weekday);
 }
+
+/**
+ * Iniciales de la pareja para la portada: "Deirys & Mauricio" → "D & M".
+ * Separa por "&", "+", " y ", " e " o " and " y toma la primera letra del primer
+ * nombre de cada uno. Devuelve null si no se pueden obtener al menos dos (p. ej.
+ * "Los Pérez"), para que se muestre el nombre completo en vez de algo incorrecto.
+ */
+export function coupleInitials(coupleName?: string | null): string | null {
+  const parts = (coupleName || "")
+    .split(/\s*[&+]\s*|\s+(?:y|e|and)\s+/i)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length < 2) return null;
+  const initials = parts.map((part) => {
+    const firstName = part.split(/\s+/)[0];
+    return Array.from(firstName)[0]?.toLocaleUpperCase("es-MX") || "";
+  });
+  return initials.every(Boolean) ? initials.join(" & ") : null;
+}
