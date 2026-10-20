@@ -26,7 +26,7 @@ const mediaUrl = (file: string) =>
 
 export const INVITATION_MUSIC = {
   /** true cuando ya subiste media-src/music.mp3 con el script */
-  enabled: false,
+  enabled: true,
   /** nombre que se muestra un momento en el mini reproductor */
   title: "Nuestra canción",
   /** volumen final (0–1); en iOS lo fija el volumen del teléfono */
@@ -99,14 +99,11 @@ export const SAMPLE_DRESS_CODE: { note: string; avoid: AvoidGroup[] } = {
       group: "Mujeres",
       colors: [
         { name: "Rosa (toda la gama)", hexes: ["#f9c5d6", "#f591b3", "#e0508a"] },
-        { name: "Terracota", hexes: ["#cc6b4a"] },
-        { name: "Blanco y beige", hexes: ["#ffffff", "#f1e6cf"] },
+        { name: "Blanco (toda la gama) y beige", hexes: ["#ffffff", "#f1e6cf"] },
         { name: "Gris claro", hexes: ["#cfd2d6"] },
         { name: "Gris oscuro", hexes: ["#5b6068"] },
-        { name: "Verde (toda la gama)", hexes: ["#9cc58a", "#4f8a4a", "#2f5d3a"] },
         { name: "Rojo", hexes: ["#d11a2a"] },
         { name: "Negro", hexes: ["#111111"] },
-        { name: "Dorado", hexes: ["#d4af37"] },
       ],
     },
     {
