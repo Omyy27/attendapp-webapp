@@ -43,11 +43,19 @@ const navIconSalon = (
   </svg>
 );
 
+const navIconMomentos = (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+    <circle cx="12" cy="13" r="3" />
+  </svg>
+);
+
 export const allNavItems: NavItem[] = [
   { href: "/", label: "Invitados", icon: navIconInvitados },
   { href: "/scanner", label: "Escanear", icon: navIconEscanear },
   { href: "/pases", label: "Invitaciones", hideForScanner: true, icon: navIconEnviar },
   { href: "/salon", label: "Salon", icon: navIconSalon },
+  { href: "/momentos", label: "Momentos", hideForScanner: true, icon: navIconMomentos },
 ];
 
 export function visibleNavItems(role: string): NavItem[] {

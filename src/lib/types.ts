@@ -33,6 +33,31 @@ export interface Wedding {
   confirmation_mode?: "in_app" | "organizer";
   /** Sección de obsequios de la invitación; null = oculta */
   gift_message?: string | null;
+  /** Sobre y previa con solo las iniciales de la pareja */
+  cover_initials?: boolean | null;
+  /** Galería de fotos y chat de los invitados (/pase/[uuid]/momentos) */
+  moments_enabled?: boolean | null;
+}
+
+/** Foto subida por un invitado durante el evento */
+export interface EventPhoto {
+  id: string;
+  guest_id: string | null;
+  author_name: string;
+  url: string;
+  thumb_url: string;
+  width: number | null;
+  height: number | null;
+  created_at: string;
+}
+
+/** Mensaje del chat de invitados */
+export interface ChatMessage {
+  id: string;
+  guest_id: string | null;
+  author_name: string;
+  body: string;
+  created_at: string;
 }
 
 export interface GuestGroup {

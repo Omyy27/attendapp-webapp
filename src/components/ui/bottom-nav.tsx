@@ -12,7 +12,7 @@ export function BottomNav({ role = "organizer" }: { role?: string }) {
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 bg-card border-t border-line safe-bottom md:hidden">
-      <div className="max-w-md mx-auto flex items-center justify-around h-16 relative px-8">
+      <div className="max-w-md mx-auto flex items-center justify-around h-16 relative px-3">
         {items.map((item, i) => {
           const isActive = pathname === item.href;
 

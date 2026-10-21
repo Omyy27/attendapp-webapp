@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { EnvelopeIntro, openingDurationMs } from "@/components/envelope-intro";
 import { HeroVideo } from "@/components/invitation/hero-video";
 import { MusicPlayer, type MusicPlayerHandle } from "@/components/invitation/music-player";
@@ -56,6 +57,8 @@ interface PassData {
   couple_initials?: string | null;
   /** Sección de obsequios; null = oculta */
   gift_message?: string | null;
+  /** Galería y chat de invitados en /pase/[uuid]/momentos */
+  moments_enabled?: boolean;
   /** Ceremonia (opcional); venue_* y event_time son los de la recepción */
   ceremony?: {
     name: string;
@@ -721,6 +724,24 @@ export default function GuestPassPage({
               <section className="letter-reveal mt-12 -mx-8 md:-mx-12" style={delay(0.55)}>
                 <SectionTitle eyebrow="Nuestra historia" title="Galería" />
                 <PhotoCarousel photos={SAMPLE_GALLERY} />
+                {/* Momentos: solo para quien ya confirmó */}
+                {passData.moments_enabled && rsvpState === "confirmed" && (
+                  <div className="mt-8 px-8 md:px-12 text-center">
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      Comparte las fotos que tomes durante el evento y déjanos un mensaje.
+                    </p>
+                    <Link
+                      href={`/pase/${uuid}/momentos`}
+                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-inv-olive px-6 py-3 text-sm font-semibold text-white shadow-card transition-colors hover:bg-inv-olive-deep"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                        <circle cx="12" cy="13" r="3" />
+                      </svg>
+                      Fotos y mensajes del evento
+                    </Link>
+                  </div>
+                )}
               </section>
 
               {/* 6. Ubicación: ceremonia (opcional) y recepción */}

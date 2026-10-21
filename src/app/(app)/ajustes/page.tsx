@@ -151,6 +151,9 @@ export default function AjustesPage() {
   const [giftOn, setGiftOn] = useState(false);
   const [giftMessage, setGiftMessage] = useState("");
 
+  // Momentos: galería de fotos y chat de los invitados durante el evento
+  const [momentsOn, setMomentsOn] = useState(false);
+
   // Instantánea de lo guardado, para saber si hay cambios sin guardar
   const [baseline, setBaseline] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
@@ -240,6 +243,7 @@ export default function AjustesPage() {
       setCoverInitials(!!w.cover_initials);
       setGiftOn(!!w.gift_message);
       setGiftMessage(w.gift_message || "");
+      setMomentsOn(!!w.moments_enabled);
       setCeremonyName(w.ceremony_name || "");
       setCeremonyCountry(w.ceremony_country || "");
       setCeremonyCity(w.ceremony_city || "");
@@ -276,6 +280,7 @@ export default function AjustesPage() {
           coverInitials: !!w.cover_initials,
           giftOn: !!w.gift_message,
           giftMessage: w.gift_message || "",
+          momentsOn: !!w.moments_enabled,
           ceremonyName: w.ceremony_name || "",
           ceremonyCountry: w.ceremony_country || "",
           ceremonyCity: w.ceremony_city || "",
@@ -367,6 +372,8 @@ export default function AjustesPage() {
         ...(wedding && "gift_message" in wedding
           ? { gift_message: giftOn ? giftMessage.trim() || SAMPLE_GIFT_COPY.defaultMessage : null }
           : {}),
+        // Momentos: solo si la migración 009 ya existe
+        ...(wedding && "moments_enabled" in wedding ? { moments_enabled: momentsOn } : {}),
         // Ceremonia y hora de la recepción: solo si la migración 006 ya existe
         ...(wedding && "ceremony_name" in wedding
           ? {
@@ -505,6 +512,7 @@ export default function AjustesPage() {
     coverInitials,
     giftOn,
     giftMessage,
+    momentsOn,
     ceremonyName,
     ceremonyCountry,
     ceremonyCity,
@@ -1009,6 +1017,30 @@ export default function AjustesPage() {
             {wedding && !("gift_message" in wedding) && (
               <p className="text-[11px] text-amber-600 dark:text-amber-400">
                 Falta ejecutar la migración 008_gift_message.sql en Supabase para guardar esta opción.
+              </p>
+            )}
+          </SettingsSection>
+
+          {/* Momentos */}
+          <SettingsSection
+            icon={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+            }
+            title="Momentos"
+            description="Galería de fotos y chat para que los invitados compartan el evento"
+          >
+            <SwitchRow
+              title="Habilitar fotos y chat"
+              description="Los invitados verán un botón en su invitación para subir fotos y dejar mensajes. Puedes moderarlos desde Momentos."
+              checked={momentsOn}
+              onChange={setMomentsOn}
+            />
+            {wedding && !("moments_enabled" in wedding) && (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                Falta ejecutar la migración 009_moments.sql en Supabase para guardar esta opción.
               </p>
             )}
           </SettingsSection>
