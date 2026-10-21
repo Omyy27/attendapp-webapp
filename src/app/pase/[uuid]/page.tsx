@@ -831,7 +831,7 @@ export default function GuestPassPage({
                 <p className="font-script text-3xl text-inv-olive-deep mt-1">
                   <CoupleName name={firstNames} />
                 </p>
-                <p className="text-[10px] text-slate-400 mt-8 tracking-wide">Protegido por Attendapp</p>
+                {/* <p className="text-[10px] text-slate-400 mt-8 tracking-wide">Protegido por Attendapp</p> */}
               </footer>
             </div>
           </article>
