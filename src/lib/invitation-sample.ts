@@ -120,6 +120,18 @@ export const SAMPLE_DRESS_CODE: { note: string; avoid: AvoidGroup[] } = {
 export const SAMPLE_ADULTS_ONLY =
   "Amamos a sus pequeños, pero esta celebración es solo para adultos. Les pedimos asistir sin niños, de ninguna edad.";
 
+// Sección de obsequios: el texto lo edita la pareja en Ajustes; este es el inicial.
+export const SAMPLE_GIFT_COPY = {
+  eyebrow: "Con cariño",
+  title: "Obsequios",
+  defaultMessage:
+    "Queremos celebrar contigo este gran día. No es necesario un regalo material; si prefieres hacernos un obsequio, dispondremos de un buzón para lluvia de sobres en el evento.",
+};
+
+/** Aviso debajo del QR */
+export const SAMPLE_QR_NOTICE =
+  "Nos gustaría que estuvieras tanto en la ceremonia como en la recepción; por eso tendrás un registro de ingreso, así que lleva tu celular.";
+
 // Textos fijos del lugar sorpresa; el mensaje principal lo escribe la novia en Ajustes.
 export const SAMPLE_REVEAL_COPY = {
   confirmEyebrow: "Tu respuesta",

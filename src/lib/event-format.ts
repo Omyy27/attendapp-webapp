@@ -41,6 +41,14 @@ export function formatEventDate(eventDate?: string | null, weekday = false): str
   return formatLongDate(eventDate, weekday);
 }
 
+/** Separa "Deirys Pérez & Mauricio López" en una entrada por persona. */
+function coupleParts(coupleName?: string | null): string[] {
+  return (coupleName || "")
+    .split(/\s*[&+]\s*|\s+(?:y|e|and)\s+/i)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 /**
  * Iniciales de la pareja para la portada: "Deirys & Mauricio" → "D & M".
  * Separa por "&", "+", " y ", " e " o " and " y toma la primera letra del primer
@@ -48,14 +56,21 @@ export function formatEventDate(eventDate?: string | null, weekday = false): str
  * "Los Pérez"), para que se muestre el nombre completo en vez de algo incorrecto.
  */
 export function coupleInitials(coupleName?: string | null): string | null {
-  const parts = (coupleName || "")
-    .split(/\s*[&+]\s*|\s+(?:y|e|and)\s+/i)
-    .map((part) => part.trim())
-    .filter(Boolean);
+  const parts = coupleParts(coupleName);
   if (parts.length < 2) return null;
   const initials = parts.map((part) => {
     const firstName = part.split(/\s+/)[0];
     return Array.from(firstName)[0]?.toLocaleUpperCase("es-MX") || "";
   });
   return initials.every(Boolean) ? initials.join(" & ") : null;
+}
+
+/**
+ * Solo los nombres de pila: "Deirys Pérez & Mauricio López" → "Deirys & Mauricio".
+ * Devuelve null si no hay dos personas, para mostrar el nombre tal cual.
+ */
+export function coupleFirstNames(coupleName?: string | null): string | null {
+  const parts = coupleParts(coupleName);
+  if (parts.length < 2) return null;
+  return parts.map((part) => part.split(/\s+/)[0]).join(" & ");
 }

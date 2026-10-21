@@ -155,11 +155,12 @@ function setSpacing(ctx: CanvasRenderingContext2D, px: number) {
 export async function renderPassImage(data: PassImageData): Promise<Blob> {
   const rootStyle = getComputedStyle(document.documentElement);
   const serif = rootStyle.getPropertyValue("--font-playfair").trim() || "Georgia, serif";
+  const script = rootStyle.getPropertyValue("--font-great-vibes").trim() || "cursive";
   const sans = rootStyle.getPropertyValue("--font-plus-jakarta").trim() || "system-ui, sans-serif";
 
   const fonts = {
     eyebrow: `600 24px ${sans}`,
-    title: `400 76px ${serif}`,
+    title: `400 104px ${script}`,
     italic: `italic 400 40px ${serif}`,
     body: `400 28px ${sans}`,
     bold: `700 30px ${sans}`,
@@ -213,7 +214,7 @@ export async function renderPassImage(data: PassImageData): Promise<Blob> {
 
     ctx.font = fonts.title;
     ctx.fillStyle = INK;
-    let y = drawWrapped(ctx, data.coupleName, cx, 250, contentW, 84, 2);
+    let y = drawWrapped(ctx, data.coupleName, cx, 265, contentW, 100, 2);
 
     ctx.font = fonts.body;
     ctx.fillStyle = MUTED;

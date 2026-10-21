@@ -50,6 +50,8 @@ export async function GET(
           reception_time`;
     const COVER_FIELD = `,
           cover_initials`;
+    const GIFT_FIELD = `,
+          gift_message`;
     // El select se arma en tiempo de ejecución: se tipa a mano el resultado
     type GroupRow = { id: string; name: string; table_number: number | null; weddings: unknown };
     type GroupResult = { data: GroupRow | null; error: { message: string } | null };
@@ -63,8 +65,8 @@ export async function GET(
     // Si una migración aún no se ejecutó (006 ceremonia, 005 modo de confirmación,
     // 003 lugar sorpresa), faltan columnas: se va quitando la función más reciente
     // hasta que la consulta funcione, en vez de romper todos los pases.
-    const FIELD_GROUPS = [BASE_FIELDS, REVEAL_FIELDS, MODE_FIELD, CEREMONY_FIELDS, COVER_FIELD];
-    const MISSING_COLUMN = /reveal_|confirmation_mode|ceremony_|reception_time|cover_initials/;
+    const FIELD_GROUPS = [BASE_FIELDS, REVEAL_FIELDS, MODE_FIELD, CEREMONY_FIELDS, COVER_FIELD, GIFT_FIELD];
+    const MISSING_COLUMN = /reveal_|confirmation_mode|ceremony_|reception_time|cover_initials|gift_message/;
     let { data: group, error: groupError } = await query(FIELD_GROUPS.join(""));
     for (let n = FIELD_GROUPS.length - 1; n >= 1 && groupError; n--) {
       if (!MISSING_COLUMN.test(groupError.message || "")) break;
@@ -114,6 +116,7 @@ export async function GET(
       ceremony_time?: string | null;
       reception_time?: string | null;
       cover_initials?: boolean | null;
+      gift_message?: string | null;
     };
 
     // Lugar sorpresa: el servidor decide qué lugar entregar. Antes de confirmar
@@ -192,6 +195,7 @@ export async function GET(
         reveal_enabled: revealEnabled,
         venue_revealed: revealed,
         reveal_message: revealed ? wedding.reveal_message ?? null : null,
+        gift_message: wedding.gift_message ?? null,
       },
       { headers: { "Cache-Control": "no-store" } }
     );

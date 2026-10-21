@@ -6,15 +6,19 @@ import { EnvelopeIntro, openingDurationMs } from "@/components/envelope-intro";
 import { HeroVideo } from "@/components/invitation/hero-video";
 import { MusicPlayer, type MusicPlayerHandle } from "@/components/invitation/music-player";
 import { PhotoCarousel } from "@/components/invitation/photo-carousel";
+import { CoupleName } from "@/components/invitation/couple-name";
+import { coupleFirstNames } from "@/lib/event-format";
 import {
   INVITATION_MUSIC,
   SAMPLE_ADULTS_ONLY,
   SAMPLE_DRESS_CODE,
   SAMPLE_GALLERY,
+  SAMPLE_GIFT_COPY,
   SAMPLE_HERO_VIDEO,
   SAMPLE_INVITATION_TEXT,
   SAMPLE_MUSIC_SRC,
   SAMPLE_PREVIEW_LINES,
+  SAMPLE_QR_NOTICE,
   SAMPLE_REVEAL_COPY,
 } from "@/lib/invitation-sample";
 import { renderPassImage } from "@/lib/pass-image";
@@ -50,6 +54,8 @@ interface PassData {
   confirm_mode?: "in_app" | "organizer";
   /** Iniciales de la pareja para el sobre y la previa; null = nombre completo */
   couple_initials?: string | null;
+  /** Sección de obsequios; null = oculta */
+  gift_message?: string | null;
   /** Ceremonia (opcional); venue_* y event_time son los de la recepción */
   ceremony?: {
     name: string;
@@ -332,6 +338,8 @@ export default function GuestPassPage({
   }
 
   const isOpen = phase === "open";
+  // Sobre, previa y firma: solo nombres de pila; con el video, el nombre completo
+  const firstNames = coupleFirstNames(passData.couple_name) || passData.couple_name;
   const code = uuid.toUpperCase();
   const formattedCode = `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}-${code.slice(12, 16)}`;
   const mapsUrl = mapsLink(passData.venue_lat, passData.venue_lng, passData.venue_name, passData.venue_address);
@@ -452,7 +460,7 @@ export default function GuestPassPage({
     <>
       {!isOpen && (
         <EnvelopeIntro
-          coupleName={passData.couple_initials || passData.couple_name}
+          coupleName={passData.couple_initials || firstNames}
           initials={!!passData.couple_initials}
           eventDate={passData.event_date}
           previewLines={SAMPLE_PREVIEW_LINES}
@@ -645,6 +653,20 @@ export default function GuestPassPage({
                 </div>
               </section>
 
+              {/* Obsequios (se configura en Ajustes) */}
+              {passData.gift_message && (
+                <section className="letter-reveal mt-12 text-center" style={delay(0.4)}>
+                  <SectionTitle eyebrow={SAMPLE_GIFT_COPY.eyebrow} title={SAMPLE_GIFT_COPY.title} />
+                  <svg className="mx-auto h-7 w-7 text-inv-rose-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <path d="m22 7-10 6L2 7" />
+                  </svg>
+                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-600">
+                    {passData.gift_message}
+                  </p>
+                </section>
+              )}
+
               {/* 4. Tu pase */}
               {rsvpState === "confirmed" ? (
               <section className="letter-reveal mt-12 flex flex-col items-center" style={delay(0.45)}>
@@ -670,6 +692,13 @@ export default function GuestPassPage({
                 <p className="mt-4 text-center text-xs text-emerald-700">
                   ¡Asistencia confirmada! Presenta este código en la entrada.
                 </p>
+                <div className="mt-5 flex items-start gap-3 rounded-md border border-inv-rose/50 bg-white/60 px-5 py-4 text-left">
+                  <svg className="mt-0.5 h-5 w-5 shrink-0 text-inv-rose-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="6" y="2" width="12" height="20" rx="2" />
+                    <path d="M11 18h2" />
+                  </svg>
+                  <p className="text-xs leading-relaxed text-slate-600">{SAMPLE_QR_NOTICE}</p>
+                </div>
               </section>
               ) : (
               <section className="letter-reveal mt-12 flex flex-col items-center" style={delay(0.45)}>
@@ -799,7 +828,9 @@ export default function GuestPassPage({
               {/* Firma */}
               <footer className="letter-reveal mt-12 text-center" style={delay(0.9)}>
                 <p className="text-sm text-slate-500">Con cariño,</p>
-                <p className="font-serif italic text-2xl text-inv-olive-deep mt-1">{passData.couple_name}</p>
+                <p className="font-script text-3xl text-inv-olive-deep mt-1">
+                  <CoupleName name={firstNames} />
+                </p>
                 <p className="text-[10px] text-slate-400 mt-8 tracking-wide">Protegido por Attendapp</p>
               </footer>
             </div>

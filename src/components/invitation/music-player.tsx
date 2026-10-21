@@ -58,8 +58,9 @@ export function MusicPlayer({ src, title, volume = 0.5, active, ref }: MusicPlay
     const from = audio.volume;
     const t0 = performance.now();
     const step = (now: number) => {
-      const k = Math.min(1, (now - t0) / FADE_MS);
-      audio.volume = from + (target - from) * k;
+      // `now` (reloj del frame) puede ir unos ms por detrás de t0: sin el máximo, k < 0
+      const k = Math.min(1, Math.max(0, (now - t0) / FADE_MS));
+      audio.volume = Math.min(1, Math.max(0, from + (target - from) * k));
       if (k < 1) fadeRef.current = requestAnimationFrame(step);
     };
     fadeRef.current = requestAnimationFrame(step);

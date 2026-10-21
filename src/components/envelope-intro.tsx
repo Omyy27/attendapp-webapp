@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { CoupleName } from "@/components/invitation/couple-name";
 
 // Tiempos de la previa (s). Deben coincidir con la coreografía de globals.css:
 // la carta termina de cubrir la pantalla ~2.1 s después de tocar el sello.
@@ -25,7 +26,7 @@ export function openingDurationMs(lineCount: number) {
 
 export interface EnvelopeIntroProps {
   coupleName: string;
-  /** coupleName son las iniciales (p. ej. "D & M"): se dibujan más grandes */
+  /** coupleName son las iniciales (p. ej. "D & M"); si no, los nombres de pila. Las iniciales se dibujan más grandes */
   initials?: boolean;
   eventDate: string;
   /** Frases que aparecen una tras otra antes de «¡Nos casamos!» */
@@ -83,11 +84,11 @@ export function EnvelopeIntro({
               Se complacen en invitarte
             </span>
             <span
-              className={`block font-serif text-inv-olive-deep mt-3 leading-tight ${
-                initials ? "text-5xl md:text-6xl tracking-[0.12em]" : "text-3xl md:text-4xl"
+              className={`block font-script text-inv-olive-deep mt-3 leading-tight ${
+                initials ? "text-6xl md:text-7xl" : "text-[clamp(2.25rem,10vw,3rem)]"
               }`}
             >
-              {coupleName}
+              <CoupleName name={coupleName} />
             </span>
             <span className="ornament-divider mt-4" />
           </span>
@@ -108,11 +109,11 @@ export function EnvelopeIntro({
             Se complacen en invitarte
           </span>
           <span
-            className={`block font-serif text-inv-olive-deep mt-3 leading-tight ${
-              initials ? "text-6xl md:text-8xl tracking-[0.12em]" : "text-3xl md:text-5xl"
+            className={`block font-script text-inv-olive-deep mt-3 leading-tight ${
+              initials ? "text-7xl md:text-9xl" : "text-[clamp(2.5rem,11vw,3.75rem)]"
             }`}
           >
-            {coupleName}
+            <CoupleName name={coupleName} />
           </span>
           <span className="block text-xs md:text-sm text-slate-500 mt-2 tracking-wider">
             {eventDate}
@@ -161,11 +162,11 @@ export function EnvelopeIntro({
             ¡Nos casamos!
           </p>
           <p
-            className={`font-serif text-inv-olive-deep mt-3 leading-tight ${
-              initials ? "text-7xl md:text-9xl tracking-[0.12em]" : "text-4xl md:text-6xl"
+            className={`font-script text-inv-olive-deep mt-3 leading-tight ${
+              initials ? "text-8xl md:text-[10rem]" : "text-[clamp(2.75rem,12vw,4.5rem)]"
             }`}
           >
-            {coupleName}
+            <CoupleName name={coupleName} />
           </p>
           <span className="ornament-divider mt-5" />
         </div>

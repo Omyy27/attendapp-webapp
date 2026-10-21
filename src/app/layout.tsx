@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
+import { Plus_Jakarta_Sans, Playfair_Display, Great_Vibes } from "next/font/google";
 import { ScriptsLoader } from "@/components/scripts-loader";
 import "./globals.css";
 
@@ -14,6 +14,12 @@ const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
   weight: ["600", "700"],
   style: ["normal", "italic"],
+});
+
+const greatVibes = Great_Vibes({
+  variable: "--font-great-vibes",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -51,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${jakartaSans.variable} ${playfairDisplay.variable} h-full`}
+      className={`${jakartaSans.variable} ${playfairDisplay.variable} ${greatVibes.variable} h-full`}
       suppressHydrationWarning
     >
       <ScriptsLoader />

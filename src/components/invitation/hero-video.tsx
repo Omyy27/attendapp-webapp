@@ -81,7 +81,7 @@ export function HeroVideo({
         <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-inv-rose font-semibold">
           Nos casamos
         </p>
-        <h1 className="font-serif text-4xl md:text-6xl mt-3 leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
+        <h1 className="font-script text-[clamp(1.875rem,7.5vw,3.5rem)] text-balance mt-3 leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
           {coupleName}
         </h1>
         <p className="text-xs md:text-sm mt-2 tracking-wider text-white/85">{eventDate}</p>

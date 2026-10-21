@@ -6,7 +6,8 @@ import dynamic from "next/dynamic";
 import { useSupabase } from "@/lib/use-supabase";
 import type { Wedding } from "@/lib/types";
 import { geocodePlace } from "@/lib/mapbox";
-import { coupleInitials } from "@/lib/event-format";
+import { coupleFirstNames, coupleInitials } from "@/lib/event-format";
+import { SAMPLE_GIFT_COPY } from "@/lib/invitation-sample";
 import {
   canChangeRole,
   canDeleteMember,
@@ -146,6 +147,10 @@ export default function AjustesPage() {
   // Sobre y previa con solo las iniciales de los novios
   const [coverInitials, setCoverInitials] = useState(false);
 
+  // Sección de obsequios de la invitación (gift_message; null = oculta)
+  const [giftOn, setGiftOn] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
+
   // Instantánea de lo guardado, para saber si hay cambios sin guardar
   const [baseline, setBaseline] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
@@ -233,6 +238,8 @@ export default function AjustesPage() {
         setRevealPinLng(w.reveal_venue_lng);
       }
       setCoverInitials(!!w.cover_initials);
+      setGiftOn(!!w.gift_message);
+      setGiftMessage(w.gift_message || "");
       setCeremonyName(w.ceremony_name || "");
       setCeremonyCountry(w.ceremony_country || "");
       setCeremonyCity(w.ceremony_city || "");
@@ -267,6 +274,8 @@ export default function AjustesPage() {
           revealPinLat: w.reveal_venue_lat && w.reveal_venue_lng ? w.reveal_venue_lat : null,
           revealPinLng: w.reveal_venue_lat && w.reveal_venue_lng ? w.reveal_venue_lng : null,
           coverInitials: !!w.cover_initials,
+          giftOn: !!w.gift_message,
+          giftMessage: w.gift_message || "",
           ceremonyName: w.ceremony_name || "",
           ceremonyCountry: w.ceremony_country || "",
           ceremonyCity: w.ceremony_city || "",
@@ -354,6 +363,10 @@ export default function AjustesPage() {
         venue_lng: pinLng,
         // Iniciales en el sobre: solo si la migración 007 ya existe
         ...(wedding && "cover_initials" in wedding ? { cover_initials: coverInitials } : {}),
+        // Obsequios: solo si la migración 008 ya existe
+        ...(wedding && "gift_message" in wedding
+          ? { gift_message: giftOn ? giftMessage.trim() || SAMPLE_GIFT_COPY.defaultMessage : null }
+          : {}),
         // Ceremonia y hora de la recepción: solo si la migración 006 ya existe
         ...(wedding && "ceremony_name" in wedding
           ? {
@@ -490,6 +503,8 @@ export default function AjustesPage() {
     revealPinLat,
     revealPinLng,
     coverInitials,
+    giftOn,
+    giftMessage,
     ceremonyName,
     ceremonyCountry,
     ceremonyCity,
@@ -550,11 +565,17 @@ export default function AjustesPage() {
             </Field>
             <div className="space-y-2">
               <SwitchRow
-                title="Mostrar solo las iniciales en el sobre"
-                description="En el sobre y la previa se verán solo las iniciales; los nombres completos aparecen con el video y dentro de la invitación."
+                title="Mostrar iniciales en lugar de los nombres en el sobre"
+                description="En el sobre y la previa se ven los nombres de pila; actívalo para mostrar solo las iniciales. Los nombres completos aparecen con el video."
                 checked={coverInitials}
                 onChange={setCoverInitials}
               />
+              {!coverInitials && coupleFirstNames(coupleName) && (
+                <p className="text-[11px] text-muted-soft">
+                  En el sobre se verá:{" "}
+                  <span className="font-semibold text-content">{coupleFirstNames(coupleName)}</span>
+                </p>
+              )}
               {coverInitials && (
                 <p className="text-[11px] text-muted-soft">
                   {coupleInitials(coupleName) ? (
@@ -950,6 +971,46 @@ export default function AjustesPage() {
                 </div>
               </SwitchRow>
             </div>
+          </SettingsSection>
+
+          {/* Obsequios */}
+          <SettingsSection
+            icon={
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="m22 7-10 6L2 7" />
+              </svg>
+            }
+            title="Obsequios"
+            description="Mensaje sobre regalos que aparece en la invitación, arriba del pase"
+          >
+            <SwitchRow
+              title="Mostrar sección de obsequios"
+              description="Por ejemplo, para avisar que habrá un buzón de lluvia de sobres."
+              checked={giftOn}
+              onChange={(on) => {
+                setGiftOn(on);
+                if (on && !giftMessage.trim()) setGiftMessage(SAMPLE_GIFT_COPY.defaultMessage);
+              }}
+            >
+              <Field label="Mensaje">
+                <textarea
+                  value={giftMessage}
+                  onChange={(e) => setGiftMessage(e.target.value)}
+                  rows={4}
+                  placeholder={SAMPLE_GIFT_COPY.defaultMessage}
+                  className={`${inputCls} resize-none`}
+                />
+                <p className="text-[11px] text-muted-soft mt-1">
+                  Si lo dejas vacío se usa el texto por defecto.
+                </p>
+              </Field>
+            </SwitchRow>
+            {wedding && !("gift_message" in wedding) && (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                Falta ejecutar la migración 008_gift_message.sql en Supabase para guardar esta opción.
+              </p>
+            )}
           </SettingsSection>
 
           {/* Equipo */}

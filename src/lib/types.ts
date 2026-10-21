@@ -31,6 +31,8 @@ export interface Wedding {
   ceremony_time?: string | null;
   reception_time?: string | null;
   confirmation_mode?: "in_app" | "organizer";
+  /** Sección de obsequios de la invitación; null = oculta */
+  gift_message?: string | null;
 }
 
 export interface GuestGroup {
