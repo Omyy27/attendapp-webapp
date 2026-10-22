@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Playfair_Display, Great_Vibes } from "next/font/google";
+import { Plus_Jakarta_Sans, Playfair_Display, Norican } from "next/font/google";
 import { ScriptsLoader } from "@/components/scripts-loader";
 import "./globals.css";
 
@@ -16,8 +16,8 @@ const playfairDisplay = Playfair_Display({
   style: ["normal", "italic"],
 });
 
-const greatVibes = Great_Vibes({
-  variable: "--font-great-vibes",
+const norican = Norican({
+  variable: "--font-norican",
   subsets: ["latin"],
   weight: "400",
 });
@@ -57,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${jakartaSans.variable} ${playfairDisplay.variable} ${greatVibes.variable} h-full`}
+      className={`${jakartaSans.variable} ${playfairDisplay.variable} ${norican.variable} h-full`}
       suppressHydrationWarning
     >
       <ScriptsLoader />

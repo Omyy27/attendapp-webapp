@@ -155,7 +155,7 @@ function setSpacing(ctx: CanvasRenderingContext2D, px: number) {
 export async function renderPassImage(data: PassImageData): Promise<Blob> {
   const rootStyle = getComputedStyle(document.documentElement);
   const serif = rootStyle.getPropertyValue("--font-playfair").trim() || "Georgia, serif";
-  const script = rootStyle.getPropertyValue("--font-great-vibes").trim() || "cursive";
+  const script = rootStyle.getPropertyValue("--font-norican").trim() || "cursive";
   const sans = rootStyle.getPropertyValue("--font-plus-jakarta").trim() || "system-ui, sans-serif";
 
   const fonts = {
