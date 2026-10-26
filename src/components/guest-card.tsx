@@ -27,9 +27,14 @@ interface GuestCardProps {
   showActions?: boolean;
   onQRClick?: () => void;
   onMessageClick?: () => void;
-  onToggleConfirm?: () => void;
   onEditClick?: () => void;
   onDeleteClick?: () => void;
+  /** Personas en la misma invitación, cuántas faltan y cuántas ya confirmaron */
+  groupSize?: number;
+  groupUnconfirmed?: number;
+  groupConfirmed?: number;
+  onConfirmGroup?: () => void;
+  onUnconfirmGroup?: () => void;
 }
 
 function getStatusBadge(status: Guest["status"]) {
@@ -65,18 +70,30 @@ function getStatusBadge(status: Guest["status"]) {
   }
 }
 
+function CheckIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="m8.5 12.5 2.5 2.5 4.5-5" />
+    </svg>
+  );
+}
+
 export const GuestCard = memo(function GuestCard({
   guest,
   showActions = true,
   onQRClick,
   onMessageClick,
-  onToggleConfirm,
   onEditClick,
   onDeleteClick,
+  groupSize = 1,
+  groupUnconfirmed = 0,
+  groupConfirmed = 0,
+  onConfirmGroup,
+  onUnconfirmGroup,
 }: GuestCardProps) {
   const initials = `${guest.first_name.charAt(0)}${guest.last_name.charAt(0)}`;
 
-  const isConfirmed = guest.status === "confirmed";
   const actionBase =
     "flex-1 min-w-0 h-11 rounded-lg px-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 text-[11px] font-semibold transition-colors";
   const actionIdle = "text-muted hover:bg-field";
@@ -125,24 +142,6 @@ export const GuestCard = memo(function GuestCard({
             </svg>
             <span>QR</span>
           </button>
-          {guest.status !== "checked_in" && (
-            <button
-              onClick={onToggleConfirm}
-              className={`${actionBase} ${
-                isConfirmed
-                  ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25"
-                  : `${actionIdle} hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10`
-              }`}
-              title={isConfirmed ? "Desconfirmar" : "Marcar confirmado"}
-              aria-label={isConfirmed ? "Desconfirmar" : "Marcar confirmado"}
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <path d="m8.5 12.5 2.5 2.5 4.5-5" />
-              </svg>
-              <span>{isConfirmed ? "Desconfirmar" : "Confirmar"}</span>
-            </button>
-          )}
           <button
             onClick={onEditClick}
             className={`${actionBase} ${actionIdle} hover:text-sky hover:bg-sky/10`}
@@ -168,6 +167,28 @@ export const GuestCard = memo(function GuestCard({
             <span>Eliminar</span>
           </button>
         </div>
+      )}
+
+      {/* Confirmación por invitación: confirma (o deshace) a todos los de la invitación */}
+      {showActions && groupUnconfirmed > 0 && onConfirmGroup && (
+        <button
+          onClick={onConfirmGroup}
+          className="w-full h-10 -mt-1 rounded-lg flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 transition-colors"
+        >
+          <CheckIcon />
+          {groupSize > 1 ? `Confirmar invitación completa (${groupSize} personas)` : "Confirmar invitación"}
+        </button>
+      )}
+      {showActions && groupUnconfirmed === 0 && groupConfirmed > 0 && onUnconfirmGroup && (
+        <button
+          onClick={onUnconfirmGroup}
+          className="w-full h-10 -mt-1 rounded-lg flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10 transition-colors"
+          title="Deshacer la confirmación de esta invitación"
+        >
+          <CheckIcon />
+          Invitación confirmada
+          <span className="text-muted font-medium">· Desconfirmar</span>
+        </button>
       )}
     </article>
   );

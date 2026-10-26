@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
-import { formatEventDate, formatLongDate, formatTime } from "@/lib/event-format";
+import { formatEventDate, formatGuestNames, formatLongDate, formatTime } from "@/lib/event-format";
 import {
   invitationEmailHtml,
   invitationEmailSubject,
@@ -83,11 +83,12 @@ export async function POST(request: NextRequest) {
     // 4. Invitados del grupo con correo
     const { data: guests } = await supabase
       .from("guests")
-      .select("first_name, email")
-      .eq("group_id", group.id);
+      .select("first_name, last_name, email")
+      .eq("group_id", group.id)
+      .order("created_at");
 
     const recipients = (guests || []).filter(
-      (g): g is { first_name: string; email: string } =>
+      (g): g is { first_name: string; last_name: string; email: string } =>
         !!g.email && g.email.includes("@")
     );
 
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       .join(", ");
     const origin = new URL(request.url).origin;
     const base: InvitationEmailData = {
-      groupName: group.name,
+      groupName: formatGuestNames(guests || []) || group.name,
       passUrl: `${origin}/pase/${group.pass_uuid}`,
       coupleName: wedding?.couple_name || "Los novios",
       eventDate,
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
           subject: invitationEmailSubject(base),
           html: invitationEmailHtml({
             ...base,
-            groupName: `${guest.first_name} (${group.name})`,
+            groupName: guest.first_name,
           }),
           text: invitationEmailText(base),
         })

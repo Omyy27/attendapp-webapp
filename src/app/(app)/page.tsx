@@ -169,6 +169,19 @@ export default function DashboardPage() {
     };
   }, [guests]);
 
+  // Por invitación: cuántas personas tiene, cuántas faltan y cuántas ya confirmaron
+  const groupStats = useMemo(() => {
+    const map = new Map<string, { total: number; unconfirmed: number; confirmed: number }>();
+    for (const g of guests) {
+      const s = map.get(g.group_id) ?? { total: 0, unconfirmed: 0, confirmed: 0 };
+      s.total += 1;
+      if (g.status === "pending" || g.status === "opened") s.unconfirmed += 1;
+      if (g.status === "confirmed") s.confirmed += 1;
+      map.set(g.group_id, s);
+    }
+    return map;
+  }, [guests]);
+
   const availableTables = useMemo(() => {
     const tables = new Set(guests.map((g) => g.group?.table_number).filter(Boolean));
     return Array.from(tables).sort((a, b) => a - b);
@@ -256,17 +269,38 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // El organizador marca (o desmarca) la confirmación de un invitado, p. ej. cuando
-  // confirmó por WhatsApp con quien le envió la invitación. Desbloquea su QR.
-  async function handleToggleConfirm(guest: Guest) {
-    if (guest.status === "checked_in") return;
-    const next: Guest["status"] =
-      guest.status === "confirmed" ? (guest.opened_at ? "opened" : "pending") : "confirmed";
-
-    // Optimista: actualizar la lista y revertir recargando si falla
-    setGuests((prev) => prev.map((g) => (g.id === guest.id ? { ...g, status: next } : g)));
-    const { error } = await supabase.from("guests").update({ status: next }).eq("id", guest.id);
+  // El organizador confirma la invitación completa (p. ej. cuando respondieron por
+  // WhatsApp a quien la envió). No toca a quienes ya llegaron o ya estaban confirmados.
+  async function handleConfirmGroup(guest: Guest) {
+    const isPending = (g: Guest) => g.status === "pending" || g.status === "opened";
+    setGuests((prev) =>
+      prev.map((g) => (g.group_id === guest.group_id && isPending(g) ? { ...g, status: "confirmed" } : g))
+    );
+    const { error } = await supabase
+      .from("guests")
+      .update({ status: "confirmed" })
+      .eq("group_id", guest.group_id)
+      .in("status", ["pending", "opened"]);
     if (error) fetchData({ silent: true });
+  }
+
+  // Deshace la confirmación de la invitación: vuelve a "Abrió la carta" si la
+  // abrieron, o a "Sin confirmar". Quienes ya llegaron no cambian.
+  async function handleUnconfirmGroup(guest: Guest) {
+    setGuests((prev) =>
+      prev.map((g) =>
+        g.group_id === guest.group_id && g.status === "confirmed"
+          ? { ...g, status: g.opened_at ? "opened" : "pending" }
+          : g
+      )
+    );
+    const [opened, pending] = await Promise.all([
+      supabase.from("guests").update({ status: "opened" })
+        .eq("group_id", guest.group_id).eq("status", "confirmed").not("opened_at", "is", null),
+      supabase.from("guests").update({ status: "pending" })
+        .eq("group_id", guest.group_id).eq("status", "confirmed").is("opened_at", null),
+    ]);
+    if (opened.error || pending.error) fetchData({ silent: true });
   }
 
   async function handleDeleteConfirm() {
@@ -578,7 +612,11 @@ export default function DashboardPage() {
                   guest={guest}
                   showActions={canManageEvent(role)}
                   onQRClick={() => handleQRClick(guest)}
-                  onToggleConfirm={() => handleToggleConfirm(guest)}
+                  groupSize={groupStats.get(guest.group_id)?.total}
+                  groupUnconfirmed={groupStats.get(guest.group_id)?.unconfirmed}
+                  groupConfirmed={groupStats.get(guest.group_id)?.confirmed}
+                  onConfirmGroup={() => handleConfirmGroup(guest)}
+                  onUnconfirmGroup={() => handleUnconfirmGroup(guest)}
                   onEditClick={() => handleEditClick(guest)}
                   onDeleteClick={() => handleDeleteClick(guest)}
                 />

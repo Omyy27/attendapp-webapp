@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { coupleInitials, formatEventDate, formatLongDate, formatTime } from "@/lib/event-format";
+import { coupleInitials, formatEventDate, formatGuestNames, formatLongDate, formatTime } from "@/lib/event-format";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -79,10 +79,13 @@ export async function GET(
       return NextResponse.json({ error: "Pass not found" }, { status: 404 });
     }
 
-    const { count } = await supabaseAdmin
+    // Invitados de la invitación, en el orden en que se registraron
+    const { data: groupGuests } = await supabaseAdmin
       .from("guests")
-      .select("*", { count: "exact", head: true })
-      .eq("group_id", group.id);
+      .select("first_name, last_name")
+      .eq("group_id", group.id)
+      .order("created_at");
+    const count = groupGuests?.length ?? 0;
 
     const { count: confirmedCount } = await supabaseAdmin
       .from("guests")
@@ -178,6 +181,8 @@ export async function GET(
     return NextResponse.json(
       {
         group_name: group.name,
+        // "Para …" de la invitación: los nombres de sus invitados, no el grupo familiar
+        addressed_to: formatGuestNames(groupGuests || []) || group.name,
         table_number: group.table_number,
         guest_count: guestCount,
         confirmed_count: confirmedCount || 0,

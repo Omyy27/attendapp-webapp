@@ -74,3 +74,17 @@ export function coupleFirstNames(coupleName?: string | null): string | null {
   if (parts.length < 2) return null;
   return parts.map((part) => part.split(/\s+/)[0]).join(" & ");
 }
+
+/**
+ * A quién va dirigida la invitación, con los nombres de sus invitados:
+ * "Ana Pérez", "Ana Pérez y Luis Gómez", "Ana, Luis y Sofía Gómez".
+ */
+export function formatGuestNames(
+  guests: { first_name: string | null; last_name: string | null }[]
+): string {
+  const names = guests
+    .map((g) => [g.first_name, g.last_name].map((s) => s?.trim()).filter(Boolean).join(" "))
+    .filter(Boolean);
+  if (names.length <= 1) return names[0] || "";
+  return `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}`;
+}

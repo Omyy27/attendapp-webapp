@@ -33,6 +33,8 @@ const VenueMap = dynamic(() => import("@/components/venue-map"), {
 
 interface PassData {
   group_name: string;
+  /** Nombres de los invitados de la invitación ("Ana Pérez y Luis Gómez") */
+  addressed_to?: string;
   table_number: number;
   guest_count: number;
   confirmed_count: number;
@@ -358,7 +360,7 @@ export default function GuestPassPage({
       const blob = await renderPassImage({
         coupleName: passData.couple_name,
         eventDate: passData.event_date,
-        groupName: passData.group_name,
+        groupName: passData.addressed_to || passData.group_name,
         qrDataUrl,
         code: formattedCode,
         guestCount: passData.guest_count,
@@ -524,7 +526,7 @@ export default function GuestPassPage({
                   Se complacen en invitarte
                 </p>
                 <p className="font-serif italic text-xl text-inv-olive-deep mt-4">
-                  Para {passData.group_name}
+                  Para {passData.addressed_to || passData.group_name}
                 </p>
                 {SAMPLE_INVITATION_TEXT.map((paragraph) => (
                   <p key={paragraph} className="text-sm text-slate-600 leading-relaxed mt-3">
